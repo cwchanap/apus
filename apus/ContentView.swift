@@ -8,50 +8,47 @@
 import SwiftUI
 import SwiftData
 
-struct ContentView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query private var items: [Item]
+enum NavigationPage {
+    case home
+    case settings
+}
 
+struct ContentView: View {
+    @State private var currentPage: NavigationPage = .home
+    
     var body: some View {
-        NavigationSplitView {
-            List {
-                ForEach(items) { item in
-                    NavigationLink {
-                        Text("Item at \(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))")
-                    } label: {
-                        Text(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))
-                    }
+        NavigationView {
+            VStack {
+                // Main content based on current page
+                switch currentPage {
+                case .home:
+                    HomeView()
+                case .settings:
+                    SettingsView()
                 }
-                .onDelete(perform: deleteItems)
             }
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
-                }
-                ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Menu {
+                        Button("Home") {
+                            currentPage = .home
+                        }
+                        Button("Settings") {
+                            currentPage = .settings
+                        }
+                    } label: {
+                        Image(systemName: "line.horizontal.3")
                     }
                 }
             }
-        } detail: {
-            Text("Select an item")
+            .navigationTitle(currentPage == .home ? "Home" : "Settings")
         }
     }
+}
 
-    private func addItem() {
-        withAnimation {
-            let newItem = Item(timestamp: Date())
-            modelContext.insert(newItem)
-        }
-    }
-
-    private func deleteItems(offsets: IndexSet) {
-        withAnimation {
-            for index in offsets {
-                modelContext.delete(items[index])
-            }
-        }
+struct HomeView: View {
+    var body: some View {
+        CameraView()
     }
 }
 
