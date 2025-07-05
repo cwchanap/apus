@@ -8,9 +8,11 @@
 import SwiftUI
 import AVFoundation
 import Photos
+import CoreVideo
 
 struct CameraView: View {
     @StateObject private var camera = CameraManager()
+    @StateObject private var objectDetection = ObjectDetectionManager()
     @State private var showingImagePicker = false
     @State private var capturedImage: UIImage?
     @State private var showingAlert = false
@@ -20,6 +22,10 @@ struct CameraView: View {
         ZStack {
             // Camera preview
             CameraPreview(camera: camera)
+                .ignoresSafeArea()
+            
+            // Object detection overlay
+            ObjectDetectionOverlay(detections: objectDetection.detections)
                 .ignoresSafeArea()
             
             VStack {
@@ -75,6 +81,7 @@ struct CameraView: View {
         }
         .onAppear {
             camera.requestPermission()
+            camera.setObjectDetectionManager(objectDetection)
         }
         .sheet(isPresented: $showingImagePicker) {
             ImagePicker(selectedImage: $capturedImage)
@@ -121,6 +128,8 @@ class CameraManager: NSObject, ObservableObject {
     
     private var currentCamera: AVCaptureDevice?
     private var photoCompletionHandler: ((UIImage?) -> Void)?
+    private var videoDataOutput = AVCaptureVideoDataOutput()
+    private var objectDetectionManager: ObjectDetectionManager?
     
     func requestPermission() {
         switch AVCaptureDevice.authorizationStatus(for: .video) {
@@ -163,6 +172,14 @@ class CameraManager: NSObject, ObservableObject {
         // Add photo output
         if session.canAddOutput(output) {
             session.addOutput(output)
+        }
+        
+        // Add video data output for object detection
+        videoDataOutput.videoSettings = [kCVPixelBufferPixelFormatTypeKey as String: Int(kCVPixelFormatType_32BGRA)]
+        videoDataOutput.setSampleBufferDelegate(self, queue: DispatchQueue.global(qos: .userInitiated))
+        
+        if session.canAddOutput(videoDataOutput) {
+            session.addOutput(videoDataOutput)
         }
         
         // Configure session
@@ -226,6 +243,10 @@ class CameraManager: NSObject, ObservableObject {
         }
         
         session.commitConfiguration()
+    }
+    
+    func setObjectDetectionManager(_ manager: ObjectDetectionManager) {
+        objectDetectionManager = manager
     }
 }
 
@@ -294,6 +315,64 @@ extension CameraManager: AVCapturePhotoCaptureDelegate {
         
         photoCompletionHandler?(image)
         photoCompletionHandler = nil
+    }
+}
+
+// AVCaptureVideoDataOutput Delegate
+extension CameraManager: AVCaptureVideoDataOutputSampleBufferDelegate {
+    func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
+        guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
+        
+        objectDetectionManager?.detect(in: pixelBuffer)
+    }
+}
+
+// Object Detection Overlay
+struct ObjectDetectionOverlay: View {
+    let detections: [Detection]
+    
+    var body: some View {
+        GeometryReader { geometry in
+            ForEach(detections.indices, id: \.self) { index in
+                let detection = detections[index]
+                let boundingBox = scaleBoundingBox(detection.boundingBox, to: geometry.size)
+                
+                ZStack {
+                    Rectangle()
+                        .stroke(Color.red, lineWidth: 2)
+                        .frame(width: boundingBox.width, height: boundingBox.height)
+                    
+                    VStack {
+                        Text("\(detection.className)")
+                            .font(.caption)
+                            .foregroundColor(.white)
+                            .background(Color.red.opacity(0.7))
+                            .cornerRadius(4)
+                        
+                        Text(String(format: "%.2f", detection.confidence))
+                            .font(.caption2)
+                            .foregroundColor(.white)
+                            .background(Color.red.opacity(0.7))
+                            .cornerRadius(4)
+                        
+                        Spacer()
+                    }
+                }
+                .position(x: boundingBox.midX, y: boundingBox.midY)
+            }
+        }
+    }
+    
+    private func scaleBoundingBox(_ boundingBox: CGRect, to size: CGSize) -> CGRect {
+        let scaleX = size.width
+        let scaleY = size.height
+        
+        return CGRect(
+            x: boundingBox.minX * scaleX,
+            y: boundingBox.minY * scaleY,
+            width: boundingBox.width * scaleX,
+            height: boundingBox.height * scaleY
+        )
     }
 }
 
