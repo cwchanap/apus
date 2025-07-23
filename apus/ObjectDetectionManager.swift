@@ -59,7 +59,7 @@ class ObjectDetectionManager: ObservableObject {
         }
         
         do {
-            let content = try String(contentsOfFile: labelPath)
+            let content = try String(contentsOfFile: labelPath, encoding: .utf8)
             labels = content.components(separatedBy: .newlines).filter { !$0.isEmpty }
             print("Loaded \(labels.count) labels")
         } catch {
@@ -127,9 +127,9 @@ class ObjectDetectionManager: ObservableObject {
                 let g = buffer[offset + 1]
                 let b = buffer[offset]
                 
-                let normalizedR = Float(r) / 255.0
-                let normalizedG = Float(g) / 255.0
-                let normalizedB = Float(b) / 255.0
+                var normalizedR = Float(r) / 255.0
+                var normalizedG = Float(g) / 255.0
+                var normalizedB = Float(b) / 255.0
                 
                 inputData.append(Data(bytes: &normalizedR, count: 4))
                 inputData.append(Data(bytes: &normalizedG, count: 4))
@@ -147,7 +147,7 @@ class ObjectDetectionManager: ObservableObject {
         var detections: [Detection] = []
         
         for i in stride(from: 0, to: dataCount, by: 7) {
-            let batchId = data.withUnsafeBytes { $0.load(fromByteOffset: i * 4, as: Float32.self) }
+            _ = data.withUnsafeBytes { $0.load(fromByteOffset: i * 4, as: Float32.self) }
             let classId = data.withUnsafeBytes { $0.load(fromByteOffset: (i + 1) * 4, as: Float32.self) }
             let score = data.withUnsafeBytes { $0.load(fromByteOffset: (i + 2) * 4, as: Float32.self) }
             let xMin = data.withUnsafeBytes { $0.load(fromByteOffset: (i + 3) * 4, as: Float32.self) }
@@ -181,8 +181,8 @@ class ObjectDetectionManager: ObservableObject {
 
 extension CVPixelBuffer {
     func resized(to targetSize: CGSize) -> CVPixelBuffer? {
-        let width = CVPixelBufferGetWidth(self)
-        let height = CVPixelBufferGetHeight(self)
+        let _ = CVPixelBufferGetWidth(self)
+        let _ = CVPixelBufferGetHeight(self)
         
         let attributes: [NSString: Any] = [
             kCVPixelBufferCGImageCompatibilityKey: true,

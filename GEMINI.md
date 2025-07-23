@@ -4,26 +4,29 @@ This file provides guidance to Gemini when working with code in this repository.
 
 ## Project Overview
 
-This is a SwiftUI iOS application named "apus" that serves as a basic template for a camera-centric app with settings. The app utilizes SwiftData for data persistence, although the current data model is simple.
+This is a SwiftUI iOS application named "apus" that serves as a basic template for a camera-centric app with settings. The app utilizes SwiftData for data persistence, although the current data model is simple. It also includes an object detection feature using TensorFlow Lite.
 
 ## Architecture
 
 - **App Entry Point**: `apusApp.swift` - Configures and provides the SwiftData `ModelContainer`.
 - **Main View**: `ContentView.swift` - Acts as the root view, managing navigation between the `HomeView` and `SettingsView` using a toolbar menu.
 - **Home View**: `HomeView.swift` - Currently displays the `CameraView`.
-- **Camera View**: `CameraView.swift` - (Not provided, but referenced) Presumably handles camera input and display.
-- **Settings View**: `SettingsView.swift` - (Not provided, but referenced) A placeholder for application settings.
+- **Camera View**: `CameraView.swift` - Handles camera input and display, and integrates with the `ObjectDetectionManager`.
+- **Settings View**: `SettingsView.swift` - A placeholder for application settings.
 - **Data Model**: `Item.swift` - A simple SwiftData model with a single `timestamp` attribute.
+- **Object Detection Manager**: `ObjectDetectionManager.swift` - Manages the TensorFlow Lite model and performs object detection on camera frames.
 
 ## Key Technologies
 
 - SwiftUI for the user interface.
 - SwiftData for data persistence.
+- TensorFlow Lite for object detection.
+- Cocoapods for dependency management.
 
 ## Development Commands
 
 ### Building and Running
-- Open `apus.xcodeproj` in Xcode.
+- Open `apus.xcworkspace` in Xcode.
 - Build and run the application using the Xcode toolbar, selecting an appropriate simulator or a connected device.
 
 ### Testing
@@ -35,10 +38,12 @@ This is a SwiftUI iOS application named "apus" that serves as a basic template f
 ## Project Structure
 
 - `apus/`: Contains the main application source code.
+- `apus/models`: Contains the TensorFlow Lite model and labels.
 - `apusTests/`: The target for unit tests.
 - `apusUITests/`: The target for UI tests.
 - `apus.xcodeproj/`: Xcode project file and configuration.
+- `Podfile`: Manages the Cocoapods dependencies.
 
-## SwiftData Model Setup
+## Object Detection Setup
 
-The SwiftData `ModelContainer` is configured in `apusApp.swift`. It uses a `Schema` that includes the `Item` model and is configured for on-disk persistence (`isStoredInMemoryOnly: false`). The container is then injected into the SwiftUI environment for access in different views.
+The object detection feature is implemented in `ObjectDetectionManager.swift`. It uses the `efficientdet_lite0` model from TensorFlow Lite and the `coco_labels` file for class names. The manager is initialized in `CameraView.swift` and receives camera frames for processing. The detected objects are then displayed as an overlay on the camera preview.

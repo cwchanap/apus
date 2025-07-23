@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep:*)",
+      "WebFetch(domain:www.tensorflow.org)",
+      "WebFetch(domain:ai.google.dev)",
+      "WebFetch(domain:github.com)",
+      "Bash(pod install:*)",
+      "Bash(ls:*)",
+      "Bash(xcodebuild test -workspace apus.xcworkspace -scheme apus -destination 'platform=iOS Simulator,name=iPhone 15,OS=latest')",
+      "Bash(xcodebuild test:*)",
+      "Bash(xcodebuild build:*)",
+      "mcp__XcodeBuildMCP__discover_projs",
+      "mcp__XcodeBuildMCP__list_schems_ws",
+      "mcp__XcodeBuildMCP__build_sim_name_ws",
+      "mcp__XcodeBuildMCP__test_sim_name_ws",
+      "mcp__XcodeBuildMCP__build_run_sim_name_ws",
+      "mcp__XcodeBuildMCP__clean_ws",
+      "mcp__XcodeBuildMCP__list_sims",
+      "Bash(find:*)"
+    ],
+    "deny": []
+  }
+}

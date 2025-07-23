@@ -15,11 +15,14 @@ struct CameraView: View {
     @StateObject private var objectDetection = ObjectDetectionManager()
     @State private var showingImagePicker = false
     @State private var capturedImage: UIImage?
-    @State private var showingAlert = false
-    @State private var alertMessage = ""
     
     var body: some View {
-        ZStack {
+        let isShowingPreview = Binding<Bool>(
+            get: { self.capturedImage != nil },
+            set: { if !$0 { self.capturedImage = nil } }
+        )
+
+        return ZStack {
             // Camera preview
             CameraPreview(camera: camera)
                 .ignoresSafeArea()
@@ -50,7 +53,6 @@ struct CameraView: View {
                         camera.capturePhoto { image in
                             if let image = image {
                                 capturedImage = image
-                                saveImageToPhotos(image)
                             }
                         }
                     }) {
@@ -78,6 +80,11 @@ struct CameraView: View {
                 }
                 .padding(.bottom, 50)
             }
+            
+            // Hidden NavigationLink for the preview
+            .navigationDestination(isPresented: isShowingPreview) {
+                PreviewView(capturedImage: $capturedImage)
+            }
         }
         .onAppear {
             camera.requestPermission()
@@ -85,36 +92,6 @@ struct CameraView: View {
         }
         .sheet(isPresented: $showingImagePicker) {
             ImagePicker(selectedImage: $capturedImage)
-        }
-        .alert("Camera", isPresented: $showingAlert) {
-            Button("OK") { }
-        } message: {
-            Text(alertMessage)
-        }
-    }
-    
-    private func saveImageToPhotos(_ image: UIImage) {
-        PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
-            if status == .authorized {
-                PHPhotoLibrary.shared().performChanges({
-                    PHAssetCreationRequest.creationRequestForAsset(from: image)
-                }) { success, error in
-                    DispatchQueue.main.async {
-                        if success {
-                            alertMessage = "Photo saved to gallery!"
-                            showingAlert = true
-                        } else {
-                            alertMessage = "Failed to save photo: \(error?.localizedDescription ?? "Unknown error")"
-                            showingAlert = true
-                        }
-                    }
-                }
-            } else {
-                DispatchQueue.main.async {
-                    alertMessage = "Photo library access denied"
-                    showingAlert = true
-                }
-            }
         }
     }
 }

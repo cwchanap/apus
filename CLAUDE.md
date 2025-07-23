@@ -27,9 +27,15 @@ This is a SwiftUI iOS camera application named "apus" that provides full camera 
 ## Development Commands
 
 ### Building and Running
-- Open `apus.xcodeproj` in Xcode to build and run the application
-- Use Xcode's built-in simulator or connected device for testing
+- **IMPORTANT**: Open `apus.xcworkspace` (not `apus.xcodeproj`) in Xcode due to CocoaPods integration
+- Use Xcode GUI for building - command line builds may fail due to CocoaPods sandbox permissions
+- Physical device required for camera functionality and object detection testing
+- Simulator has limitations: no camera access, no GPU acceleration for TensorFlow Lite
 - Requires iOS 18.5+ deployment target
+
+### Dependencies Setup
+- Install CocoaPods dependencies: `pod install` (if Podfile.lock changes)
+- Dependencies managed via CocoaPods include TensorFlow Lite Swift with GPU support
 
 ### Testing
 - Run tests through Xcode Test Navigator (⌘+6) or Product → Test (⌘+U)
@@ -83,3 +89,21 @@ The app includes real-time object detection using TensorFlow Lite with Efficient
 - **TensorFlow Lite Swift**: Added via CocoaPods (`pod 'TensorFlowLiteSwift'`)
 - **AVFoundation**: Video processing and camera integration
 - **CoreVideo**: Pixel buffer handling and image preprocessing
+
+## Project Structure Notes
+
+### Key Configuration Files
+- `Podfile` and `Podfile.lock` - CocoaPods dependency management
+- `apus.xcworkspace` - Main workspace file (use this, not .xcodeproj)
+- `Info.plist` - Camera and photo library permissions configuration
+- `apus.entitlements` - CloudKit and app sandbox permissions
+
+### Object Detection Assets
+- `efficientdet_lite0.tflite` - 4.5MB pre-trained model (320x320 input resolution)
+- `coco_labels.txt` - 80 COCO dataset object class labels
+
+### Development Constraints
+- Command-line builds may fail due to CocoaPods sandbox restrictions
+- GPU acceleration (MetalDelegate) automatically disabled on simulator
+- Real-time object detection requires physical device for performance testing
+- Camera permissions must be granted for full functionality
