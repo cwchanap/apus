@@ -96,6 +96,7 @@ struct PreviewView: View {
     }
 }
 
+#if DEBUG
 #Preview {
     struct PreviewWrapper: View {
         @State var image: UIImage? = UIImage(systemName: "camera")
@@ -107,3 +108,4 @@ struct PreviewView: View {
     }
     return PreviewWrapper()
 }
+#endif

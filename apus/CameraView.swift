@@ -12,7 +12,7 @@ import CoreVideo
 
 struct CameraView: View {
     @StateObject private var camera = CameraManager()
-    @StateObject private var objectDetection = ObjectDetectionManager()
+    @StateObject private var objectDetection = ObjectDetectionProvider()
     @State private var showingImagePicker = false
     @State private var capturedImage: UIImage?
     
@@ -90,6 +90,17 @@ struct CameraView: View {
             camera.requestPermission()
             camera.setObjectDetectionManager(objectDetection)
         }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
+            // Restart camera when app becomes active (fixes initial load issue)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                if camera.isAuthorized && !camera.session.isRunning {
+                    camera.requestPermission()
+                }
+            }
+        }
+        .onDisappear {
+            camera.stopSession()
+        }
         .sheet(isPresented: $showingImagePicker) {
             ImagePicker(selectedImage: $capturedImage)
         }
@@ -106,7 +117,7 @@ class CameraManager: NSObject, ObservableObject {
     private var currentCamera: AVCaptureDevice?
     private var photoCompletionHandler: ((UIImage?) -> Void)?
     private var videoDataOutput = AVCaptureVideoDataOutput()
-    private var objectDetectionManager: ObjectDetectionManager?
+    private var objectDetectionManager: (any ObjectDetectionProtocol)?
     
     func requestPermission() {
         switch AVCaptureDevice.authorizationStatus(for: .video) {
@@ -122,7 +133,9 @@ class CameraManager: NSObject, ObservableObject {
                     }
                 }
             }
-        default:
+        case .denied, .restricted:
+            isAuthorized = false
+        @unknown default:
             isAuthorized = false
         }
     }
@@ -134,8 +147,12 @@ class CameraManager: NSObject, ObservableObject {
         session.inputs.forEach { session.removeInput($0) }
         
         // Add camera input
-        guard let camera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back),
-              let input = try? AVCaptureDeviceInput(device: camera) else {
+        guard let camera = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) else {
+            session.commitConfiguration()
+            return
+        }
+        
+        guard let input = try? AVCaptureDeviceInput(device: camera) else {
             session.commitConfiguration()
             return
         }
@@ -164,14 +181,25 @@ class CameraManager: NSObject, ObservableObject {
         
         session.commitConfiguration()
         
-        // Setup preview layer
-        preview.session = session
-        preview.videoGravity = .resizeAspectFill
-        
-        // Start session
-        DispatchQueue.global(qos: .background).async {
-            self.session.startRunning()
+        // Start the session
+        if !session.isRunning {
+            DispatchQueue.global(qos: .background).async {
+                self.session.startRunning()
+            }
         }
+        
+        // Setup preview layer
+        DispatchQueue.main.async {
+            self.preview.session = self.session
+            self.preview.videoGravity = .resizeAspectFill
+            
+            // Force refresh after a short delay (fixes initial load issue)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                self.preview.connection?.isEnabled = false
+                self.preview.connection?.isEnabled = true
+            }
+        }
+        
     }
     
     func capturePhoto(completion: @escaping (UIImage?) -> Void) {
@@ -222,8 +250,14 @@ class CameraManager: NSObject, ObservableObject {
         session.commitConfiguration()
     }
     
-    func setObjectDetectionManager(_ manager: ObjectDetectionManager) {
+    func setObjectDetectionManager(_ manager: any ObjectDetectionProtocol) {
         objectDetectionManager = manager
+    }
+    
+    func stopSession() {
+        if session.isRunning {
+            session.stopRunning()
+        }
     }
 }
 
@@ -233,13 +267,25 @@ struct CameraPreview: UIViewRepresentable {
     
     func makeUIView(context: Context) -> UIView {
         let view = UIView(frame: UIScreen.main.bounds)
-        camera.preview.frame = view.bounds
-        view.layer.addSublayer(camera.preview)
+        view.backgroundColor = .black
         return view
     }
     
     func updateUIView(_ uiView: UIView, context: Context) {
+        // Remove existing preview layer
+        uiView.layer.sublayers?.removeAll { $0 is AVCaptureVideoPreviewLayer }
+        
+        // Only add preview layer if view has proper size
+        guard uiView.bounds.width > 0 && uiView.bounds.height > 0 else {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                self.updateUIView(uiView, context: context)
+            }
+            return
+        }
+        
+        // Add current preview layer with proper frame
         camera.preview.frame = uiView.bounds
+        uiView.layer.addSublayer(camera.preview)
     }
 }
 
@@ -300,7 +346,7 @@ extension CameraManager: AVCaptureVideoDataOutputSampleBufferDelegate {
     func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
         guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
         
-        objectDetectionManager?.detect(in: pixelBuffer)
+        objectDetectionManager?.processFrame(pixelBuffer)
     }
 }
 

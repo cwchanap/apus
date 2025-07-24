@@ -65,15 +65,11 @@
 		};
 		24829C812E0FB0E900F99FD7 /* apusTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
 			path = apusTests;
 			sourceTree = "<group>";
 		};
 		24829C8B2E0FB0E900F99FD7 /* apusUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
 			path = apusUITests;
 			sourceTree = "<group>";
 		};
@@ -139,7 +135,6 @@
 				6C9EE16CF7E197F68D7CC646 /* Pods-apusUITests.debug.xcconfig */,
 				EAD3CE3D3D253697B7DE67C4 /* Pods-apusUITests.release.xcconfig */,
 			);
-			name = Pods;
 			path = Pods;
 			sourceTree = "<group>";
 		};
@@ -402,9 +397,10 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
-				CODE_SIGN_ENTITLEMENTS = apus/apus.entitlements;
+				CODE_SIGN_ENTITLEMENTS = apus/apusDebug.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = U896CZ5W5N;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -436,6 +432,7 @@
 				CODE_SIGN_ENTITLEMENTS = apus/apus.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = U896CZ5W5N;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;

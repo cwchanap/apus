@@ -17,7 +17,7 @@ struct ContentView: View {
     @State private var currentPage: NavigationPage = .home
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack {
                 // Main content based on current page
                 switch currentPage {

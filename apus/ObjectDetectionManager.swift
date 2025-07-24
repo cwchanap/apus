@@ -1,16 +1,11 @@
+#if !DEBUG && !targetEnvironment(simulator)
 import Foundation
 import TensorFlowLite
 import CoreVideo
 import UIKit
 import QuartzCore
 
-struct Detection {
-    let boundingBox: CGRect
-    let className: String
-    let confidence: Float
-}
-
-class ObjectDetectionManager: ObservableObject {
+class ObjectDetectionManager: ObservableObject, ObjectDetectionProtocol {
     private var interpreter: Interpreter?
     private var labels: [String] = []
     private var isProcessing = false
@@ -67,7 +62,7 @@ class ObjectDetectionManager: ObservableObject {
         }
     }
     
-    func detect(in pixelBuffer: CVPixelBuffer) {
+    func processFrame(_ pixelBuffer: CVPixelBuffer) {
         guard let interpreter = interpreter else { return }
         
         // Throttle processing to avoid overwhelming the system
@@ -235,3 +230,4 @@ extension CVPixelBuffer {
         return resizedBuffer
     }
 }
+#endif
