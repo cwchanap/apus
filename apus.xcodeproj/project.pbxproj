@@ -45,7 +45,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		24829C902E0FB0E900F99FD7 /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+		24829C902E0FB0E900F99FD7 /* Exceptions for "apus" folder in "apus" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Resources/Info.plist,
@@ -58,7 +58,7 @@
 		24829C6F2E0FB0E700F99FD7 /* apus */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
-				24829C902E0FB0E900F99FD7 /* PBXFileSystemSynchronizedBuildFileExceptionSet */,
+				24829C902E0FB0E900F99FD7 /* Exceptions for "apus" folder in "apus" target */,
 			);
 			path = apus;
 			sourceTree = "<group>";
