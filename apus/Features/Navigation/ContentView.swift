@@ -17,31 +17,48 @@ struct ContentView: View {
     @State private var currentPage: NavigationPage = .home
     
     var body: some View {
-        NavigationStack {
-            VStack {
-                // Main content based on current page
-                switch currentPage {
-                case .home:
-                    HomeView()
-                case .settings:
+        ZStack {
+            // Main content based on current page
+            switch currentPage {
+            case .home:
+                HomeView()
+                    .ignoresSafeArea(.all) // Allow home view (camera) to go full screen
+            case .settings:
+                NavigationStack {
                     SettingsView()
+                        .navigationTitle("Settings")
+                        .toolbar {
+                            ToolbarItem(placement: .navigationBarLeading) {
+                                Button("Back to Camera") {
+                                    currentPage = .home
+                                }
+                            }
+                        }
                 }
             }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Menu {
-                        Button("Home") {
-                            currentPage = .home
-                        }
-                        Button("Settings") {
+            
+            // Floating menu button for camera view
+            if currentPage == .home {
+                VStack {
+                    HStack {
+                        Button(action: {
                             currentPage = .settings
+                        }) {
+                            Image(systemName: "gearshape.fill")
+                                .font(.title2)
+                                .foregroundColor(.white)
+                                .frame(width: 44, height: 44)
+                                .background(Color.black.opacity(0.6))
+                                .clipShape(Circle())
                         }
-                    } label: {
-                        Image(systemName: "line.horizontal.3")
+                        .padding(.leading, 20)
+                        .padding(.top, 50) // Account for status bar
+                        
+                        Spacer()
                     }
+                    Spacer()
                 }
             }
-            .navigationTitle(currentPage == .home ? "Home" : "Settings")
         }
     }
 }
@@ -49,6 +66,7 @@ struct ContentView: View {
 struct HomeView: View {
     var body: some View {
         CameraView()
+            .ignoresSafeArea(.all) // Ensure camera view goes full screen
     }
 }
 

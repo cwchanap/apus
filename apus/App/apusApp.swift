@@ -27,6 +27,8 @@ struct apusApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .preferredColorScheme(.dark) // Force dark mode for camera app
+                .statusBarHidden(true) // Hide status bar
         }
         .modelContainer(sharedModelContainer)
     }
