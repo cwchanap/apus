@@ -10,6 +10,7 @@ import SwiftData
 
 @main
 struct apusApp: App {
+    @StateObject private var appDependencies = AppDependencies.shared
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             Item.self,

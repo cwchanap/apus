@@ -10,17 +10,6 @@ import AVFoundation
 import UIKit
 import CoreVideo
 
-protocol CameraManagerProtocol: ObservableObject {
-    var session: AVCaptureSession { get }
-    var isSessionRunning: Bool { get }
-    
-    func startSession()
-    func stopSession()
-    func capturePhoto(completion: @escaping (UIImage?) -> Void)
-    func toggleFlash()
-    func zoom(factor: CGFloat)
-    func processFrame(_ pixelBuffer: CVPixelBuffer)
-}
 
 class CameraManager: NSObject, ObservableObject, CameraManagerProtocol {
     @Published var isSessionRunning = false

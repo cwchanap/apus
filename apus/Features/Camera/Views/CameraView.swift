@@ -14,7 +14,7 @@ struct CameraView: View {
     var body: some View {
         ZStack {
             // Camera preview
-            CameraPreview(camera: viewModel.cameraManager)
+            CameraPreview(camera: viewModel.concreteCameraManager)
                 .ignoresSafeArea()
             
             // Object detection overlay

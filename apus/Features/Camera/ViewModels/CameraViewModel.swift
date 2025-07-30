@@ -18,9 +18,9 @@ class CameraViewModel: ObservableObject {
     @Published var isFlashOn = false
     @Published var currentZoomFactor: CGFloat = 1.0
     
-    // MARK: - Dependencies
-    let cameraManager: CameraManager
-    private let objectDetectionManager: any ObjectDetectionProtocol
+    // MARK: - Dependencies (Injected)
+    @Injected private var cameraManager: CameraManagerProtocol
+    @Injected private var objectDetectionManager: ObjectDetectionProtocol
     
     // MARK: - Computed Properties
     var isShowingPreview: Binding<Bool> {
@@ -34,12 +34,21 @@ class CameraViewModel: ObservableObject {
         objectDetectionManager.detections
     }
     
+    // Expose concrete camera manager for UI components that need it
+    var concreteCameraManager: CameraManager {
+        return cameraManager as! CameraManager
+    }
+    
     // MARK: - Initialization
-    init(cameraManager: CameraManager = CameraManager(), 
-         objectDetectionManager: any ObjectDetectionProtocol = ObjectDetectionProvider()) {
-        self.cameraManager = cameraManager
-        self.objectDetectionManager = objectDetectionManager
-        
+    init() {
+        setupBindings()
+    }
+    
+    // MARK: - Alternative initializer for testing
+    init(cameraManager: CameraManagerProtocol, objectDetectionManager: ObjectDetectionProtocol) {
+        // Register test dependencies
+        DIContainer.shared.register(CameraManagerProtocol.self, instance: cameraManager)
+        DIContainer.shared.register(ObjectDetectionProtocol.self, instance: objectDetectionManager)
         setupBindings()
     }
     
