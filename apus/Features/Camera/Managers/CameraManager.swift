@@ -27,14 +27,26 @@ class CameraManager: NSObject, ObservableObject, CameraManagerProtocol {
     
     override init() {
         super.init()
-        setupCamera()
+        // Don't setup camera immediately - wait for permission
     }
     
     private func setupCamera() {
+        // Clear any existing configuration
+        session.beginConfiguration()
+        
+        // Remove existing inputs and outputs
+        for input in session.inputs {
+            session.removeInput(input)
+        }
+        for output in session.outputs {
+            session.removeOutput(output)
+        }
+        
         session.sessionPreset = .photo
         
         guard let videoDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) else {
             print("Failed to get video device")
+            session.commitConfiguration()
             return
         }
         
@@ -46,10 +58,16 @@ class CameraManager: NSObject, ObservableObject, CameraManagerProtocol {
             if session.canAddInput(videoDeviceInput) {
                 session.addInput(videoDeviceInput)
                 self.videoDeviceInput = videoDeviceInput
+            } else {
+                print("Could not add video device input to the session")
+                session.commitConfiguration()
+                return
             }
             
             if session.canAddOutput(photoOutput) {
                 session.addOutput(photoOutput)
+            } else {
+                print("Could not add photo output to the session")
             }
             
             if session.canAddOutput(videoOutput) {
@@ -63,22 +81,44 @@ class CameraManager: NSObject, ObservableObject, CameraManagerProtocol {
                         connection.videoOrientation = .portrait
                     }
                 }
+            } else {
+                print("Could not add video output to the session")
             }
+            
+            session.commitConfiguration()
             
         } catch {
             print("Error setting up camera: \(error)")
+            session.commitConfiguration()
         }
     }
     
     func startSession() {
         requestCameraPermission()
-        if !session.isRunning {
-            DispatchQueue.global(qos: .userInitiated).async { [weak self] in
-                self?.session.startRunning()
-                DispatchQueue.main.async {
-                    self?.isSessionRunning = self?.session.isRunning ?? false
-                }
+    }
+    
+    private func actuallyStartSession() {
+        guard !session.isRunning else { 
+            DispatchQueue.main.async {
+                self.isSessionRunning = true
             }
+            return 
+        }
+        
+        // Start session on background queue to avoid blocking UI
+        let startSessionWork = { [self] in
+            self.session.startRunning()
+            
+            // Update UI on main thread
+            DispatchQueue.main.async {
+                self.isSessionRunning = self.session.isRunning
+            }
+        }
+        
+        if Thread.isMainThread {
+            DispatchQueue.global(qos: .userInitiated).async(execute: startSessionWork)
+        } else {
+            startSessionWork()
         }
     }
     
@@ -94,6 +134,16 @@ class CameraManager: NSObject, ObservableObject, CameraManagerProtocol {
     }
     
     func capturePhoto(completion: @escaping (UIImage?) -> Void) {
+        guard session.isRunning else {
+            completion(nil)
+            return
+        }
+        
+        guard photoOutput.connection(with: .video) != nil else {
+            completion(nil)
+            return
+        }
+        
         photoCompletionHandler = completion
         
         let settings = AVCapturePhotoSettings()
@@ -135,19 +185,19 @@ class CameraManager: NSObject, ObservableObject, CameraManagerProtocol {
     private func requestCameraPermission() {
         switch AVCaptureDevice.authorizationStatus(for: .video) {
         case .authorized:
-            DispatchQueue.main.async {
-                self.setupCamera()
-            }
+            setupCamera()
+            actuallyStartSession()
         case .notDetermined:
-            AVCaptureDevice.requestAccess(for: .video) { granted in
-                DispatchQueue.main.async {
-                    if granted {
-                        self.setupCamera()
-                    }
+            AVCaptureDevice.requestAccess(for: .video) { [weak self] granted in
+                if granted {
+                    self?.setupCamera()
+                    self?.actuallyStartSession()
+                } else {
+                    print("Camera permission denied by user")
                 }
             }
         case .denied, .restricted:
-            print("Camera access denied")
+            print("Camera access denied or restricted")
         @unknown default:
             print("Unknown camera authorization status")
         }

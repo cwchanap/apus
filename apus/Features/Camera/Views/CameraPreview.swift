@@ -29,10 +29,18 @@ struct CameraPreview: UIViewRepresentable {
             return
         }
         
-        // Create and configure preview layer
-        let previewLayer = AVCaptureVideoPreviewLayer(session: camera.session)
-        previewLayer.frame = uiView.bounds
-        previewLayer.videoGravity = .resizeAspectFill
-        uiView.layer.addSublayer(previewLayer)
+        // Wait a bit for session to be properly configured
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            // Create and configure preview layer
+            let previewLayer = AVCaptureVideoPreviewLayer(session: self.camera.session)
+            previewLayer.frame = uiView.bounds
+            previewLayer.videoGravity = .resizeAspectFill
+            
+            // Add the preview layer
+            uiView.layer.addSublayer(previewLayer)
+            
+            // Force preview layer to update
+            previewLayer.connection?.isEnabled = true
+        }
     }
 }

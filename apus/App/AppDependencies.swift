@@ -35,15 +35,13 @@ class AppDependencies: ObservableObject {
     
     // MARK: - Camera Dependencies
     private func configureCameraDependencies() {
-        // Register camera manager as singleton
-        container.register(CameraManagerProtocol.self) {
-            CameraManager() as any CameraManagerProtocol
-        }
+        // Register camera manager as singleton instance (not factory)
+        let cameraManager = CameraManager()
+        container.register(CameraManagerProtocol.self, instance: cameraManager)
         
-        // Register object detection manager
-        container.register(ObjectDetectionProtocol.self) {
-            ObjectDetectionProvider() as any ObjectDetectionProtocol
-        }
+        // Register object detection manager as singleton instance
+        let objectDetectionManager = ObjectDetectionProvider()
+        container.register(ObjectDetectionProtocol.self, instance: objectDetectionManager)
     }
     
     // MARK: - Service Dependencies
