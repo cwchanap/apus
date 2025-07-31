@@ -52,6 +52,14 @@ class AppDependencies: ObservableObject {
         // Register object detection manager as singleton instance
         let objectDetectionManager = ObjectDetectionProvider()
         container.register(ObjectDetectionProtocol.self, instance: objectDetectionManager)
+        
+        // Register image classification manager as singleton instance
+        let imageClassificationManager = ImageClassificationProvider()
+        container.register(ImageClassificationProtocol.self, instance: imageClassificationManager)
+        
+        // Register classification history manager as singleton instance
+        let historyManager = ClassificationHistoryManager()
+        container.register(ClassificationHistoryManager.self, instance: historyManager)
     }
     
     // MARK: - Service Dependencies
@@ -84,6 +92,10 @@ class AppDependencies: ObservableObject {
         
         container.register(ObjectDetectionProtocol.self) {
             MockObjectDetectionManager() as any ObjectDetectionProtocol
+        }
+        
+        container.register(ImageClassificationProtocol.self) {
+            MockImageClassificationManager() as any ImageClassificationProtocol
         }
         
         // Register mock services

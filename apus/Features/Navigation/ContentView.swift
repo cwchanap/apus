@@ -11,6 +11,7 @@ import SwiftData
 enum NavigationPage {
     case home
     case settings
+    case history
 }
 
 struct ContentView: View {
@@ -35,21 +36,45 @@ struct ContentView: View {
                             }
                         }
                 }
+            case .history:
+                NavigationStack {
+                    ClassificationHistoryView()
+                        .toolbar {
+                            ToolbarItem(placement: .navigationBarLeading) {
+                                Button("Back to Camera") {
+                                    currentPage = .home
+                                }
+                            }
+                        }
+                }
             }
             
-            // Floating menu button for camera view
+            // Floating menu buttons for camera view
             if currentPage == .home {
                 VStack {
                     HStack {
-                        Button(action: {
-                            currentPage = .settings
-                        }) {
-                            Image(systemName: "gearshape.fill")
-                                .font(.title2)
-                                .foregroundColor(.white)
-                                .frame(width: 44, height: 44)
-                                .background(Color.black.opacity(0.6))
-                                .clipShape(Circle())
+                        VStack(spacing: 12) {
+                            Button(action: {
+                                currentPage = .settings
+                            }) {
+                                Image(systemName: "gearshape.fill")
+                                    .font(.title2)
+                                    .foregroundColor(.white)
+                                    .frame(width: 44, height: 44)
+                                    .background(Color.black.opacity(0.6))
+                                    .clipShape(Circle())
+                            }
+                            
+                            Button(action: {
+                                currentPage = .history
+                            }) {
+                                Image(systemName: "clock.arrow.circlepath")
+                                    .font(.title2)
+                                    .foregroundColor(.white)
+                                    .frame(width: 44, height: 44)
+                                    .background(Color.black.opacity(0.6))
+                                    .clipShape(Circle())
+                            }
                         }
                         .padding(.leading, 20)
                         .padding(.top, 50) // Account for status bar

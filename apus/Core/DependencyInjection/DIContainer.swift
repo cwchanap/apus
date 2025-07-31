@@ -70,6 +70,7 @@ class DIContainer: DIContainerProtocol, ObservableObject {
         // Register camera-related dependencies
         register(CameraManagerProtocol.self) { CameraManager() }
         register(ObjectDetectionProtocol.self) { ObjectDetectionProvider() }
+        register(ImageClassificationProtocol.self) { ImageClassificationProvider() }
         
         // Register services (will be implemented later)
         // register(PhotoLibraryServiceProtocol.self) { PhotoLibraryService() }
