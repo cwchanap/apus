@@ -11,6 +11,7 @@ struct ClassificationHistoryView: View {
     @StateObject private var historyManager = ClassificationHistoryManager()
     @State private var selectedItem: ClassificationHistoryItem?
     @State private var showingDeleteAlert = false
+    @Injected private var hapticService: HapticServiceProtocol
     
     var body: some View {
         NavigationView {
@@ -48,6 +49,7 @@ struct ClassificationHistoryView: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     if !historyManager.historyItems.isEmpty {
                         Button("Clear All") {
+                            hapticService.warning()
                             showingDeleteAlert = true
                         }
                         .foregroundColor(.red)
@@ -57,6 +59,7 @@ struct ClassificationHistoryView: View {
             .alert("Clear History", isPresented: $showingDeleteAlert) {
                 Button("Cancel", role: .cancel) { }
                 Button("Clear All", role: .destructive) {
+                    hapticService.strongFeedback()
                     historyManager.clearHistory()
                 }
             } message: {
@@ -69,6 +72,7 @@ struct ClassificationHistoryView: View {
     }
     
     private func deleteItems(offsets: IndexSet) {
+        hapticService.actionFeedback()
         for index in offsets {
             historyManager.deleteItem(at: index)
         }
@@ -78,6 +82,7 @@ struct ClassificationHistoryView: View {
 struct HistoryItemRow: View {
     let item: ClassificationHistoryItem
     let onTap: () -> Void
+    @Injected private var hapticService: HapticServiceProtocol
     
     private var dateFormatter: DateFormatter {
         let formatter = DateFormatter()
@@ -87,7 +92,10 @@ struct HistoryItemRow: View {
     }
     
     var body: some View {
-        Button(action: onTap) {
+        Button(action: {
+            hapticService.buttonTap()
+            onTap()
+        }) {
             HStack(spacing: 12) {
                 // Thumbnail
                 if let image = item.image {

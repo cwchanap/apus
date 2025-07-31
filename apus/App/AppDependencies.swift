@@ -60,6 +60,10 @@ class AppDependencies: ObservableObject {
         // Register classification history manager as singleton instance
         let historyManager = ClassificationHistoryManager()
         container.register(ClassificationHistoryManager.self, instance: historyManager)
+        
+        // Register haptic service as singleton instance
+        let hapticService = HapticService()
+        container.register(HapticServiceProtocol.self, instance: hapticService)
     }
     
     // MARK: - Service Dependencies
@@ -96,6 +100,10 @@ class AppDependencies: ObservableObject {
         
         container.register(ImageClassificationProtocol.self) {
             MockImageClassificationManager() as any ImageClassificationProtocol
+        }
+        
+        container.register(HapticServiceProtocol.self) {
+            MockHapticService() as any HapticServiceProtocol
         }
         
         // Register mock services

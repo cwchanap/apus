@@ -9,6 +9,7 @@ import SwiftUI
 
 struct CameraControlsView: View {
     @ObservedObject var viewModel: CameraViewModel
+    @Injected private var hapticService: HapticServiceProtocol
     
     var body: some View {
         GeometryReader { geometry in
@@ -19,6 +20,7 @@ struct CameraControlsView: View {
                 HStack {
                     // Gallery button (left side)
                     Button(action: {
+                        hapticService.buttonTap()
                         viewModel.selectImageFromLibrary()
                     }) {
                         Image(systemName: "photo.on.rectangle")
@@ -34,6 +36,7 @@ struct CameraControlsView: View {
                     
                     // Capture button (center)
                     Button(action: {
+                        hapticService.actionFeedback()
                         viewModel.capturePhoto()
                     }) {
                         Circle()
@@ -50,6 +53,7 @@ struct CameraControlsView: View {
                     
                     // Flash button (right side)
                     Button(action: {
+                        hapticService.buttonTap()
                         viewModel.toggleFlash()
                     }) {
                         Image(systemName: viewModel.isFlashOn ? "bolt.fill" : "bolt.slash")

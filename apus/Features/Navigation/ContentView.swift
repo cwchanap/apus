@@ -16,6 +16,7 @@ enum NavigationPage {
 
 struct ContentView: View {
     @State private var currentPage: NavigationPage = .home
+    @Injected private var hapticService: HapticServiceProtocol
     
     var body: some View {
         ZStack {
@@ -55,6 +56,7 @@ struct ContentView: View {
                     HStack {
                         VStack(spacing: 12) {
                             Button(action: {
+                                hapticService.buttonTap()
                                 currentPage = .settings
                             }) {
                                 Image(systemName: "gearshape.fill")
@@ -66,6 +68,7 @@ struct ContentView: View {
                             }
                             
                             Button(action: {
+                                hapticService.buttonTap()
                                 currentPage = .history
                             }) {
                                 Image(systemName: "clock.arrow.circlepath")
