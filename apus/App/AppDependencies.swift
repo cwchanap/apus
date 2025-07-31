@@ -23,6 +23,9 @@ class AppDependencies: ObservableObject {
     
     /// Configure all app dependencies
     private func configureDependencies() {
+        // Core app settings
+        configureAppSettings()
+        
         // Camera dependencies
         configureCameraDependencies()
         
@@ -31,6 +34,13 @@ class AppDependencies: ObservableObject {
         
         // Navigation dependencies
         // configureNavigationDependencies()
+    }
+    
+    // MARK: - App Settings
+    private func configureAppSettings() {
+        // Register app settings as singleton
+        let appSettings = AppSettings.shared
+        container.register(AppSettings.self, instance: appSettings)
     }
     
     // MARK: - Camera Dependencies

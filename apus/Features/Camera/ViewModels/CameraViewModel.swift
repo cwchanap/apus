@@ -22,6 +22,9 @@ class CameraViewModel: ObservableObject {
     @Injected private var cameraManager: CameraManagerProtocol
     @Injected private var objectDetectionManager: ObjectDetectionProtocol
     
+    // MARK: - Settings
+    @ObservedObject private var appSettings = AppSettings.shared
+    
     // MARK: - Computed Properties
     var isShowingPreview: Binding<Bool> {
         Binding<Bool>(
@@ -31,7 +34,12 @@ class CameraViewModel: ObservableObject {
     }
     
     var detections: [Detection] {
-        objectDetectionManager.detections
+        // Only return detections if object detection is enabled
+        return appSettings.isObjectDetectionEnabled ? objectDetectionManager.detections : []
+    }
+    
+    var isObjectDetectionEnabled: Bool {
+        return appSettings.isObjectDetectionEnabled
     }
     
     // Expose concrete camera manager for UI components that need it
@@ -54,9 +62,10 @@ class CameraViewModel: ObservableObject {
     
     // MARK: - Private Methods
     private func setupBindings() {
-        // Set up object detection processing
+        // Set up object detection processing with settings check
         cameraManager.setObjectDetectionHandler { [weak self] pixelBuffer in
-            self?.objectDetectionManager.processFrame(pixelBuffer)
+            guard let self = self, self.appSettings.isObjectDetectionEnabled else { return }
+            self.objectDetectionManager.processFrame(pixelBuffer)
         }
     }
     
