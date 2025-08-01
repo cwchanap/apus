@@ -34,7 +34,8 @@ struct ImagePicker: UIViewControllerRepresentable {
         
         func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
             if let image = info[.originalImage] as? UIImage {
-                parent.selectedImage = image
+                // Normalize the image orientation and prepare it for consistent processing
+                parent.selectedImage = image.normalized()
             }
             parent.dismiss()
         }

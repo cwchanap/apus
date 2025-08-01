@@ -72,6 +72,7 @@ class DIContainer: DIContainerProtocol, ObservableObject {
         register(ObjectDetectionProtocol.self) { ObjectDetectionProvider() }
         register(ImageClassificationProtocol.self) { ImageClassificationProvider() }
         register(HapticServiceProtocol.self) { HapticService() }
+        register(ContourDetectionProtocol.self) { ContourDetectionProvider() }
         
         // Register services (will be implemented later)
         // register(PhotoLibraryServiceProtocol.self) { PhotoLibraryService() }

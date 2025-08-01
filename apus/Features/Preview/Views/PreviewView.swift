@@ -18,20 +18,50 @@ struct PreviewView: View {
     @State private var showingClassificationResults = false
     @State private var isClassifying = false
     @State private var showingHistory = false
+    @State private var detectedContours: [DetectedContour] = []
+    @State private var showingContours = false
+    @State private var isDetectingContours = false
+    @State private var cachedContours: [DetectedContour] = []
+    @State private var hasDetectedContours = false
+    
+    // Computed property for normalized display image
+    private var displayImage: UIImage? {
+        capturedImage?.preparedForDisplay()
+    }
+    
+    // Computed property for processing image
+    private var processingImage: UIImage? {
+        capturedImage?.preparedForProcessing()
+    }
     
     @Injected private var imageClassificationManager: ImageClassificationProtocol
     @Injected private var historyManager: ClassificationHistoryManager
     @Injected private var hapticService: HapticServiceProtocol
+    @Injected private var contourDetectionManager: ContourDetectionProtocol
 
     var body: some View {
         GeometryReader { geometry in
             VStack(spacing: 0) {
                 // Image display area with zoom/pan functionality - fixed height
                 ZStack {
-                    if let image = capturedImage {
+                    if let image = displayImage {
                         ZoomableImageView(image: image)
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                             .background(Color.black)
+                            .overlay(
+                                // Contour detection overlay
+                                Group {
+                                    if showingContours && !detectedContours.isEmpty {
+                                        GeometryReader { geometry in
+                                            ContourOverlayView(
+                                                contours: detectedContours,
+                                                imageSize: image.size,
+                                                displaySize: geometry.size
+                                            )
+                                        }
+                                    }
+                                }
+                            )
                     } else {
                         Rectangle()
                             .fill(Color.black)
@@ -71,61 +101,93 @@ struct PreviewView: View {
                 }
                 .frame(height: geometry.size.height - 120) // Reserve space for buttons
                 
-                // Action buttons in a single row - fixed height
-                HStack(spacing: 20) {
-                    // Classify button
-                    Button(action: {
-                        hapticService.actionFeedback()
-                        classifyImage()
-                    }) {
-                        HStack(spacing: 6) {
-                            if isClassifying {
-                                ProgressView()
-                                    .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                    .scaleEffect(0.8)
-                                Text("Classifying...")
-                            } else {
-                                Image(systemName: "brain.head.profile")
-                                Text("Classify")
+                // Action buttons in two rows - fixed height
+                VStack(spacing: 12) {
+                    // Top row: Analysis buttons
+                    HStack(spacing: 16) {
+                        // Classify button
+                        Button(action: {
+                            hapticService.actionFeedback()
+                            classifyImage()
+                        }) {
+                            HStack(spacing: 6) {
+                                if isClassifying {
+                                    ProgressView()
+                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                        .scaleEffect(0.8)
+                                    Text("Classifying...")
+                                } else {
+                                    Image(systemName: "brain.head.profile")
+                                    Text("Classify")
+                                }
                             }
-                        }
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 20)
-                        .padding(.vertical, 12)
-                        .background(Color.purple)
-                        .clipShape(Capsule())
-                    }
-                    .disabled(isClassifying)
-                    
-                    // Discard button
-                    Button(action: {
-                        hapticService.buttonTap()
-                        capturedImage = nil
-                    }) {
-                        Text("Discard")
-                            .font(.headline)
+                            .font(.subheadline)
                             .foregroundColor(.white)
-                            .padding(.horizontal, 20)
-                            .padding(.vertical, 12)
-                            .background(Color.black.opacity(0.7))
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 10)
+                            .background(Color.purple)
                             .clipShape(Capsule())
+                        }
+                        .disabled(isClassifying)
+                        
+                        // Contour detection button
+                        Button(action: {
+                            hapticService.actionFeedback()
+                            toggleContours()
+                        }) {
+                            HStack(spacing: 6) {
+                                if isDetectingContours {
+                                    ProgressView()
+                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                        .scaleEffect(0.8)
+                                    Text("Detecting...")
+                                } else {
+                                    Image(systemName: showingContours ? "eye.slash" : "eye")
+                                    Text(getContourButtonText())
+                                }
+                            }
+                            .font(.subheadline)
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 10)
+                            .background(getContourButtonColor())
+                            .clipShape(Capsule())
+                        }
+                        .disabled(isDetectingContours)
                     }
                     
-                    // Save button
-                    Button(action: {
-                        hapticService.actionFeedback()
-                        if let image = capturedImage {
-                            saveImageToPhotos(image)
+                    // Bottom row: Action buttons
+                    HStack(spacing: 20) {
+                        // Discard button
+                        Button(action: {
+                            hapticService.buttonTap()
+                            clearContourCache()
+                            capturedImage = nil
+                        }) {
+                            Text("Discard")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 20)
+                                .padding(.vertical, 12)
+                                .background(Color.black.opacity(0.7))
+                                .clipShape(Capsule())
                         }
-                    }) {
-                        Text("Save")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 20)
-                            .padding(.vertical, 12)
-                            .background(Color.blue)
-                            .clipShape(Capsule())
+                        
+                        // Save button
+                        Button(action: {
+                            hapticService.actionFeedback()
+                            if let image = capturedImage {
+                                saveImageToPhotos(image)
+                            }
+                        }) {
+                            Text("Save")
+                                .font(.headline)
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 20)
+                                .padding(.vertical, 12)
+                                .background(Color.blue)
+                                .clipShape(Capsule())
+                        }
                     }
                 }
                 .frame(height: 120) // Fixed height for button area
@@ -159,10 +221,16 @@ struct PreviewView: View {
         .sheet(isPresented: $showingHistory) {
             ClassificationHistoryView()
         }
+        .onChange(of: capturedImage) { oldValue, newValue in
+            // Clear contour cache when image changes
+            if oldValue != newValue {
+                clearContourCache()
+            }
+        }
     }
 
     private func classifyImage() {
-        guard let image = capturedImage else { return }
+        guard let image = processingImage else { return }
         
         isClassifying = true
         showingClassificationResults = false
@@ -178,8 +246,8 @@ struct PreviewView: View {
                     self.hapticService.success() // Success haptic feedback
                     
                     // Save to history if we have results and an image
-                    if !results.isEmpty, let image = self.capturedImage {
-                        let historyItem = ClassificationHistoryItem(results: results, image: image)
+                    if !results.isEmpty, let originalImage = self.capturedImage {
+                        let historyItem = ClassificationHistoryItem(results: results, image: originalImage)
                         Task { @MainActor in
                             self.historyManager.addHistoryItem(historyItem)
                         }
@@ -192,6 +260,88 @@ struct PreviewView: View {
                 }
             }
         }
+    }
+    
+    private func toggleContours() {
+        guard let _ = capturedImage else { return }
+        
+        if showingContours {
+            // Hide contours - keep them cached
+            withAnimation(.easeInOut(duration: 0.3)) {
+                showingContours = false
+            }
+            hapticService.buttonTap()
+            return
+        }
+        
+        // Check if we have cached contours for quick show
+        if hasDetectedContours && !cachedContours.isEmpty {
+            // Use cached contours for instant display
+            detectedContours = cachedContours
+            withAnimation(.easeInOut(duration: 0.3)) {
+                showingContours = true
+            }
+            hapticService.buttonTap()
+            return
+        }
+        
+        // No cached contours - perform detection
+        detectContours()
+    }
+    
+    private func detectContours() {
+        guard let image = processingImage else { return }
+        
+        isDetectingContours = true
+        
+        contourDetectionManager.detectContours(in: image) { result in
+            DispatchQueue.main.async {
+                self.isDetectingContours = false
+                
+                switch result {
+                case .success(let contours):
+                    self.detectedContours = contours
+                    self.cachedContours = contours // Cache the results
+                    self.hasDetectedContours = true
+                    withAnimation(.easeInOut(duration: 0.5)) {
+                        self.showingContours = true
+                    }
+                    self.hapticService.success() // Success haptic feedback
+                    
+                case .failure(let error):
+                    self.alertMessage = "Contour detection failed: \(error.localizedDescription)"
+                    self.showingAlert = true
+                    self.hapticService.error() // Error haptic feedback
+                }
+            }
+        }
+    }
+    
+    private func getContourButtonText() -> String {
+        if showingContours {
+            return "Hide Contours"
+        } else if hasDetectedContours {
+            return "Show Contours"
+        } else {
+            return "Detect Contours"
+        }
+    }
+    
+    private func getContourButtonColor() -> Color {
+        if showingContours {
+            return .orange  // Orange when showing
+        } else if hasDetectedContours {
+            return .blue    // Blue when cached (quick show)
+        } else {
+            return .green   // Green when needs detection
+        }
+    }
+    
+    private func clearContourCache() {
+        cachedContours = []
+        detectedContours = []
+        hasDetectedContours = false
+        showingContours = false
     }
     
     private func saveImageToPhotos(_ image: UIImage) {

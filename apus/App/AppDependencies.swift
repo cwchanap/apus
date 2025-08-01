@@ -64,6 +64,10 @@ class AppDependencies: ObservableObject {
         // Register haptic service as singleton instance
         let hapticService = HapticService()
         container.register(HapticServiceProtocol.self, instance: hapticService)
+        
+        // Register contour detection manager as singleton instance
+        let contourDetectionManager = ContourDetectionProvider()
+        container.register(ContourDetectionProtocol.self, instance: contourDetectionManager)
     }
     
     // MARK: - Service Dependencies
@@ -104,6 +108,10 @@ class AppDependencies: ObservableObject {
         
         container.register(HapticServiceProtocol.self) {
             MockHapticService() as any HapticServiceProtocol
+        }
+        
+        container.register(ContourDetectionProtocol.self) {
+            MockContourDetectionManager() as any ContourDetectionProtocol
         }
         
         // Register mock services
