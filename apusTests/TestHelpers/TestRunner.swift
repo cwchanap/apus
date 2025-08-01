@@ -21,8 +21,7 @@ class TestRunner {
         testSuite.addTest(ErrorServiceTests.defaultTestSuite)
         
         // Run the tests
-        let testRun = XCTestSuiteRun(test: testSuite)
-        testSuite.run(testRun)
+        testSuite.run()
     }
     
     /// Run all ViewModel tests
@@ -33,8 +32,7 @@ class TestRunner {
         testSuite.addTest(CameraViewModelTests.defaultTestSuite)
         
         // Run the tests
-        let testRun = XCTestSuiteRun(test: testSuite)
-        testSuite.run(testRun)
+        testSuite.run()
     }
     
     /// Run all dependency injection tests
@@ -45,8 +43,7 @@ class TestRunner {
         testSuite.addTest(DIContainerTests.defaultTestSuite)
         
         // Run the tests
-        let testRun = XCTestSuiteRun(test: testSuite)
-        testSuite.run(testRun)
+        testSuite.run()
     }
     
     /// Setup test environment with clean dependencies

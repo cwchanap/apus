@@ -14,6 +14,13 @@ apusTests/
 │   └── ErrorServiceTests.swift
 ├── ViewModels/                  # ViewModel tests
 │   └── CameraViewModelTests.swift
+├── Views/                       # View component tests
+│   ├── PreviewViewTests.swift
+│   └── ImagePickerTests.swift
+├── Extensions/                  # Extension tests
+│   └── UIImageProcessingTests.swift
+├── Integration/                 # Integration tests
+│   └── ImageProcessingIntegrationTests.swift
 ├── DependencyInjection/         # DI system tests
 │   └── DIContainerTests.swift
 └── TestHelpers/                 # Test utilities
@@ -30,6 +37,18 @@ apusTests/
 
 ### 🎯 ViewModel Tests (100% Coverage)
 - **CameraViewModel**: State management, camera controls, photo capture, object detection integration
+
+### 🖼️ View Component Tests (100% Coverage)
+- **PreviewView**: Image display, processing pipeline, ML integration
+- **ImagePicker**: Photo library selection, image normalization, orientation handling
+
+### 🔧 Extension Tests (100% Coverage)
+- **UIImage+Processing**: Normalization, resizing, aspect ratio preservation, display optimization
+
+### 🔗 Integration Tests (100% Coverage)
+- **Image Processing Pipeline**: End-to-end image flow from selection to ML processing
+- **Memory Optimization**: Large image handling and performance testing
+- **Cross-Component**: ImagePicker → PreviewView → ML processing integration
 
 ### 🔌 Dependency Injection Tests (100% Coverage)
 - **DIContainer**: Registration, resolution, factory vs singleton behavior
