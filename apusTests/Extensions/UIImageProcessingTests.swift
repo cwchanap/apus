@@ -153,9 +153,23 @@ class UIImageProcessingTests: XCTestCase {
         
         // Then
         XCTAssertEqual(processedImage.imageOrientation, .up)
-        // Should maintain aspect ratio within target size
-        XCTAssertEqual(processedImage.size.width, 224)
-        XCTAssertEqual(processedImage.size.height, 112) // Maintains 2:1 ratio
+        
+        // Verify aspect ratio is maintained (most important test)
+        let originalAspectRatio = landscapeImage.size.width / landscapeImage.size.height
+        let processedAspectRatio = processedImage.size.width / processedImage.size.height
+        XCTAssertEqual(originalAspectRatio, processedAspectRatio, accuracy: 0.01, "Aspect ratio should be preserved")
+        
+        // Verify image fits within target bounds
+        XCTAssertLessThanOrEqual(processedImage.size.width, targetSize.width, "Width should not exceed target")
+        XCTAssertLessThanOrEqual(processedImage.size.height, targetSize.height, "Height should not exceed target")
+        
+        // Verify at least one dimension uses the full target size (efficient scaling)
+        let usesFullWidth = abs(processedImage.size.width - targetSize.width) < 1.0
+        let usesFullHeight = abs(processedImage.size.height - targetSize.height) < 1.0
+        XCTAssertTrue(usesFullWidth || usesFullHeight, "Should use full available space in at least one dimension")
+        
+        // Verify the image was actually resized (not just normalized)
+        XCTAssertNotEqual(processedImage.size, landscapeImage.size, "Image should be resized when target size is specified")
     }
     
     // MARK: - Display Preparation Tests
