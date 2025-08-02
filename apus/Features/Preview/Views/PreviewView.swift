@@ -17,6 +17,8 @@ struct PreviewView: View {
     @State private var classificationResults: [ClassificationResult] = []
     @State private var showingClassificationResults = false
     @State private var isClassifying = false
+    @State private var cachedClassificationResults: [ClassificationResult] = []
+    @State private var hasClassificationResults = false
     @State private var showingHistory = false
     @State private var detectedContours: [DetectedContour] = []
     @State private var showingContours = false
@@ -126,7 +128,7 @@ struct PreviewView: View {
                         // Classify button
                         Button(action: {
                             hapticService.actionFeedback()
-                            classifyImage()
+                            toggleClassification()
                         }) {
                             HStack(spacing: 4) {
                                 if isClassifying {
@@ -136,16 +138,16 @@ struct PreviewView: View {
                                     Text("Classifying...")
                                         .font(.caption)
                                 } else {
-                                    Image(systemName: "brain.head.profile")
+                                    Image(systemName: showingClassificationResults ? "brain.head.profile.fill" : "brain.head.profile")
                                         .font(.caption)
-                                    Text("Classify")
+                                    Text(getClassificationButtonText())
                                         .font(.caption)
                                 }
                             }
                             .foregroundColor(.white)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 8)
-                            .background(Color.purple)
+                            .background(getClassificationButtonColor())
                             .clipShape(Capsule())
                         }
                         .disabled(isClassifying)
@@ -291,7 +293,11 @@ struct PreviewView: View {
                 switch result {
                 case .success(let results):
                     self.classificationResults = results
-                    self.showingClassificationResults = true
+                    self.cachedClassificationResults = results // Cache the results
+                    self.hasClassificationResults = true
+                    withAnimation(.easeInOut(duration: 0.5)) {
+                        self.showingClassificationResults = true
+                    }
                     self.hapticService.success() // Success haptic feedback
                     
                     // Save to history if we have results and an image
@@ -475,7 +481,62 @@ struct PreviewView: View {
         showingObjects = false
     }
     
+    private func toggleClassification() {
+        guard let _ = capturedImage else { return }
+        
+        if showingClassificationResults {
+            // Hide classification results - keep them cached
+            withAnimation(.easeInOut(duration: 0.3)) {
+                showingClassificationResults = false
+            }
+            hapticService.buttonTap()
+            return
+        }
+        
+        // Check if we have cached results for quick show
+        if hasClassificationResults && !cachedClassificationResults.isEmpty {
+            // Use cached results for instant display
+            classificationResults = cachedClassificationResults
+            withAnimation(.easeInOut(duration: 0.3)) {
+                showingClassificationResults = true
+            }
+            hapticService.buttonTap()
+            return
+        }
+        
+        // No cached results - perform classification
+        classifyImage()
+    }
+    
+    private func getClassificationButtonText() -> String {
+        if showingClassificationResults {
+            return "Hide Results"
+        } else if hasClassificationResults {
+            return "Show Results"
+        } else {
+            return "Classify"
+        }
+    }
+    
+    private func getClassificationButtonColor() -> Color {
+        if showingClassificationResults {
+            return .indigo   // Indigo when showing
+        } else if hasClassificationResults {
+            return .blue     // Blue when cached (quick show)
+        } else {
+            return .purple   // Purple when needs classification
+        }
+    }
+    
+    private func clearClassificationCache() {
+        cachedClassificationResults = []
+        classificationResults = []
+        hasClassificationResults = false
+        showingClassificationResults = false
+    }
+    
     private func clearAllCaches() {
+        clearClassificationCache()
         clearContourCache()
         clearObjectCache()
     }
