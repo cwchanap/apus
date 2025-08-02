@@ -23,6 +23,11 @@ struct PreviewView: View {
     @State private var isDetectingContours = false
     @State private var cachedContours: [DetectedContour] = []
     @State private var hasDetectedContours = false
+    @State private var detectedObjects: [VisionDetection] = []
+    @State private var showingObjects = false
+    @State private var isDetectingObjects = false
+    @State private var cachedObjects: [VisionDetection] = []
+    @State private var hasDetectedObjects = false
     
     // Computed property for normalized display image
     private var displayImage: UIImage? {
@@ -38,6 +43,7 @@ struct PreviewView: View {
     @Injected private var historyManager: ClassificationHistoryManager
     @Injected private var hapticService: HapticServiceProtocol
     @Injected private var contourDetectionManager: ContourDetectionProtocol
+    @Injected private var visionObjectDetectionManager: VisionObjectDetectionProtocol
 
     var body: some View {
         GeometryReader { geometry in
@@ -49,15 +55,27 @@ struct PreviewView: View {
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                             .background(Color.black)
                             .overlay(
-                                // Contour detection overlay
+                                // Overlays for detection results
                                 Group {
-                                    if showingContours && !detectedContours.isEmpty {
-                                        GeometryReader { geometry in
-                                            ContourOverlayView(
-                                                contours: detectedContours,
-                                                imageSize: image.size,
-                                                displaySize: geometry.size
-                                            )
+                                    GeometryReader { geometry in
+                                        ZStack {
+                                            // Contour detection overlay
+                                            if showingContours && !detectedContours.isEmpty {
+                                                ContourOverlayView(
+                                                    contours: detectedContours,
+                                                    imageSize: image.size,
+                                                    displaySize: geometry.size
+                                                )
+                                            }
+                                            
+                                            // Object detection overlay
+                                            if showingObjects && !detectedObjects.isEmpty {
+                                                VisionObjectDetectionOverlay(
+                                                    detections: detectedObjects,
+                                                    imageSize: image.size,
+                                                    displaySize: geometry.size
+                                                )
+                                            }
                                         }
                                     }
                                 }
@@ -104,52 +122,83 @@ struct PreviewView: View {
                 // Action buttons in two rows - fixed height
                 VStack(spacing: 12) {
                     // Top row: Analysis buttons
-                    HStack(spacing: 16) {
+                    HStack(spacing: 12) {
                         // Classify button
                         Button(action: {
                             hapticService.actionFeedback()
                             classifyImage()
                         }) {
-                            HStack(spacing: 6) {
+                            HStack(spacing: 4) {
                                 if isClassifying {
                                     ProgressView()
                                         .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                        .scaleEffect(0.8)
+                                        .scaleEffect(0.7)
                                     Text("Classifying...")
+                                        .font(.caption)
                                 } else {
                                     Image(systemName: "brain.head.profile")
+                                        .font(.caption)
                                     Text("Classify")
+                                        .font(.caption)
                                 }
                             }
-                            .font(.subheadline)
                             .foregroundColor(.white)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 10)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
                             .background(Color.purple)
                             .clipShape(Capsule())
                         }
                         .disabled(isClassifying)
+                        
+                        // Object detection button
+                        Button(action: {
+                            hapticService.actionFeedback()
+                            toggleObjects()
+                        }) {
+                            HStack(spacing: 4) {
+                                if isDetectingObjects {
+                                    ProgressView()
+                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                        .scaleEffect(0.7)
+                                    Text("Detecting...")
+                                        .font(.caption)
+                                } else {
+                                    Image(systemName: showingObjects ? "viewfinder.circle.fill" : "viewfinder.circle")
+                                        .font(.caption)
+                                    Text(getObjectButtonText())
+                                        .font(.caption)
+                                }
+                            }
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(getObjectButtonColor())
+                            .clipShape(Capsule())
+                        }
+                        .disabled(isDetectingObjects)
                         
                         // Contour detection button
                         Button(action: {
                             hapticService.actionFeedback()
                             toggleContours()
                         }) {
-                            HStack(spacing: 6) {
+                            HStack(spacing: 4) {
                                 if isDetectingContours {
                                     ProgressView()
                                         .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                        .scaleEffect(0.8)
+                                        .scaleEffect(0.7)
                                     Text("Detecting...")
+                                        .font(.caption)
                                 } else {
                                     Image(systemName: showingContours ? "eye.slash" : "eye")
+                                        .font(.caption)
                                     Text(getContourButtonText())
+                                        .font(.caption)
                                 }
                             }
-                            .font(.subheadline)
                             .foregroundColor(.white)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 10)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
                             .background(getContourButtonColor())
                             .clipShape(Capsule())
                         }
@@ -161,7 +210,7 @@ struct PreviewView: View {
                         // Discard button
                         Button(action: {
                             hapticService.buttonTap()
-                            clearContourCache()
+                            clearAllCaches()
                             capturedImage = nil
                         }) {
                             Text("Discard")
@@ -222,9 +271,9 @@ struct PreviewView: View {
             ClassificationHistoryView()
         }
         .onChange(of: capturedImage) { oldValue, newValue in
-            // Clear contour cache when image changes
+            // Clear all caches when image changes
             if oldValue != newValue {
-                clearContourCache()
+                clearAllCaches()
             }
         }
     }
@@ -337,11 +386,98 @@ struct PreviewView: View {
         }
     }
     
+    private func toggleObjects() {
+        guard let _ = capturedImage else { return }
+        
+        if showingObjects {
+            // Hide objects - keep them cached
+            withAnimation(.easeInOut(duration: 0.3)) {
+                showingObjects = false
+            }
+            hapticService.buttonTap()
+            return
+        }
+        
+        // Check if we have cached objects for quick show
+        if hasDetectedObjects && !cachedObjects.isEmpty {
+            // Use cached objects for instant display
+            detectedObjects = cachedObjects
+            withAnimation(.easeInOut(duration: 0.3)) {
+                showingObjects = true
+            }
+            hapticService.buttonTap()
+            return
+        }
+        
+        // No cached objects - perform detection
+        detectObjects()
+    }
+    
+    private func detectObjects() {
+        guard let image = processingImage else { return }
+        
+        isDetectingObjects = true
+        
+        visionObjectDetectionManager.detectObjects(in: image) { result in
+            DispatchQueue.main.async {
+                self.isDetectingObjects = false
+                
+                switch result {
+                case .success(let objects):
+                    self.detectedObjects = objects
+                    self.cachedObjects = objects // Cache the results
+                    self.hasDetectedObjects = true
+                    withAnimation(.easeInOut(duration: 0.5)) {
+                        self.showingObjects = true
+                    }
+                    self.hapticService.success() // Success haptic feedback
+                    
+                case .failure(let error):
+                    self.alertMessage = "Object detection failed: \(error.localizedDescription)"
+                    self.showingAlert = true
+                    self.hapticService.error() // Error haptic feedback
+                }
+            }
+        }
+    }
+    
+    private func getObjectButtonText() -> String {
+        if showingObjects {
+            return "Hide Objects"
+        } else if hasDetectedObjects {
+            return "Show Objects"
+        } else {
+            return "Detect Objects"
+        }
+    }
+    
+    private func getObjectButtonColor() -> Color {
+        if showingObjects {
+            return .red      // Red when showing
+        } else if hasDetectedObjects {
+            return .blue     // Blue when cached (quick show)
+        } else {
+            return .teal     // Teal when needs detection
+        }
+    }
+    
     private func clearContourCache() {
         cachedContours = []
         detectedContours = []
         hasDetectedContours = false
         showingContours = false
+    }
+    
+    private func clearObjectCache() {
+        cachedObjects = []
+        detectedObjects = []
+        hasDetectedObjects = false
+        showingObjects = false
+    }
+    
+    private func clearAllCaches() {
+        clearContourCache()
+        clearObjectCache()
     }
     
     private func saveImageToPhotos(_ image: UIImage) {

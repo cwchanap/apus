@@ -68,6 +68,10 @@ class AppDependencies: ObservableObject {
         // Register contour detection manager as singleton instance
         let contourDetectionManager = ContourDetectionProvider()
         container.register(ContourDetectionProtocol.self, instance: contourDetectionManager)
+        
+        // Register vision object detection manager as singleton instance
+        let visionObjectDetectionManager = VisionObjectDetectionProvider()
+        container.register(VisionObjectDetectionProtocol.self, instance: visionObjectDetectionManager)
     }
     
     // MARK: - Service Dependencies
@@ -112,6 +116,10 @@ class AppDependencies: ObservableObject {
         
         container.register(ContourDetectionProtocol.self) {
             MockContourDetectionManager() as any ContourDetectionProtocol
+        }
+        
+        container.register(VisionObjectDetectionProtocol.self) {
+            MockVisionObjectDetectionManager() as any VisionObjectDetectionProtocol
         }
         
         // Register mock services
