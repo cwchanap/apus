@@ -44,9 +44,9 @@ class ImageClassificationManager: ObservableObject, ImageClassificationProtocol 
                     return
                 }
                 
-                // Get top 5 results with confidence > 0.1
+                // Get top 5 results with confidence > 0.05 for more variety
                 let results = observations
-                    .filter { $0.confidence > 0.1 }
+                    .filter { $0.confidence > 0.05 }
                     .prefix(5)
                     .map { ClassificationResult(identifier: $0.identifier, confidence: $0.confidence) }
                 
@@ -56,7 +56,9 @@ class ImageClassificationManager: ObservableObject, ImageClassificationProtocol 
             }
         }
         
-        let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+        // Handle image orientation properly for better classification
+        let orientation = CGImagePropertyOrientation(image.imageOrientation)
+        let handler = VNImageRequestHandler(cgImage: cgImage, orientation: orientation, options: [:])
         
         DispatchQueue.global(qos: .userInitiated).async {
             do {
@@ -85,6 +87,23 @@ enum ClassificationError: Error, LocalizedError {
             return "Invalid image for classification"
         case .processingFailed:
             return "Image classification processing failed"
+        }
+    }
+}
+
+// MARK: - CGImagePropertyOrientation Extension
+extension CGImagePropertyOrientation {
+    init(_ uiOrientation: UIImage.Orientation) {
+        switch uiOrientation {
+        case .up: self = .up
+        case .upMirrored: self = .upMirrored
+        case .down: self = .down
+        case .downMirrored: self = .downMirrored
+        case .left: self = .left
+        case .leftMirrored: self = .leftMirrored
+        case .right: self = .right
+        case .rightMirrored: self = .rightMirrored
+        @unknown default: self = .up
         }
     }
 }
