@@ -46,11 +46,13 @@ class ContourDetectionManager: ObservableObject, ContourDetectionProtocol {
         }
         
         // Configure for edge/contour detection
-        request.contrastAdjustment = 2.0  // Higher contrast for better edge detection
+        request.contrastAdjustment = 1.5  // Moderate contrast adjustment
         request.detectsDarkOnLight = true
-        request.maximumImageDimension = 512  // Lower resolution for more contours
+        request.maximumImageDimension = 1024  // Higher resolution for better accuracy
         
-        let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
+        // Handle image orientation properly
+        let orientation = CGImagePropertyOrientation(image.imageOrientation)
+        let handler = VNImageRequestHandler(cgImage: cgImage, orientation: orientation, options: [:])
         
         DispatchQueue.global(qos: .userInitiated).async {
             do {
@@ -75,15 +77,18 @@ class ContourDetectionManager: ObservableObject, ContourDetectionProtocol {
                 // Convert contour points to normalized coordinates
                 let normalizedPoints = contour.normalizedPoints
                 
-                // Accept contours with fewer points for edge detection
-                guard normalizedPoints.count >= 2 else { continue }
+                // Filter out contours with too few points
+                guard normalizedPoints.count >= 3 else { continue }
                 
                 // Calculate bounding box
                 let boundingBox = calculateBoundingBox(for: normalizedPoints)
                 
-                // Accept smaller contours for detailed edge detection (0.1% of image area)
+                // Filter by minimum size (0.5% of image area)
                 let area = boundingBox.width * boundingBox.height
-                guard area > 0.001 else { continue }
+                guard area > 0.005 else { continue }
+                
+                // Filter by confidence
+                guard observation.confidence > 0.3 else { continue }
                 
                 // Calculate aspect ratio
                 let aspectRatio = boundingBox.width / boundingBox.height
@@ -101,8 +106,10 @@ class ContourDetectionManager: ObservableObject, ContourDetectionProtocol {
             }
         }
         
-        // Sort by area and return more contours for detailed edge highlighting
-        return Array(detectedContours.sorted { $0.area > $1.area }.prefix(50))
+        // Sort by confidence and area, return top contours
+        return Array(detectedContours
+            .sorted { $0.confidence > $1.confidence }
+            .prefix(20))
     }
     
     private func getAllContours(from observation: VNContoursObservation) -> [VNContour] {
@@ -160,6 +167,23 @@ enum ContourDetectionError: Error, LocalizedError {
             return "Contour detection processing failed"
         case .noContoursFound:
             return "No contours found in the image"
+        }
+    }
+}
+
+// MARK: - CGImagePropertyOrientation Extension
+extension CGImagePropertyOrientation {
+    init(_ uiOrientation: UIImage.Orientation) {
+        switch uiOrientation {
+        case .up: self = .up
+        case .upMirrored: self = .upMirrored
+        case .down: self = .down
+        case .downMirrored: self = .downMirrored
+        case .left: self = .left
+        case .leftMirrored: self = .leftMirrored
+        case .right: self = .right
+        case .rightMirrored: self = .rightMirrored
+        @unknown default: self = .up
         }
     }
 }

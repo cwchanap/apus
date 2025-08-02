@@ -39,76 +39,98 @@ struct ContourEdgePath: View {
     let opacity: Double
     
     private var scaledPoints: [CGPoint] {
-        contour.points.map { point in
-            CGPoint(
-                x: point.x * displaySize.width,
-                y: (1 - point.y) * displaySize.height // Flip Y coordinate
+        contour.points.map { visionPoint in
+            // Step 1: Convert from Vision coordinates (bottom-left origin) to top-left origin
+            let flippedY = 1.0 - visionPoint.y
+            
+            // Step 2: Calculate how the image is actually displayed within the view bounds
+            let (imageDisplaySize, imageOffset) = calculateImageDisplayBounds()
+            
+            // Step 3: Scale to actual image display area
+            let scaledX = visionPoint.x * imageDisplaySize.width + imageOffset.x
+            let scaledY = flippedY * imageDisplaySize.height + imageOffset.y
+            
+            return CGPoint(x: scaledX, y: scaledY)
+        }
+    }
+    
+    // Calculate how the image is actually displayed within the view bounds
+    private func calculateImageDisplayBounds() -> (size: CGSize, offset: CGPoint) {
+        let imageAspectRatio = imageSize.width / imageSize.height
+        let displayAspectRatio = displaySize.width / displaySize.height
+        
+        var imageDisplaySize: CGSize
+        var imageOffset: CGPoint
+        
+        if imageAspectRatio > displayAspectRatio {
+            // Image is wider - fit to width
+            imageDisplaySize = CGSize(
+                width: displaySize.width,
+                height: displaySize.width / imageAspectRatio
+            )
+            imageOffset = CGPoint(
+                x: 0,
+                y: (displaySize.height - imageDisplaySize.height) / 2
+            )
+        } else {
+            // Image is taller - fit to height
+            imageDisplaySize = CGSize(
+                width: displaySize.height * imageAspectRatio,
+                height: displaySize.height
+            )
+            imageOffset = CGPoint(
+                x: (displaySize.width - imageDisplaySize.width) / 2,
+                y: 0
             )
         }
+        
+        return (imageDisplaySize, imageOffset)
     }
     
     private var edgePath: Path {
         var path = Path()
         guard scaledPoints.count >= 2 else { return path }
         
-        // Create smooth curves for edge highlighting
-        if scaledPoints.count == 2 {
-            // Simple line for 2 points
-            path.move(to: scaledPoints[0])
-            path.addLine(to: scaledPoints[1])
-        } else {
-            // Smooth curve for multiple points
-            path.move(to: scaledPoints[0])
-            
-            for i in 1..<scaledPoints.count {
-                let currentPoint = scaledPoints[i]
-                
-                if i == scaledPoints.count - 1 {
-                    // Last point - close the path if it's a closed contour
-                    if scaledPoints.count > 3 {
-                        path.addLine(to: currentPoint)
-                        path.closeSubpath()
-                    } else {
-                        path.addLine(to: currentPoint)
-                    }
-                } else {
-                    // Add smooth curve to next point
-                    path.addLine(to: currentPoint)
-                }
-            }
+        path.move(to: scaledPoints[0])
+        
+        for i in 1..<scaledPoints.count {
+            path.addLine(to: scaledPoints[i])
+        }
+        
+        // Close path if it's a significant contour with enough points
+        if scaledPoints.count > 3 && contour.area > 0.01 {
+            path.closeSubpath()
         }
         
         return path
     }
     
     private var edgeColor: Color {
-        // Use different colors based on contour size for better visibility
-        if contour.area > 0.1 {
-            return .cyan  // Large contours in cyan
-        } else if contour.area > 0.05 {
-            return .green  // Medium contours in green
-        } else if contour.area > 0.01 {
-            return .yellow  // Small contours in yellow
-        } else {
-            return .red  // Very small contours in red
+        // Use colors based on contour type for better identification
+        switch contour.contourType {
+        case .document:
+            return .blue
+        case .rectangle:
+            return .green
+        case .square:
+            return .orange
+        case .complex:
+            return .purple
+        case .simple:
+            return .red
         }
     }
     
     private var lineWidth: CGFloat {
-        // Vary line width based on contour size
-        if contour.area > 0.1 {
-            return 2.5
-        } else if contour.area > 0.05 {
-            return 2.0
-        } else if contour.area > 0.01 {
-            return 1.5
-        } else {
-            return 1.0
-        }
+        // Vary line width based on contour confidence and size
+        let baseWidth: CGFloat = 1.5
+        let confidenceMultiplier = CGFloat(contour.confidence)
+        let sizeMultiplier = contour.area > 0.1 ? 1.5 : 1.0
+        
+        return baseWidth * confidenceMultiplier * sizeMultiplier
     }
     
     var body: some View {
-        // Edge highlighting - no fills, just outlines
         edgePath
             .stroke(
                 edgeColor,
@@ -119,7 +141,7 @@ struct ContourEdgePath: View {
                 )
             )
             .opacity(opacity)
-            .shadow(color: .black.opacity(0.3), radius: 0.5)
+            .shadow(color: .black.opacity(0.3), radius: 1)
     }
 }
 
