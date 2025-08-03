@@ -18,15 +18,54 @@ class TensorFlowLiteObjectDetectionManager: ObservableObject, UnifiedObjectDetec
     private var interpreter: Interpreter?
     private var labels: [String] = []
     
+    private var isModelLoaded = false
+    private var isModelLoading = false
+    private let modelLoadingQueue = DispatchQueue(label: "com.apus.tensorflow.modelLoading", qos: .userInitiated)
+    
     init() {
-        setupModel()
+        // Don't load model immediately - do it lazily when first needed
     }
     
-    private func setupModel() {
+    private func ensureModelLoaded(completion: @escaping (Bool) -> Void) {
+        // If already loaded, return immediately
+        if isModelLoaded {
+            completion(true)
+            return
+        }
+        
+        // If currently loading, wait for completion
+        if isModelLoading {
+            modelLoadingQueue.async {
+                // Wait for loading to complete
+                while self.isModelLoading {
+                    Thread.sleep(forTimeInterval: 0.1)
+                }
+                DispatchQueue.main.async {
+                    completion(self.isModelLoaded)
+                }
+            }
+            return
+        }
+        
+        // Start loading
+        isModelLoading = true
+        
+        modelLoadingQueue.async {
+            let success = self.setupModel()
+            
+            DispatchQueue.main.async {
+                self.isModelLoading = false
+                self.isModelLoaded = success
+                completion(success)
+            }
+        }
+    }
+    
+    private func setupModel() -> Bool {
         guard let modelPath = Bundle.main.path(forResource: "efficientdet_lite0", ofType: "tflite"),
               let labelsPath = Bundle.main.path(forResource: "coco_labels", ofType: "txt") else {
             print("Failed to load TensorFlow Lite model or labels")
-            return
+            return false
         }
         
         do {
@@ -39,49 +78,62 @@ class TensorFlowLiteObjectDetectionManager: ObservableObject, UnifiedObjectDetec
             try interpreter?.allocateTensors()
             
             print("TensorFlow Lite model loaded successfully with \(labels.count) labels")
+            return true
         } catch {
             print("Failed to initialize TensorFlow Lite: \(error)")
+            return false
         }
     }
     
     func detectObjects(in image: UIImage, completion: @escaping (Result<[DetectedObject], Error>) -> Void) {
-        guard let interpreter = interpreter else {
-            completion(.failure(TensorFlowLiteError.modelNotLoaded))
-            return
-        }
-        
         DispatchQueue.main.async {
             self.isDetecting = true
         }
         
-        DispatchQueue.global(qos: .userInitiated).async {
-            do {
-                // Preprocess image
-                guard let inputData = self.preprocessImage(image) else {
+        // Ensure model is loaded before proceeding
+        ensureModelLoaded { [weak self] success in
+            guard let self = self else { 
+                completion(.failure(TensorFlowLiteError.modelNotLoaded))
+                return 
+            }
+            
+            guard success, let interpreter = self.interpreter else {
+                DispatchQueue.main.async {
+                    self.isDetecting = false
+                }
+                completion(.failure(TensorFlowLiteError.modelNotLoaded))
+                return
+            }
+            
+            DispatchQueue.global(qos: .userInitiated).async {
+                do {
+                    // Preprocess image
+                    guard let inputData = self.preprocessImage(image) else {
+                        DispatchQueue.main.async {
+                            self.isDetecting = false
+                            completion(.failure(TensorFlowLiteError.imagePreprocessingFailed))
+                        }
+                        return
+                    }
+                    
+                    // Run inference
+                    try interpreter.copy(inputData, toInputAt: 0)
+                    try interpreter.invoke()
+                    
+                    // Get outputs
+                    let detections = try self.processOutputs(interpreter: interpreter, originalImageSize: image.size)
+                    
                     DispatchQueue.main.async {
                         self.isDetecting = false
-                        completion(.failure(TensorFlowLiteError.imagePreprocessingFailed))
+                        self.lastDetectedObjects = detections
+                        completion(.success(detections))
                     }
-                    return
-                }
-                
-                // Run inference
-                try interpreter.copy(inputData, toInputAt: 0)
-                try interpreter.invoke()
-                
-                // Get outputs
-                let detections = try self.processOutputs(interpreter: interpreter, originalImageSize: image.size)
-                
-                DispatchQueue.main.async {
-                    self.isDetecting = false
-                    self.lastDetectedObjects = detections
-                    completion(.success(detections))
-                }
-                
-            } catch {
-                DispatchQueue.main.async {
-                    self.isDetecting = false
-                    completion(.failure(error))
+                    
+                } catch {
+                    DispatchQueue.main.async {
+                        self.isDetecting = false
+                        completion(.failure(error))
+                    }
                 }
             }
         }

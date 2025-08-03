@@ -34,12 +34,12 @@ class CameraViewModel: ObservableObject {
     }
     
     var detections: [Detection] {
-        // Only return detections if object detection is enabled
-        return appSettings.isObjectDetectionEnabled ? objectDetectionManager.detections : []
+        // Only return detections if real-time object detection is enabled
+        return appSettings.isRealTimeObjectDetectionEnabled ? objectDetectionManager.detections : []
     }
     
-    var isObjectDetectionEnabled: Bool {
-        return appSettings.isObjectDetectionEnabled
+    var isRealTimeObjectDetectionEnabled: Bool {
+        return appSettings.isRealTimeObjectDetectionEnabled
     }
     
     // Expose concrete camera manager for UI components that need it
@@ -64,7 +64,7 @@ class CameraViewModel: ObservableObject {
     private func setupBindings() {
         // Set up object detection processing with settings check
         cameraManager.setObjectDetectionHandler { [weak self] pixelBuffer in
-            guard let self = self, self.appSettings.isObjectDetectionEnabled else { return }
+            guard let self = self, self.appSettings.isRealTimeObjectDetectionEnabled else { return }
             self.objectDetectionManager.processFrame(pixelBuffer)
         }
     }

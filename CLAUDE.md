@@ -4,54 +4,88 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a SwiftUI iOS camera application named "apus" that provides full camera functionality with navigation between camera and settings views. The app features comprehensive camera controls, photo capture, gallery access, and uses SwiftData for data persistence.
+This is a SwiftUI iOS camera application named "apus" that provides full camera functionality with advanced computer vision capabilities. The app features comprehensive camera controls, photo capture, gallery access, real-time object detection, image classification, contour detection, and uses SwiftData for data persistence. Built with a modular architecture using dependency injection for high testability and maintainability.
 
 ## Architecture
 
-- **App Entry Point**: `apusApp.swift` - Contains the main app structure with SwiftData ModelContainer setup
+### Core Architecture Components
+- **App Entry Point**: `apusApp.swift` - SwiftData ModelContainer setup with forced dark mode and hidden status bar
+- **Dependency Injection**: `DIContainer.swift` - Complete DI system with protocol-based dependencies, property wrappers (@Injected, @OptionalInjected), and testing support
 - **Root Navigation**: `ContentView.swift` - Navigation view with hamburger menu switching between Home and Settings
-- **Camera Implementation**: `CameraView.swift` - Full-featured camera with AVFoundation integration, capture, gallery access, and camera switching
-- **Settings View**: `SettingsView.swift` - Placeholder for app settings and preferences
-- **Data Model**: `Item.swift` - SwiftData model for timestamped items
-- **Permissions**: `Info.plist` - Contains camera and photo library usage descriptions
+- **Service Layer**: Modular services (CameraManager, PhotoLibraryService, PermissionService, ErrorService, HapticService)
+
+### Feature Modules
+- **Camera Module**: `CameraView.swift`, `CameraViewModel.swift`, `CameraManager.swift` - Full AVFoundation integration with state management
+- **Object Detection Module**: Multiple detection systems (TensorFlow Lite, Vision framework, unified detection)
+- **Image Classification Module**: ML-powered image analysis with classification history
+- **Preview Module**: `PreviewView.swift` with zoomable image display and processing pipeline
+- **Settings Module**: `SettingsView.swift` with app configuration and preferences
+
+### Data Layer
+- **Models**: `Item.swift` (SwiftData), `AppSettings.swift`, `ClassificationHistory.swift`
+- **Extensions**: `UIImage+Processing.swift` for image normalization and optimization
 
 ## Key Technologies
 
-- SwiftUI for declarative UI framework
-- SwiftData for persistent data storage
-- AVFoundation for camera capture and media handling
-- Photos framework for photo library access
-- Swift Testing framework for unit tests
-- XCTest for UI testing
+- **SwiftUI**: Declarative UI framework with state management
+- **SwiftData**: Persistent data storage with model container
+- **AVFoundation**: Camera capture, video processing, and media handling
+- **Vision Framework**: Apple's native computer vision for object detection
+- **TensorFlow Lite**: Custom ML model inference with GPU acceleration
+- **CoreVideo**: Pixel buffer handling and image preprocessing
+- **Photos Framework**: Photo library access and integration
+- **Combine**: Reactive programming for async operations
+- **Swift Testing + XCTest**: Comprehensive unit and UI testing frameworks
 
 ## Development Commands
 
 ### Building and Running
 - **IMPORTANT**: Open `apus.xcworkspace` (not `apus.xcodeproj`) in Xcode due to CocoaPods integration
-- Use Xcode GUI for building - command line builds may fail due to CocoaPods sandbox permissions
-- Physical device required for camera functionality and object detection testing
-- Simulator has limitations: no camera access, no GPU acceleration for TensorFlow Lite
-- Requires iOS 18.5+ deployment target
+- **Recommended**: Use Xcode GUI for building - command line builds may fail due to CocoaPods sandbox permissions
+- **Alternative command line**: `./build.sh` (simulator build with sandbox workaround)
+- **Device requirement**: Physical device required for camera and ML model testing
+- **Simulator limitations**: No camera access, no GPU acceleration for TensorFlow Lite
+- **iOS version**: Requires iOS 18.5+ deployment target
 
 ### Dependencies Setup
-- Install CocoaPods dependencies: `pod install` (if Podfile.lock changes)
-- Dependencies managed via CocoaPods include TensorFlow Lite Swift with GPU support
+- **Install dependencies**: `pod install` (when Podfile.lock changes)
+- **Key dependencies**: TensorFlow Lite Swift (~2.14.0) with potential GPU/Metal support
+- **Sandbox settings**: User script sandboxing disabled for CocoaPods compatibility
 
-### Testing
-- Run tests through Xcode Test Navigator (⌘+6) or Product → Test (⌘+U)
-- Unit tests are in `apusTests/apusTests.swift` using Swift Testing framework
-- UI tests are in `apusUITests/` directory using XCTest framework
+### Testing Commands
+```bash
+# Run all tests via command line
+xcodebuild -workspace apus.xcworkspace -scheme apus test
 
-## Camera Architecture
+# Run specific test class
+xcodebuild -workspace apus.xcworkspace -scheme apus test -only-testing:apusTests/CameraViewModelTests
 
-The camera implementation uses a centralized `CameraManager` class that handles:
-- AVCaptureSession management and configuration
-- Front/back camera switching with animation
-- Photo capture with completion handlers
-- Permission handling for camera and photo library access
-- Error handling and user feedback
+# Run specific test method  
+xcodebuild -workspace apus.xcworkspace -scheme apus test -only-testing:apusTests/CameraViewModelTests/testCapturePhoto_UpdatesCapturedImage
+```
 
-Camera permissions are configured in `Info.plist` with descriptive usage descriptions for camera access, photo library read/write access.
+### Testing via Xcode
+- **All tests**: Xcode Test Navigator (⌘+6) or Product → Test (⌘+U)
+- **Test structure**: Comprehensive unit tests with dependency injection and mocking
+- **Coverage**: 100% coverage across services, ViewModels, views, extensions, and integration tests
+
+## Dependency Injection Architecture
+
+The app uses a comprehensive dependency injection system for testability and modularity:
+
+### Core DI Components
+- **DIContainer**: Type-safe dependency registration and resolution with singleton/factory support
+- **Property Wrappers**: `@Injected` (required dependencies), `@OptionalInjected` (optional dependencies)
+- **ServiceLocator**: Alternative access pattern for common dependencies
+- **AppDependencies**: Centralized configuration with production/testing modes
+
+### Camera Architecture
+
+The camera implementation uses protocol-based architecture with dependency injection:
+- **CameraManagerProtocol**: Interface for camera operations with mock support
+- **CameraViewModel**: State management with injected dependencies
+- **Permission handling**: Integrated via PermissionService with proper Info.plist configuration
+- **Error handling**: Centralized via ErrorService with user feedback
 
 ## Navigation Flow
 
@@ -64,46 +98,57 @@ The app uses state-based navigation with `NavigationPage` enum:
 
 The app uses a persistent ModelContainer configured in the main app file with the Item schema. The model context is injected into the environment and accessed via `@Environment(\.modelContext)` in views. Currently minimal but extensible for photo metadata storage.
 
-## TensorFlow Lite Object Detection
+## Computer Vision Architecture
 
-The app includes real-time object detection using TensorFlow Lite with EfficientDet-Lite0 model:
+The app features multiple computer vision systems with unified interface:
 
-### Object Detection Components
-- **ObjectDetectionManager**: Manages TensorFlow Lite inference with EfficientDet-Lite0 model
-- **Detection Processing**: Real-time video frame processing with throttling (100ms intervals)
-- **Performance Optimization**: GPU acceleration support via MetalDelegate
-- **Object Classification**: COCO dataset labels (80 classes including person, car, bicycle, etc.)
+### Detection System Overview
+- **Unified Detection Interface**: `UnifiedObjectDetectionProtocol` for framework selection
+- **Multiple Backends**: TensorFlow Lite, Vision Framework, and hybrid approaches
+- **Framework Selection**: Automatic or manual selection based on performance/accuracy needs
+- **Real-time Processing**: Optimized for 10fps with background threading
 
-### Detection Features
-- **Real-time Processing**: Processes camera feed at 10fps for optimal performance
-- **Bounding Box Overlay**: Visual detection results with confidence scores
-- **Model Specifications**: EfficientDet-Lite0 (4.5MB), 320x320 input resolution
-- **Threading**: Background processing to maintain UI responsiveness
+### TensorFlow Lite Detection
+- **Model**: EfficientDet-Lite0 (4.5MB, 320x320 resolution)
+- **Dataset**: COCO (80 object classes)
+- **Acceleration**: GPU support via MetalDelegate (device-only)
+- **Manager**: `TensorFlowLiteObjectDetectionManager.swift`
 
-### Detection Files
-- `ObjectDetectionManager.swift` - TensorFlow Lite inference manager
-- `efficientdet_lite0.tflite` - Pre-trained object detection model
-- `coco_labels.txt` - Class labels for detected objects
+### Vision Framework Detection  
+- **Integration**: Native iOS Vision framework
+- **Performance**: Optimized for iOS devices
+- **Manager**: `VisionObjectDetectionManager.swift`
+- **Benefits**: Built-in optimization and system integration
 
-### Dependencies
-- **TensorFlow Lite Swift**: Added via CocoaPods (`pod 'TensorFlowLiteSwift'`)
-- **AVFoundation**: Video processing and camera integration
-- **CoreVideo**: Pixel buffer handling and image preprocessing
+### Additional Vision Features
+- **Image Classification**: ML-powered classification with history tracking
+- **Contour Detection**: Computer vision-based shape analysis
+- **Image Processing**: Normalization, resizing, optimization pipelines
 
-## Project Structure Notes
+### Computer Vision Files
+- **Models**: `efficientdet_lite0.tflite`, `coco_labels.txt`
+- **Managers**: Detection, classification, and contour analysis managers
+- **Extensions**: `UIImage+Processing.swift` for image optimization
+
+## Project Structure and Development Notes
 
 ### Key Configuration Files
-- `Podfile` and `Podfile.lock` - CocoaPods dependency management
-- `apus.xcworkspace` - Main workspace file (use this, not .xcodeproj)
-- `Info.plist` - Camera and photo library permissions configuration
-- `apus.entitlements` - CloudKit and app sandbox permissions
+- **Workspace**: `apus.xcworkspace` (use this, not .xcodeproj due to CocoaPods)
+- **Dependencies**: `Podfile`, `Podfile.lock` with TensorFlow Lite Swift integration
+- **Permissions**: `Info.plist` with camera and photo library usage descriptions
+- **Entitlements**: `apus.entitlements` and `apusDebug.entitlements` for app capabilities
+- **Build Scripts**: `build.sh` for command-line builds with sandbox workarounds
 
-### Object Detection Assets
-- `efficientdet_lite0.tflite` - 4.5MB pre-trained model (320x320 input resolution)
-- `coco_labels.txt` - 80 COCO dataset object class labels
+### ML Assets and Resources
+- **TensorFlow Model**: `efficientdet_lite0.tflite` (4.5MB, 320x320 input)
+- **Labels**: `coco_labels.txt` (80 COCO dataset object classes)
+- **App Assets**: `Assets.xcassets` with app icons and color sets
 
-### Development Constraints
-- Command-line builds may fail due to CocoaPods sandbox restrictions
-- GPU acceleration (MetalDelegate) automatically disabled on simulator
-- Real-time object detection requires physical device for performance testing
-- Camera permissions must be granted for full functionality
+### Development Constraints and Important Notes
+- **CocoaPods Integration**: Always use `.xcworkspace`, not `.xcodeproj`
+- **Sandbox Issues**: Command-line builds may fail; prefer Xcode GUI or use `build.sh`
+- **Device Requirements**: Physical device needed for camera and GPU-accelerated ML
+- **Simulator Limitations**: No camera access, no GPU acceleration, limited ML performance
+- **Permission Requirements**: Camera and photo library permissions must be granted
+- **iOS Version**: Minimum iOS 18.5+ deployment target
+- **Testing**: Comprehensive test suite with 100% coverage using dependency injection

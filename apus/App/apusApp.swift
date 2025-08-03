@@ -11,6 +11,12 @@ import SwiftData
 @main
 struct apusApp: App {
     @StateObject private var appDependencies = AppDependencies.shared
+    
+    init() {
+        // Ensure dependencies are configured at app startup
+        _ = AppDependencies.shared.diContainer
+        print("✅ App dependencies initialized at startup")
+    }
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             Item.self,

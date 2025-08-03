@@ -44,9 +44,9 @@ enum ObjectDetectionFramework: String, CaseIterable {
 class AppSettings: ObservableObject {
     static let shared = AppSettings()
     
-    @Published var isObjectDetectionEnabled: Bool {
+    @Published var isRealTimeObjectDetectionEnabled: Bool {
         didSet {
-            UserDefaults.standard.set(isObjectDetectionEnabled, forKey: UserDefaults.Keys.isObjectDetectionEnabled)
+            UserDefaults.standard.set(isRealTimeObjectDetectionEnabled, forKey: UserDefaults.Keys.isRealTimeObjectDetectionEnabled)
         }
     }
     
@@ -58,14 +58,14 @@ class AppSettings: ObservableObject {
     
     private init() {
         // Load saved settings or defaults
-        self.isObjectDetectionEnabled = UserDefaults.standard.object(forKey: UserDefaults.Keys.isObjectDetectionEnabled) as? Bool ?? true
+        self.isRealTimeObjectDetectionEnabled = UserDefaults.standard.object(forKey: UserDefaults.Keys.isRealTimeObjectDetectionEnabled) as? Bool ?? true
         
         let frameworkRawValue = UserDefaults.standard.string(forKey: UserDefaults.Keys.objectDetectionFramework) ?? ObjectDetectionFramework.vision.rawValue
         self.objectDetectionFramework = ObjectDetectionFramework(rawValue: frameworkRawValue) ?? .vision
     }
     
     func resetToDefaults() {
-        isObjectDetectionEnabled = true
+        isRealTimeObjectDetectionEnabled = true
         objectDetectionFramework = .vision
     }
 }
@@ -73,7 +73,7 @@ class AppSettings: ObservableObject {
 /// UserDefaults keys for settings
 extension UserDefaults {
     enum Keys {
-        static let isObjectDetectionEnabled = "isObjectDetectionEnabled"
+        static let isRealTimeObjectDetectionEnabled = "isRealTimeObjectDetectionEnabled"
         static let objectDetectionFramework = "objectDetectionFramework"
     }
 }

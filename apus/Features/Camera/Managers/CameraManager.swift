@@ -44,11 +44,28 @@ class CameraManager: NSObject, ObservableObject, CameraManagerProtocol {
         
         session.sessionPreset = .photo
         
-        guard let videoDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) else {
-            print("Failed to get video device")
+        // Try to get back camera first, fallback to any available camera
+        var videoDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back)
+        
+        // If no back camera (simulator), try front camera
+        if videoDevice == nil {
+            videoDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front)
+            print("⚠️ Using front camera (likely running on simulator)")
+        }
+        
+        // If still no camera, try any available camera
+        if videoDevice == nil {
+            videoDevice = AVCaptureDevice.default(for: .video)
+            print("⚠️ Using default camera device")
+        }
+        
+        guard let videoDevice = videoDevice else {
+            print("❌ Failed to get any video device - camera functionality will not work")
             session.commitConfiguration()
             return
         }
+        
+        print("✅ Using camera device: \(videoDevice.localizedName)")
         
         self.videoDevice = videoDevice
         
@@ -183,23 +200,30 @@ class CameraManager: NSObject, ObservableObject, CameraManagerProtocol {
     }
     
     private func requestCameraPermission() {
+        print("🔍 Checking camera permission...")
+        
         switch AVCaptureDevice.authorizationStatus(for: .video) {
         case .authorized:
+            print("✅ Camera permission already granted")
             setupCamera()
             actuallyStartSession()
         case .notDetermined:
+            print("⚠️ Camera permission not determined, requesting...")
             AVCaptureDevice.requestAccess(for: .video) { [weak self] granted in
-                if granted {
-                    self?.setupCamera()
-                    self?.actuallyStartSession()
-                } else {
-                    print("Camera permission denied by user")
+                DispatchQueue.main.async {
+                    if granted {
+                        print("✅ Camera permission granted by user")
+                        self?.setupCamera()
+                        self?.actuallyStartSession()
+                    } else {
+                        print("❌ Camera permission denied by user")
+                    }
                 }
             }
         case .denied, .restricted:
-            print("Camera access denied or restricted")
+            print("❌ Camera access denied or restricted")
         @unknown default:
-            print("Unknown camera authorization status")
+            print("❓ Unknown camera authorization status")
         }
     }
 }

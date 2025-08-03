@@ -24,7 +24,7 @@ class DIContainer: DIContainerProtocol, ObservableObject {
     private var factories: [String: () -> Any] = [:]
     
     private init() {
-        registerDefaultDependencies()
+        // Don't register dependencies immediately - do it lazily
     }
     
     /// Register a factory function for a type
@@ -62,22 +62,21 @@ class DIContainer: DIContainerProtocol, ObservableObject {
             return instance
         }
         
+        // If not found, dependencies should be registered by AppDependencies
+        if services.isEmpty && factories.isEmpty {
+            print("❌ No dependencies registered in DIContainer - AppDependencies may not be initialized")
+            print("   Requested type: \(type)")
+            print("   Make sure AppDependencies.shared is accessed before using @Injected properties")
+        }
+        
         return nil
     }
     
-    /// Register default dependencies
+    /// Register default dependencies - REMOVED to prevent conflicts with AppDependencies
     private func registerDefaultDependencies() {
-        // Register camera-related dependencies
-        register(CameraManagerProtocol.self) { CameraManager() }
-        register(ObjectDetectionProtocol.self) { ObjectDetectionProvider() }
-        register(ImageClassificationProtocol.self) { ImageClassificationProvider() }
-        register(HapticServiceProtocol.self) { HapticService() }
-        register(ContourDetectionProtocol.self) { ContourDetectionProvider() }
-        
-        // Register services (will be implemented later)
-        // register(PhotoLibraryServiceProtocol.self) { PhotoLibraryService() }
-        // register(PermissionServiceProtocol.self) { PermissionService() }
-        // register(ErrorServiceProtocol.self) { ErrorService() }
+        // Dependencies are now managed by AppDependencies.shared
+        // This prevents conflicts between factory and singleton registrations
+        print("⚠️ DIContainer.registerDefaultDependencies() called - dependencies should be managed by AppDependencies")
     }
     
     /// Clear all registrations (useful for testing)

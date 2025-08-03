@@ -167,16 +167,16 @@ final class DIContainerTests: XCTestCase {
     
     func testReset_RestoresDefaultDependencies() {
         // Given
-        sut.clear()
-        let cameraManager: CameraManagerProtocol? = sut.resolve(CameraManagerProtocol.self)
-        XCTAssertNil(cameraManager)
+        sut.register(TestServiceProtocol.self) { TestService() }
+        let service: TestServiceProtocol? = sut.resolve(TestServiceProtocol.self)
+        XCTAssertNotNil(service)
         
         // When
         sut.reset()
         
         // Then
-        let restoredCameraManager: CameraManagerProtocol? = sut.resolve(CameraManagerProtocol.self)
-        XCTAssertNotNil(restoredCameraManager)
+        let clearedService: TestServiceProtocol? = sut.resolve(TestServiceProtocol.self)
+        XCTAssertNil(clearedService) // Dependencies are now managed by AppDependencies, not DIContainer
     }
 }
 

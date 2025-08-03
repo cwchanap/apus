@@ -15,9 +15,46 @@ class ObjectDetectionManager: ObservableObject, ObjectDetectionProtocol {
     @Published var detections: [Detection] = []
     @Published var isInitialized = false
     
+    private var isModelLoading = false
+    private let modelLoadingQueue = DispatchQueue(label: "com.apus.objectdetection.modelLoading", qos: .userInitiated)
+    
     init() {
-        setupInterpreter()
-        loadLabels()
+        // Don't load model immediately - do it lazily when first needed
+    }
+    
+    private func ensureModelLoaded(completion: @escaping (Bool) -> Void) {
+        // If already loaded, return immediately
+        if isInitialized {
+            completion(true)
+            return
+        }
+        
+        // If currently loading, wait for completion
+        if isModelLoading {
+            modelLoadingQueue.async {
+                // Wait for loading to complete
+                while self.isModelLoading {
+                    Thread.sleep(forTimeInterval: 0.1)
+                }
+                DispatchQueue.main.async {
+                    completion(self.isInitialized)
+                }
+            }
+            return
+        }
+        
+        // Start loading
+        isModelLoading = true
+        
+        modelLoadingQueue.async {
+            self.setupInterpreter()
+            self.loadLabels()
+            
+            DispatchQueue.main.async {
+                self.isModelLoading = false
+                completion(self.isInitialized)
+            }
+        }
     }
     
     private func setupInterpreter() {
@@ -63,8 +100,6 @@ class ObjectDetectionManager: ObservableObject, ObjectDetectionProtocol {
     }
     
     func processFrame(_ pixelBuffer: CVPixelBuffer) {
-        guard let interpreter = interpreter else { return }
-        
         // Throttle processing to avoid overwhelming the system
         let currentTime = CACurrentMediaTime()
         guard !isProcessing && (currentTime - lastProcessingTime) > processingInterval else {
@@ -74,22 +109,32 @@ class ObjectDetectionManager: ObservableObject, ObjectDetectionProtocol {
         isProcessing = true
         lastProcessingTime = currentTime
         
-        DispatchQueue.global(qos: .userInitiated).async {
-            do {
-                let inputData = try self.preprocessImage(pixelBuffer: pixelBuffer)
-                try interpreter.copy(inputData, toInputAt: 0)
-                try interpreter.invoke()
-                
-                let outputTensor = try interpreter.output(at: 0)
-                let results = try self.parseResults(outputTensor: outputTensor)
-                
-                DispatchQueue.main.async {
-                    self.detections = results
-                    self.isProcessing = false
+        // Ensure model is loaded before processing
+        ensureModelLoaded { [weak self] success in
+            guard let self = self, success, let interpreter = self.interpreter else {
+                self?.isProcessing = false
+                return
+            }
+            
+            DispatchQueue.global(qos: .userInitiated).async {
+                do {
+                    let inputData = try self.preprocessImage(pixelBuffer: pixelBuffer)
+                    try interpreter.copy(inputData, toInputAt: 0)
+                    try interpreter.invoke()
+                    
+                    let outputTensor = try interpreter.output(at: 0)
+                    let results = try self.parseResults(outputTensor: outputTensor)
+                    
+                    DispatchQueue.main.async {
+                        self.detections = results
+                        self.isProcessing = false
+                    }
+                } catch {
+                    print("Detection error: \(error.localizedDescription)")
+                    DispatchQueue.main.async {
+                        self.isProcessing = false
+                    }
                 }
-            } catch {
-                print("Detection error: \(error.localizedDescription)")
-                self.isProcessing = false
             }
         }
     }

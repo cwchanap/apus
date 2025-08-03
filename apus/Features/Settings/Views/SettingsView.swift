@@ -22,38 +22,37 @@ struct SettingsView: View {
                             .frame(width: 24, height: 24)
                         
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Enable Object Detection")
+                            Text("Real-Time Detection")
                                 .font(.body)
-                            Text("Detect and highlight objects in images")
+                            Text("Enable live object detection in camera view")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
                         
                         Spacer()
                         
-                        Toggle("", isOn: $viewModel.isObjectDetectionEnabled)
+                        Toggle("", isOn: $viewModel.isRealTimeObjectDetectionEnabled)
                             .labelsHidden()
                     }
                     .padding(.vertical, 4)
                     
-                    // Framework Selection (only shown when enabled)
-                    if viewModel.isObjectDetectionEnabled {
-                        VStack(alignment: .leading, spacing: 12) {
-                            HStack {
-                                Image(systemName: "gearshape.2")
-                                    .foregroundColor(.purple)
-                                    .frame(width: 24, height: 24)
-                                
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text("Detection Framework")
-                                        .font(.body)
-                                    Text("Choose the ML framework for object detection")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                }
-                                
-                                Spacer()
+                    // Framework Selection (always visible)
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Image(systemName: "gearshape.2")
+                                .foregroundColor(.purple)
+                                .frame(width: 24, height: 24)
+                            
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Detection Framework")
+                                    .font(.body)
+                                Text("Choose the ML framework for object detection")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
                             }
+                            
+                            Spacer()
+                        }
                             
                             // Framework Options
                             VStack(spacing: 8) {
@@ -99,11 +98,9 @@ struct SettingsView: View {
                                     }
                                     .buttonStyle(PlainButtonStyle())
                                 }
-                            }
                         }
-                        .padding(.vertical, 4)
-                        .transition(.opacity.combined(with: .slide))
                     }
+                    .padding(.vertical, 4)
                 }
                 
                 // App Information Section

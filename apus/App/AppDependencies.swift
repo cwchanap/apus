@@ -18,7 +18,17 @@ class AppDependencies: ObservableObject {
     
     private init() {
         self.container = DIContainer.shared
+        // Don't configure dependencies immediately - do it lazily when first needed
+    }
+    
+    private var dependenciesConfigured = false
+    
+    /// Configure all app dependencies lazily
+    private func ensureDependenciesConfigured() {
+        guard !dependenciesConfigured else { return }
+        
         configureDependencies()
+        dependenciesConfigured = true
     }
     
     /// Configure all app dependencies
@@ -138,6 +148,7 @@ class AppDependencies: ObservableObject {
     
     // MARK: - Dependency Access
     var diContainer: DIContainerProtocol {
+        ensureDependenciesConfigured()
         return self.container
     }
 }

@@ -15,13 +15,13 @@ class SettingsViewModel: ObservableObject {
     @ObservedObject private var appSettings = AppSettings.shared
     
     // MARK: - Published Properties (for direct binding)
-    @Published var isObjectDetectionEnabled: Bool = true
+    @Published var isRealTimeObjectDetectionEnabled: Bool = true
     @Published var objectDetectionFramework: ObjectDetectionFramework = .vision
     
     // MARK: - Initialization
     init() {
         // Initialize with current settings
-        self.isObjectDetectionEnabled = appSettings.isObjectDetectionEnabled
+        self.isRealTimeObjectDetectionEnabled = appSettings.isRealTimeObjectDetectionEnabled
         self.objectDetectionFramework = appSettings.objectDetectionFramework
         
         // Set up two-way binding
@@ -30,11 +30,11 @@ class SettingsViewModel: ObservableObject {
     
     private func setupBindings() {
         // Update ViewModel when AppSettings changes (but avoid loops)
-        appSettings.$isObjectDetectionEnabled
+        appSettings.$isRealTimeObjectDetectionEnabled
             .removeDuplicates()
             .sink { [weak self] newValue in
-                if self?.isObjectDetectionEnabled != newValue {
-                    self?.isObjectDetectionEnabled = newValue
+                if self?.isRealTimeObjectDetectionEnabled != newValue {
+                    self?.isRealTimeObjectDetectionEnabled = newValue
                 }
             }
             .store(in: &cancellables)
@@ -49,12 +49,12 @@ class SettingsViewModel: ObservableObject {
             .store(in: &cancellables)
         
         // Update AppSettings when ViewModel changes (but avoid loops)
-        $isObjectDetectionEnabled
+        $isRealTimeObjectDetectionEnabled
             .dropFirst() // Skip initial value
             .removeDuplicates()
             .sink { [weak self] newValue in
-                if self?.appSettings.isObjectDetectionEnabled != newValue {
-                    self?.appSettings.isObjectDetectionEnabled = newValue
+                if self?.appSettings.isRealTimeObjectDetectionEnabled != newValue {
+                    self?.appSettings.isRealTimeObjectDetectionEnabled = newValue
                 }
             }
             .store(in: &cancellables)
