@@ -25,10 +25,10 @@ struct PreviewView: View {
     @State private var isDetectingContours = false
     @State private var cachedContours: [DetectedContour] = []
     @State private var hasDetectedContours = false
-    @State private var detectedObjects: [VisionDetection] = []
+    @State private var detectedObjects: [DetectedObject] = []
     @State private var showingObjects = false
     @State private var isDetectingObjects = false
-    @State private var cachedObjects: [VisionDetection] = []
+    @State private var cachedObjects: [DetectedObject] = []
     @State private var hasDetectedObjects = false
     
     // Computed property for normalized display image
@@ -45,7 +45,7 @@ struct PreviewView: View {
     @Injected private var historyManager: ClassificationHistoryManager
     @Injected private var hapticService: HapticServiceProtocol
     @Injected private var contourDetectionManager: ContourDetectionProtocol
-    @Injected private var visionObjectDetectionManager: VisionObjectDetectionProtocol
+    @Injected private var unifiedObjectDetectionManager: UnifiedObjectDetectionProtocol
 
     var body: some View {
         GeometryReader { geometry in
@@ -72,7 +72,7 @@ struct PreviewView: View {
                                             
                                             // Object detection overlay
                                             if showingObjects && !detectedObjects.isEmpty {
-                                                VisionObjectDetectionOverlay(
+                                                UnifiedObjectDetectionOverlay(
                                                     detections: detectedObjects,
                                                     imageSize: image.size,
                                                     displaySize: geometry.size
@@ -424,7 +424,7 @@ struct PreviewView: View {
         
         isDetectingObjects = true
         
-        visionObjectDetectionManager.detectObjects(in: image) { result in
+        unifiedObjectDetectionManager.detectObjects(in: image) { result in
             DispatchQueue.main.async {
                 self.isDetectingObjects = false
                 

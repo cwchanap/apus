@@ -16,11 +16,13 @@ class SettingsViewModel: ObservableObject {
     
     // MARK: - Published Properties (for direct binding)
     @Published var isObjectDetectionEnabled: Bool = true
+    @Published var objectDetectionFramework: ObjectDetectionFramework = .vision
     
     // MARK: - Initialization
     init() {
-        // Initialize with current setting
+        // Initialize with current settings
         self.isObjectDetectionEnabled = appSettings.isObjectDetectionEnabled
+        self.objectDetectionFramework = appSettings.objectDetectionFramework
         
         // Set up two-way binding
         setupBindings()
@@ -37,6 +39,15 @@ class SettingsViewModel: ObservableObject {
             }
             .store(in: &cancellables)
         
+        appSettings.$objectDetectionFramework
+            .removeDuplicates()
+            .sink { [weak self] newValue in
+                if self?.objectDetectionFramework != newValue {
+                    self?.objectDetectionFramework = newValue
+                }
+            }
+            .store(in: &cancellables)
+        
         // Update AppSettings when ViewModel changes (but avoid loops)
         $isObjectDetectionEnabled
             .dropFirst() // Skip initial value
@@ -44,6 +55,16 @@ class SettingsViewModel: ObservableObject {
             .sink { [weak self] newValue in
                 if self?.appSettings.isObjectDetectionEnabled != newValue {
                     self?.appSettings.isObjectDetectionEnabled = newValue
+                }
+            }
+            .store(in: &cancellables)
+        
+        $objectDetectionFramework
+            .dropFirst() // Skip initial value
+            .removeDuplicates()
+            .sink { [weak self] newValue in
+                if self?.appSettings.objectDetectionFramework != newValue {
+                    self?.appSettings.objectDetectionFramework = newValue
                 }
             }
             .store(in: &cancellables)
