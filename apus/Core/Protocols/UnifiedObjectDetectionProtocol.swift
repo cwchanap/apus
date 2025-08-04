@@ -69,13 +69,25 @@ protocol UnifiedObjectDetectionProtocol: ObservableObject {
 /// Factory for creating object detection managers based on settings
 class ObjectDetectionFactory {
     static func createObjectDetectionManager() -> any UnifiedObjectDetectionProtocol {
-        let framework = AppSettings.shared.objectDetectionFramework
+        // Use default framework to avoid circular dependency with AppSettings
+        // The actual framework will be determined when detection is first used
+        let defaultFramework = ObjectDetectionFramework.vision
         
         #if DEBUG || targetEnvironment(simulator)
         // Use mock implementation for simulator/debug
+        return MockUnifiedObjectDetectionManager(framework: defaultFramework)
+        #else
+        // Use default Vision framework to avoid AppSettings dependency during initialization
+        // Framework switching will be handled at runtime when needed
+        return VisionUnifiedObjectDetectionManager()
+        #endif
+    }
+    
+    /// Create object detection manager with specific framework (for runtime switching)
+    static func createObjectDetectionManager(framework: ObjectDetectionFramework) -> any UnifiedObjectDetectionProtocol {
+        #if DEBUG || targetEnvironment(simulator)
         return MockUnifiedObjectDetectionManager(framework: framework)
         #else
-        // Use real implementation based on selected framework
         switch framework {
         case .vision:
             return VisionUnifiedObjectDetectionManager()

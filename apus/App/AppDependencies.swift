@@ -80,6 +80,7 @@ class AppDependencies: ObservableObject {
         container.register(ContourDetectionProtocol.self, instance: contourDetectionManager)
         
         // Register unified object detection manager as singleton instance
+        // Use default factory to avoid circular dependency with AppSettings
         let unifiedObjectDetectionManager = ObjectDetectionFactory.createObjectDetectionManager()
         container.register(UnifiedObjectDetectionProtocol.self, instance: unifiedObjectDetectionManager)
     }
