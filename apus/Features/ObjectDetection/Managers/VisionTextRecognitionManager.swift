@@ -111,9 +111,9 @@ class VisionTextRecognitionManager: ObservableObject, VisionTextRecognitionProto
         // Try to get character-level bounding boxes
         do {
             let range = text.startIndex..<text.endIndex
-            if let characterObservations = try observation.boundingBox(for: range) {
+            if let characterObservation = try observation.boundingBox(for: range) {
                 let characterBox = convertVisionToUIKit(
-                    visionRect: characterObservations.boundingBox,
+                    visionRect: characterObservation.boundingBox,
                     imageSize: imageSize
                 )
                 characterBoxes.append(characterBox)

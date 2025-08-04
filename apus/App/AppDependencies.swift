@@ -83,6 +83,10 @@ class AppDependencies: ObservableObject {
         // Use default factory to avoid circular dependency with AppSettings
         let unifiedObjectDetectionManager = ObjectDetectionFactory.createObjectDetectionManager()
         container.register(UnifiedObjectDetectionProtocol.self, instance: unifiedObjectDetectionManager)
+        
+        // Register text recognition manager as singleton instance
+        let textRecognitionManager = VisionTextRecognitionProvider()
+        container.register(VisionTextRecognitionProtocol.self, instance: textRecognitionManager)
     }
     
     // MARK: - Service Dependencies
@@ -131,6 +135,10 @@ class AppDependencies: ObservableObject {
         
         container.register(UnifiedObjectDetectionProtocol.self) {
             ObjectDetectionFactory.createObjectDetectionManager()
+        }
+        
+        container.register(VisionTextRecognitionProtocol.self) {
+            VisionTextRecognitionProvider() as any VisionTextRecognitionProtocol
         }
         
         // Register mock services

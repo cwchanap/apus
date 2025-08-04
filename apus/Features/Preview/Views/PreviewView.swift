@@ -84,6 +84,15 @@ struct PreviewView: View {
                                                     displaySize: geometry.size
                                                 )
                                             }
+                                            
+                                            // Text recognition overlay
+                                            if showingTexts && !detectedTexts.isEmpty {
+                                                VisionTextRecognitionOverlay(
+                                                    detectedTexts: detectedTexts,
+                                                    imageSize: image.size,
+                                                    displaySize: geometry.size
+                                                )
+                                            }
                                         }
                                     }
                                 }
@@ -130,7 +139,9 @@ struct PreviewView: View {
                 // Action buttons in two rows - fixed height
                 VStack(spacing: 12) {
                     // Top row: Analysis buttons
-                    HStack(spacing: 12) {
+                    VStack(spacing: 8) {
+                        // First row: Classification and Object Detection
+                        HStack(spacing: 12) {
                         // Classify button
                         Button(action: {
                             hapticService.actionFeedback()
@@ -184,7 +195,10 @@ struct PreviewView: View {
                             .clipShape(Capsule())
                         }
                         .disabled(isDetectingObjects)
+                        }
                         
+                        // Second row: Contour Detection and Text Recognition
+                        HStack(spacing: 12) {
                         // Contour detection button
                         Button(action: {
                             hapticService.actionFeedback()
@@ -211,6 +225,34 @@ struct PreviewView: View {
                             .clipShape(Capsule())
                         }
                         .disabled(isDetectingContours)
+                        
+                        // Text recognition button
+                        Button(action: {
+                            hapticService.actionFeedback()
+                            toggleTextRecognition()
+                        }) {
+                            HStack(spacing: 4) {
+                                if isDetectingTexts {
+                                    ProgressView()
+                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                        .scaleEffect(0.7)
+                                    Text("Detecting...")
+                                        .font(.caption)
+                                } else {
+                                    Image(systemName: showingTexts ? "textformat.alt" : "textformat")
+                                        .font(.caption)
+                                    Text(getTextRecognitionButtonText())
+                                        .font(.caption)
+                                }
+                            }
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(getTextRecognitionButtonColor())
+                            .clipShape(Capsule())
+                        }
+                        .disabled(isDetectingTexts)
+                        }
                     }
                     
                     // Bottom row: Action buttons
@@ -473,6 +515,26 @@ struct PreviewView: View {
         }
     }
     
+    private func getTextRecognitionButtonText() -> String {
+        if showingTexts {
+            return "Hide Text"
+        } else if hasDetectedTexts {
+            return "Show Text"
+        } else {
+            return "Detect Text"
+        }
+    }
+    
+    private func getTextRecognitionButtonColor() -> Color {
+        if showingTexts {
+            return .red      // Red when showing
+        } else if hasDetectedTexts {
+            return .blue     // Blue when cached (quick show)
+        } else {
+            return .purple   // Purple for text recognition
+        }
+    }
+    
     private func clearContourCache() {
         cachedContours = []
         detectedContours = []
@@ -485,6 +547,13 @@ struct PreviewView: View {
         detectedObjects = []
         hasDetectedObjects = false
         showingObjects = false
+    }
+    
+    private func clearTextCache() {
+        cachedTexts = []
+        detectedTexts = []
+        hasDetectedTexts = false
+        showingTexts = false
     }
     
     private func toggleClassification() {
@@ -512,6 +581,61 @@ struct PreviewView: View {
         
         // No cached results - perform classification
         classifyImage()
+    }
+    
+    private func toggleTextRecognition() {
+        guard let _ = capturedImage else { return }
+        
+        if showingTexts {
+            // Hide text recognition results - keep them cached
+            withAnimation(.easeInOut(duration: 0.3)) {
+                showingTexts = false
+            }
+            hapticService.buttonTap()
+            return
+        }
+        
+        // Check if we have cached text results for quick show
+        if hasDetectedTexts && !cachedTexts.isEmpty {
+            // Use cached texts for instant display
+            detectedTexts = cachedTexts
+            withAnimation(.easeInOut(duration: 0.3)) {
+                showingTexts = true
+            }
+            hapticService.buttonTap()
+            return
+        }
+        
+        // No cached texts - perform text recognition
+        detectText()
+    }
+    
+    private func detectText() {
+        guard let image = processingImage else { return }
+        
+        isDetectingTexts = true
+        
+        textRecognitionManager.detectText(in: image) { result in
+            DispatchQueue.main.async {
+                self.isDetectingTexts = false
+                
+                switch result {
+                case .success(let texts):
+                    self.detectedTexts = texts
+                    self.cachedTexts = texts // Cache the results
+                    self.hasDetectedTexts = true
+                    withAnimation(.easeInOut(duration: 0.5)) {
+                        self.showingTexts = true
+                    }
+                    self.hapticService.success() // Success haptic feedback
+                    
+                case .failure(let error):
+                    self.alertMessage = "Text recognition failed: \(error.localizedDescription)"
+                    self.showingAlert = true
+                    self.hapticService.error() // Error haptic feedback
+                }
+            }
+        }
     }
     
     private func getClassificationButtonText() -> String {
@@ -545,6 +669,7 @@ struct PreviewView: View {
         clearClassificationCache()
         clearContourCache()
         clearObjectCache()
+        clearTextCache()
     }
     
     private func saveImageToPhotos(_ image: UIImage) {
