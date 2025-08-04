@@ -108,20 +108,9 @@ class VisionTextRecognitionManager: ObservableObject, VisionTextRecognitionProto
     private func getCharacterBoundingBoxes(from observation: VNRecognizedTextObservation, text: String, imageSize: CGSize) -> [CGRect] {
         var characterBoxes: [CGRect] = []
         
-        // Try to get character-level bounding boxes
-        do {
-            let range = text.startIndex..<text.endIndex
-            if let characterObservation = try observation.boundingBox(for: range) {
-                let characterBox = convertVisionToUIKit(
-                    visionRect: characterObservation.boundingBox,
-                    imageSize: imageSize
-                )
-                characterBoxes.append(characterBox)
-            }
-        } catch {
-            // If character-level detection fails, use the word-level bounding box
-            print("Character-level bounding box detection failed: \(error)")
-        }
+        // For now, return empty array - character-level detection is optional
+        // The main text bounding box is sufficient for most use cases
+        // Future enhancement: implement proper character-level detection if needed
         
         return characterBoxes
     }
