@@ -30,6 +30,11 @@ struct PreviewView: View {
     @State private var isDetectingObjects = false
     @State private var cachedObjects: [DetectedObject] = []
     @State private var hasDetectedObjects = false
+    @State private var detectedTexts: [DetectedText] = []
+    @State private var showingTexts = false
+    @State private var isDetectingTexts = false
+    @State private var cachedTexts: [DetectedText] = []
+    @State private var hasDetectedTexts = false
     
     // Computed property for normalized display image
     private var displayImage: UIImage? {
@@ -46,6 +51,7 @@ struct PreviewView: View {
     @Injected private var hapticService: HapticServiceProtocol
     @Injected private var contourDetectionManager: ContourDetectionProtocol
     @Injected private var unifiedObjectDetectionManager: UnifiedObjectDetectionProtocol
+    @Injected private var textRecognitionManager: VisionTextRecognitionProtocol
 
     var body: some View {
         GeometryReader { geometry in
