@@ -38,8 +38,8 @@ struct TextDetectionBox: View {
     let displaySize: CGSize
     let opacity: Double
     
-    private var scaledBoundingBox: CGRect {
-        scaleRectToDisplaySize(detectedText.boundingBox)
+    private var displayBoundingBox: CGRect {
+        detectedText.displayBoundingBox(imageSize: imageSize, displaySize: displaySize)
     }
     
     private var textColor: Color {
@@ -67,10 +67,10 @@ struct TextDetectionBox: View {
                     Rectangle()
                         .fill(textColor.opacity(0.1))
                 )
-                .frame(width: scaledBoundingBox.width, height: scaledBoundingBox.height)
+                .frame(width: displayBoundingBox.width, height: displayBoundingBox.height)
                 .position(
-                    x: scaledBoundingBox.midX,
-                    y: scaledBoundingBox.midY
+                    x: displayBoundingBox.midX,
+                    y: displayBoundingBox.midY
                 )
             
             // Text label with confidence
@@ -85,37 +85,13 @@ struct TextDetectionBox: View {
                         .fill(textColor.opacity(0.8))
                 )
                 .position(
-                    x: scaledBoundingBox.midX,
-                    y: max(scaledBoundingBox.minY - 10, 10) // Position above box, but not off-screen
+                    x: displayBoundingBox.midX,
+                    y: max(displayBoundingBox.minY - 10, 10) // Position above box, but not off-screen
                 )
         }
         .opacity(opacity)
     }
     
-    private func scaleRectToDisplaySize(_ rect: CGRect) -> CGRect {
-        // Calculate the scaling factors
-        let scaleX = displaySize.width / imageSize.width
-        let scaleY = displaySize.height / imageSize.height
-        
-        // Use the smaller scale to maintain aspect ratio
-        let scale = min(scaleX, scaleY)
-        
-        // Calculate the actual display area size
-        let scaledImageWidth = imageSize.width * scale
-        let scaledImageHeight = imageSize.height * scale
-        
-        // Calculate offsets to center the image in the display area
-        let offsetX = (displaySize.width - scaledImageWidth) / 2
-        let offsetY = (displaySize.height - scaledImageHeight) / 2
-        
-        // Scale and offset the bounding box
-        return CGRect(
-            x: rect.origin.x * scale + offsetX,
-            y: rect.origin.y * scale + offsetY,
-            width: rect.width * scale,
-            height: rect.height * scale
-        )
-    }
 }
 
 // MARK: - Preview

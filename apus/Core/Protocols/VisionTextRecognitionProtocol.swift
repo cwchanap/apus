@@ -13,12 +13,52 @@ import Vision
 struct DetectedText: Identifiable, Equatable {
     let id = UUID()
     let text: String
-    let boundingBox: CGRect
+    let boundingBox: CGRect // Normalized coordinates (0-1) with top-left origin
     let confidence: Float
     let characterBoxes: [CGRect] // Individual character bounding boxes
     
     static func == (lhs: DetectedText, rhs: DetectedText) -> Bool {
         lhs.id == rhs.id
+    }
+    
+    /// Convert bounding box to display coordinates (same logic as DetectedObject)
+    func displayBoundingBox(imageSize: CGSize, displaySize: CGSize) -> CGRect {
+        // Calculate how the image is actually displayed within the view bounds
+        let imageAspectRatio = imageSize.width / imageSize.height
+        let displayAspectRatio = displaySize.width / displaySize.height
+        
+        var imageDisplaySize: CGSize
+        var imageOffset: CGPoint
+        
+        if imageAspectRatio > displayAspectRatio {
+            // Image is wider - fit to width
+            imageDisplaySize = CGSize(
+                width: displaySize.width,
+                height: displaySize.width / imageAspectRatio
+            )
+            imageOffset = CGPoint(
+                x: 0,
+                y: (displaySize.height - imageDisplaySize.height) / 2
+            )
+        } else {
+            // Image is taller - fit to height
+            imageDisplaySize = CGSize(
+                width: displaySize.height * imageAspectRatio,
+                height: displaySize.height
+            )
+            imageOffset = CGPoint(
+                x: (displaySize.width - imageDisplaySize.width) / 2,
+                y: 0
+            )
+        }
+        
+        // Scale normalized coordinates to display coordinates
+        return CGRect(
+            x: boundingBox.minX * imageDisplaySize.width + imageOffset.x,
+            y: boundingBox.minY * imageDisplaySize.height + imageOffset.y,
+            width: boundingBox.width * imageDisplaySize.width,
+            height: boundingBox.height * imageDisplaySize.height
+        )
     }
 }
 

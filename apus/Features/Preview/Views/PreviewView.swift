@@ -253,6 +253,38 @@ struct PreviewView: View {
                         }
                         .disabled(isDetectingTexts)
                         }
+                        
+                        // Third row: OCR + Classification workflow
+                        HStack(spacing: 12) {
+                        // OCR + Classify button
+                        Button(action: {
+                            hapticService.actionFeedback()
+                            performOCRAndClassification()
+                        }) {
+                            HStack(spacing: 4) {
+                                if isDetectingTexts || isClassifying {
+                                    ProgressView()
+                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                        .scaleEffect(0.7)
+                                    Text(isDetectingTexts ? "Reading Text..." : "Classifying Text...")
+                                        .font(.caption)
+                                } else {
+                                    Image(systemName: "textformat.abc")
+                                        .font(.caption)
+                                    Text("OCR + Classify")
+                                        .font(.caption)
+                                }
+                            }
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .background(.cyan)
+                            .clipShape(Capsule())
+                        }
+                        .disabled(isDetectingTexts || isClassifying)
+                        
+                        Spacer() // Balance the layout
+                        }
                     }
                     
                     // Bottom row: Action buttons
@@ -636,6 +668,117 @@ struct PreviewView: View {
                 }
             }
         }
+    }
+    
+    private func performOCRAndClassification() {
+        guard let image = processingImage else { return }
+        
+        // Step 1: Perform OCR first
+        isDetectingTexts = true
+        
+        textRecognitionManager.detectText(in: image) { result in
+            DispatchQueue.main.async {
+                self.isDetectingTexts = false
+                
+                switch result {
+                case .success(let texts):
+                    // Cache OCR results
+                    self.detectedTexts = texts
+                    self.cachedTexts = texts
+                    self.hasDetectedTexts = true
+                    
+                    // Show OCR results briefly
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        self.showingTexts = true
+                    }
+                    
+                    // Step 2: Now classify the detected text content
+                    self.classifyDetectedText(texts)
+                    
+                case .failure(let error):
+                    self.alertMessage = "OCR failed: \(error.localizedDescription)"
+                    self.showingAlert = true
+                    self.hapticService.error()
+                }
+            }
+        }
+    }
+    
+    private func classifyDetectedText(_ texts: [DetectedText]) {
+        // Combine all detected text into a single string for classification
+        let combinedText = texts.map { $0.text }.joined(separator: " ")
+        
+        // Create a text-based image for classification
+        // For now, we'll classify the original image but show text-aware results
+        guard let image = processingImage else { return }
+        
+        isClassifying = true
+        
+        imageClassificationManager.classifyImage(image) { result in
+            DispatchQueue.main.async {
+                self.isClassifying = false
+                
+                switch result {
+                case .success(let results):
+                    // Enhance classification results with text context
+                    let enhancedResults = self.enhanceClassificationWithText(results, detectedText: combinedText)
+                    
+                    self.classificationResults = enhancedResults
+                    self.cachedClassificationResults = enhancedResults
+                    self.hasClassificationResults = true
+                    
+                    // Hide OCR overlay and show classification results
+                    withAnimation(.easeInOut(duration: 0.5)) {
+                        self.showingTexts = false
+                        self.showingClassificationResults = true
+                    }
+                    
+                    self.hapticService.success()
+                    
+                    // Show success message with text context
+                    let textSummary = texts.count > 0 ? "Found \(texts.count) text elements" : "No text detected"
+                    self.alertMessage = "OCR + Classification complete!\n\(textSummary)\nTop result: \(enhancedResults.first?.identifier.capitalized ?? "Unknown")"
+                    self.showingAlert = true
+                    
+                case .failure(let error):
+                    self.alertMessage = "Classification failed: \(error.localizedDescription)"
+                    self.showingAlert = true
+                    self.hapticService.error()
+                }
+            }
+        }
+    }
+    
+    private func enhanceClassificationWithText(_ results: [ClassificationResult], detectedText: String) -> [ClassificationResult] {
+        // Enhance classification results by considering detected text
+        var enhancedResults = results
+        
+        // Add text-based classification hints
+        let textLower = detectedText.lowercased()
+        
+        // Boost confidence for text-related classifications
+        for i in 0..<enhancedResults.count {
+            let identifier = enhancedResults[i].identifier.lowercased()
+            
+            // Boost confidence if classification matches detected text content
+            if textLower.contains(identifier) || identifier.contains("text") || identifier.contains("document") {
+                enhancedResults[i] = ClassificationResult(
+                    identifier: enhancedResults[i].identifier + " (Text-Enhanced)",
+                    confidence: min(1.0, enhancedResults[i].confidence * 1.2)
+                )
+            }
+        }
+        
+        // Add text-specific classifications if significant text was found
+        if !detectedText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            let textClassification = ClassificationResult(
+                identifier: "Text Document",
+                confidence: Float(min(0.95, Double(detectedText.count) / 100.0))
+            )
+            enhancedResults.insert(textClassification, at: 0)
+        }
+        
+        return enhancedResults.sorted { $0.confidence > $1.confidence }
     }
     
     private func getClassificationButtonText() -> String {
