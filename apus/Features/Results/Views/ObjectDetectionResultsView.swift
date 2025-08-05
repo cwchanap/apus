@@ -262,7 +262,7 @@ struct DetectedObjectRow: View {
                     
                     Text("Framework: \(detectedObject.framework)")
                         .font(.caption2)
-                        .foregroundColor(.tertiary)
+                        .foregroundColor(.secondary)
                 }
                 
                 Spacer()
