@@ -113,7 +113,7 @@ struct OCRResultRow: View {
                 
                 Image(systemName: "chevron.right")
                     .font(.caption)
-                    .foregroundColor(.tertiary)
+                    .foregroundColor(.secondary)
             }
             .padding(.vertical, 4)
         }
@@ -231,7 +231,7 @@ struct DetectedTextRow: View {
             
             Text("Position: (\(String(format: "%.2f", detectedText.boundingBox.origin.x)), \(String(format: "%.2f", detectedText.boundingBox.origin.y)))")
                 .font(.caption2)
-                .foregroundColor(.tertiary)
+                .foregroundColor(.secondary)
         }
         .padding()
         .background(Color.gray.opacity(0.05))
