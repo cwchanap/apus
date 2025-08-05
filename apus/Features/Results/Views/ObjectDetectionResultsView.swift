@@ -110,7 +110,7 @@ struct ObjectDetectionResultRow: View {
                     // Timestamp
                     Text(result.timestamp, style: .relative)
                         .font(.caption2)
-                        .foregroundColor(.tertiary)
+                        .foregroundColor(.secondary)
                 }
                 
                 Spacer()

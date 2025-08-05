@@ -118,7 +118,7 @@ struct ClassificationResultRow: View {
                     // Timestamp
                     Text(result.timestamp, style: .relative)
                         .font(.caption2)
-                        .foregroundColor(.tertiary)
+                        .foregroundColor(.secondary)
                 }
                 
                 Spacer()
@@ -133,7 +133,7 @@ struct ClassificationResultRow: View {
                         
                         Image(systemName: "chevron.right")
                             .font(.caption)
-                            .foregroundColor(.tertiary)
+                            .foregroundColor(.secondary)
                     }
                 }
             }
