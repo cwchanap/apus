@@ -52,6 +52,7 @@ struct PreviewView: View {
     @Injected private var contourDetectionManager: ContourDetectionProtocol
     @Injected private var unifiedObjectDetectionManager: UnifiedObjectDetectionProtocol
     @Injected private var textRecognitionManager: VisionTextRecognitionProtocol
+    @Injected private var detectionResultsManager: DetectionResultsManager
 
     var body: some View {
         GeometryReader { geometry in
@@ -375,6 +376,12 @@ struct PreviewView: View {
                     self.classificationResults = results
                     self.cachedClassificationResults = results // Cache the results
                     self.hasClassificationResults = true
+                    
+                    // Save results to storage
+                    if let image = self.capturedImage {
+                        self.detectionResultsManager.saveClassificationResult(classificationResults: results, image: image)
+                    }
+                    
                     withAnimation(.easeInOut(duration: 0.5)) {
                         self.showingClassificationResults = true
                     }
@@ -513,6 +520,12 @@ struct PreviewView: View {
                     self.detectedObjects = objects
                     self.cachedObjects = objects // Cache the results
                     self.hasDetectedObjects = true
+                    
+                    // Save results to storage
+                    if let image = self.capturedImage {
+                        self.detectionResultsManager.saveObjectDetectionResult(detectedObjects: objects, image: image)
+                    }
+                    
                     withAnimation(.easeInOut(duration: 0.5)) {
                         self.showingObjects = true
                     }
@@ -656,6 +669,12 @@ struct PreviewView: View {
                     self.detectedTexts = texts
                     self.cachedTexts = texts // Cache the results
                     self.hasDetectedTexts = true
+                    
+                    // Save results to storage
+                    if let image = self.capturedImage {
+                        self.detectionResultsManager.saveOCRResult(detectedTexts: texts, image: image)
+                    }
+                    
                     withAnimation(.easeInOut(duration: 0.5)) {
                         self.showingTexts = true
                     }
@@ -686,6 +705,11 @@ struct PreviewView: View {
                     self.detectedTexts = texts
                     self.cachedTexts = texts
                     self.hasDetectedTexts = true
+                    
+                    // Save OCR results to storage
+                    if let image = self.capturedImage {
+                        self.detectionResultsManager.saveOCRResult(detectedTexts: texts, image: image)
+                    }
                     
                     // Show OCR results briefly
                     withAnimation(.easeInOut(duration: 0.3)) {
@@ -726,6 +750,11 @@ struct PreviewView: View {
                     self.classificationResults = enhancedResults
                     self.cachedClassificationResults = enhancedResults
                     self.hasClassificationResults = true
+                    
+                    // Save enhanced classification results to storage
+                    if let image = self.capturedImage {
+                        self.detectionResultsManager.saveClassificationResult(classificationResults: enhancedResults, image: image)
+                    }
                     
                     // Hide OCR overlay and show classification results
                     withAnimation(.easeInOut(duration: 0.5)) {

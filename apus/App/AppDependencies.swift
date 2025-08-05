@@ -87,6 +87,10 @@ class AppDependencies: ObservableObject {
         // Register text recognition manager as singleton instance
         let textRecognitionManager = VisionTextRecognitionProvider()
         container.register(VisionTextRecognitionProtocol.self, instance: textRecognitionManager)
+        
+        // Register detection results manager as singleton instance
+        let detectionResultsManager = DetectionResultsManager()
+        container.register(DetectionResultsManager.self, instance: detectionResultsManager)
     }
     
     // MARK: - Service Dependencies
