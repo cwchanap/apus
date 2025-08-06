@@ -277,7 +277,7 @@ final class DetectionResultsModelsTests: XCTestCase {
         let convertedResult = storedResult.toClassificationResult()
         
         // Then
-        XCTAssertNotEqual(storedResult.id, originalResult.id, "Should have different IDs")
+        XCTAssertNotEqual(storedResult.id.uuidString, originalResult.identifier, "Should have different IDs")
         XCTAssertEqual(convertedResult.identifier, originalResult.identifier, "Identifier should be preserved")
         XCTAssertEqual(convertedResult.confidence, originalResult.confidence, "Confidence should be preserved")
     }

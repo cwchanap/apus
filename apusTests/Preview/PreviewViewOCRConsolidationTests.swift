@@ -59,15 +59,16 @@ final class PreviewViewOCRConsolidationTests: XCTestCase {
             DetectedText(
                 text: "Sample Text",
                 boundingBox: CGRect(x: 0.1, y: 0.1, width: 0.3, height: 0.1),
-                confidence: 0.95
+                confidence: 0.95,
+                characterBoxes: []
             )
         ]
         mockTextRecognitionManager.mockDetectedTexts = mockDetectedTexts
         
         // Mock successful classification
         let mockClassificationResults = [
-            ClassificationResult(label: "Document", confidence: 0.9),
-            ClassificationResult(label: "Text", confidence: 0.8)
+            ClassificationResult(identifier: "Document", confidence: 0.9),
+            ClassificationResult(identifier: "Text", confidence: 0.8)
         ]
         mockImageClassificationManager.mockResults = mockClassificationResults
         
@@ -79,7 +80,7 @@ final class PreviewViewOCRConsolidationTests: XCTestCase {
                 XCTAssertEqual(detectedTexts.first?.text, "Sample Text")
                 
                 // Step 2: Classification
-                self.mockImageClassificationManager.classifyImage(testImage) { classificationResult in
+                self.mockImageClassificationManager.classifyImage(self.testImage) { classificationResult in
                     switch classificationResult {
                     case .success(let classificationResults):
                         XCTAssertEqual(classificationResults.count, 2)
@@ -208,10 +209,10 @@ final class PreviewViewOCRConsolidationTests: XCTestCase {
         Task {
             // Simulate OCR + Classification results
             let ocrResults = [
-                DetectedText(text: "Test", boundingBox: CGRect.zero, confidence: 0.9)
+                DetectedText(text: "Test", boundingBox: CGRect.zero, confidence: 0.9, characterBoxes: [])
             ]
             let classificationResults = [
-                ClassificationResult(label: "Document", confidence: 0.85)
+                ClassificationResult(identifier: "Document", confidence: 0.85)
             ]
             
             // Verify results are saved to consolidated system
@@ -247,7 +248,7 @@ final class PreviewViewOCRConsolidationTests: XCTestCase {
         // Mock text recognition failure
         mockTextRecognitionManager.shouldFail = true
         
-        mockTextRecognitionManager.detectText(in: testImage) { result in
+        mockTextRecognitionManager.detectText(in: self.testImage) { result in
             switch result {
             case .success:
                 XCTFail("Should have failed")
