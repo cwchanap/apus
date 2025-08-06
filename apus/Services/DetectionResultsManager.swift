@@ -33,7 +33,7 @@ class DetectionResultsManager: ObservableObject {
     // MARK: - Initialization
     
     init() {
-        loadAllResults()
+        loadAllResultsAsync()
     }
     
     // MARK: - OCR Results Management
@@ -56,10 +56,16 @@ class DetectionResultsManager: ObservableObject {
     }
     
     private func saveOCRResults() {
-        do {
-            ocrResultsData = try encoder.encode(ocrResults)
-        } catch {
-            print("Failed to save OCR results: \(error)")
+        let resultsToSave = ocrResults // Capture current state
+        Task.detached(priority: .utility) {
+            do {
+                let data = try self.encoder.encode(resultsToSave)
+                await MainActor.run {
+                    self.ocrResultsData = data
+                }
+            } catch {
+                print("Failed to save OCR results: \(error)")
+            }
         }
     }
     
@@ -94,10 +100,16 @@ class DetectionResultsManager: ObservableObject {
     }
     
     private func saveObjectDetectionResults() {
-        do {
-            objectDetectionResultsData = try encoder.encode(objectDetectionResults)
-        } catch {
-            print("Failed to save object detection results: \(error)")
+        let resultsToSave = objectDetectionResults // Capture current state
+        Task.detached(priority: .utility) {
+            do {
+                let data = try self.encoder.encode(resultsToSave)
+                await MainActor.run {
+                    self.objectDetectionResultsData = data
+                }
+            } catch {
+                print("Failed to save object detection results: \(error)")
+            }
         }
     }
     
@@ -132,10 +144,16 @@ class DetectionResultsManager: ObservableObject {
     }
     
     private func saveClassificationResults() {
-        do {
-            classificationResultsData = try encoder.encode(classificationResults)
-        } catch {
-            print("Failed to save classification results: \(error)")
+        let resultsToSave = classificationResults // Capture current state
+        Task.detached(priority: .utility) {
+            do {
+                let data = try self.encoder.encode(resultsToSave)
+                await MainActor.run {
+                    self.classificationResultsData = data
+                }
+            } catch {
+                print("Failed to save classification results: \(error)")
+            }
         }
     }
     
@@ -152,10 +170,100 @@ class DetectionResultsManager: ObservableObject {
     
     // MARK: - General Management
     
-    private func loadAllResults() {
-        loadOCRResults()
-        loadObjectDetectionResults()
-        loadClassificationResults()
+    private func loadAllResultsAsync() {
+        Task {
+            await loadAllResults()
+        }
+    }
+    
+    @MainActor
+    private func loadAllResults() async {
+        // Load all results on background queue to avoid blocking main thread
+        let (ocrData, objectData, classificationData) = (ocrResultsData, objectDetectionResultsData, classificationResultsData)
+        
+        let results = await withTaskGroup(of: (String, Any).self) { group in
+            var loadedResults: [String: Any] = [:]
+            
+            group.addTask {
+                let ocr = await self.loadOCRResultsAsync(from: ocrData)
+                return ("ocr", ocr)
+            }
+            
+            group.addTask {
+                let objects = await self.loadObjectDetectionResultsAsync(from: objectData)
+                return ("objects", objects)
+            }
+            
+            group.addTask {
+                let classifications = await self.loadClassificationResultsAsync(from: classificationData)
+                return ("classifications", classifications)
+            }
+            
+            for await (key, value) in group {
+                loadedResults[key] = value
+            }
+            
+            return loadedResults
+        }
+        
+        // Update published properties on main actor
+        if let ocrResults = results["ocr"] as? [StoredOCRResult] {
+            self.ocrResults = ocrResults
+        }
+        if let objectResults = results["objects"] as? [StoredObjectDetectionResult] {
+            self.objectDetectionResults = objectResults
+        }
+        if let classificationResults = results["classifications"] as? [StoredClassificationResult] {
+            self.classificationResults = classificationResults
+        }
+    }
+    
+    private func loadOCRResultsAsync(from data: Data) async -> [StoredOCRResult] {
+        guard !data.isEmpty else { return [] }
+        
+        return await withCheckedContinuation { continuation in
+            DispatchQueue.global(qos: .userInitiated).async {
+                do {
+                    let results = try self.decoder.decode([StoredOCRResult].self, from: data)
+                    continuation.resume(returning: results)
+                } catch {
+                    print("Failed to load OCR results: \(error)")
+                    continuation.resume(returning: [])
+                }
+            }
+        }
+    }
+    
+    private func loadObjectDetectionResultsAsync(from data: Data) async -> [StoredObjectDetectionResult] {
+        guard !data.isEmpty else { return [] }
+        
+        return await withCheckedContinuation { continuation in
+            DispatchQueue.global(qos: .userInitiated).async {
+                do {
+                    let results = try self.decoder.decode([StoredObjectDetectionResult].self, from: data)
+                    continuation.resume(returning: results)
+                } catch {
+                    print("Failed to load object detection results: \(error)")
+                    continuation.resume(returning: [])
+                }
+            }
+        }
+    }
+    
+    private func loadClassificationResultsAsync(from data: Data) async -> [StoredClassificationResult] {
+        guard !data.isEmpty else { return [] }
+        
+        return await withCheckedContinuation { continuation in
+            DispatchQueue.global(qos: .userInitiated).async {
+                do {
+                    let results = try self.decoder.decode([StoredClassificationResult].self, from: data)
+                    continuation.resume(returning: results)
+                } catch {
+                    print("Failed to load classification results: \(error)")
+                    continuation.resume(returning: [])
+                }
+            }
+        }
     }
     
     func clearAllResults() {

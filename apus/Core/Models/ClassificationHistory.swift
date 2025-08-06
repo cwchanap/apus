@@ -33,7 +33,7 @@ class ClassificationHistoryManager: ObservableObject {
     private let maxHistoryItems = 50
     
     init() {
-        loadHistory()
+        loadHistoryAsync()
     }
     
     @MainActor
@@ -62,23 +62,43 @@ class ClassificationHistoryManager: ObservableObject {
     }
     
     private func saveHistory() {
-        do {
-            let data = try JSONEncoder().encode(historyItems)
-            userDefaults.set(data, forKey: historyKey)
-        } catch {
-            print("Failed to save classification history: \(error)")
+        let itemsToSave = historyItems // Capture current state
+        Task.detached(priority: .utility) {
+            do {
+                let data = try JSONEncoder().encode(itemsToSave)
+                await MainActor.run {
+                    self.userDefaults.set(data, forKey: self.historyKey)
+                }
+            } catch {
+                print("Failed to save classification history: \(error)")
+            }
         }
     }
     
-    private func loadHistory() {
+    private func loadHistoryAsync() {
+        Task {
+            await loadHistory()
+        }
+    }
+    
+    @MainActor
+    private func loadHistory() async {
         guard let data = userDefaults.data(forKey: historyKey) else { return }
         
-        do {
-            historyItems = try JSONDecoder().decode([ClassificationHistoryItem].self, from: data)
-        } catch {
-            print("Failed to load classification history: \(error)")
-            historyItems = []
+        // Perform JSON decoding on background queue
+        let decodedItems = await withCheckedContinuation { continuation in
+            DispatchQueue.global(qos: .userInitiated).async {
+                do {
+                    let items = try JSONDecoder().decode([ClassificationHistoryItem].self, from: data)
+                    continuation.resume(returning: items)
+                } catch {
+                    print("Failed to load classification history: \(error)")
+                    continuation.resume(returning: [])
+                }
+            }
         }
+        
+        self.historyItems = decodedItems
     }
 }
 

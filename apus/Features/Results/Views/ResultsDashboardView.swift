@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ResultsDashboardView: View {
-    @StateObject private var resultsManager = DetectionResultsManager()
+    @Injected private var resultsManager: DetectionResultsManager
     @State private var selectedCategory: DetectionCategory?
     @State private var showingCategoryView = false
     

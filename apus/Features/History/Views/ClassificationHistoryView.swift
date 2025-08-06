@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ClassificationHistoryView: View {
-    @StateObject private var historyManager = ClassificationHistoryManager()
+    @Injected private var historyManager: ClassificationHistoryManager
     @State private var selectedItem: ClassificationHistoryItem?
     @State private var showingDeleteAlert = false
     @Injected private var hapticService: HapticServiceProtocol
