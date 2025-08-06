@@ -67,9 +67,6 @@ class AppDependencies: ObservableObject {
         let imageClassificationManager = ImageClassificationProvider()
         container.register(ImageClassificationProtocol.self, instance: imageClassificationManager)
         
-        // Register classification history manager as singleton instance
-        let historyManager = ClassificationHistoryManager()
-        container.register(ClassificationHistoryManager.self, instance: historyManager)
         
         // Register haptic service as singleton instance
         let hapticService = HapticService()

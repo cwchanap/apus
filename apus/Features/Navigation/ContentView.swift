@@ -11,7 +11,6 @@ import SwiftData
 enum NavigationPage {
     case home
     case settings
-    case history
     case results
 }
 
@@ -30,17 +29,6 @@ struct ContentView: View {
                 NavigationStack {
                     SettingsView()
                         .navigationTitle("Settings")
-                        .toolbar {
-                            ToolbarItem(placement: .navigationBarLeading) {
-                                Button("Back to Camera") {
-                                    currentPage = .home
-                                }
-                            }
-                        }
-                }
-            case .history:
-                NavigationStack {
-                    ClassificationHistoryView()
                         .toolbar {
                             ToolbarItem(placement: .navigationBarLeading) {
                                 Button("Back to Camera") {
@@ -79,17 +67,6 @@ struct ContentView: View {
                                     .clipShape(Circle())
                             }
                             
-                            Button(action: {
-                                hapticService.buttonTap()
-                                currentPage = .history
-                            }) {
-                                Image(systemName: "clock.arrow.circlepath")
-                                    .font(.title2)
-                                    .foregroundColor(.white)
-                                    .frame(width: 44, height: 44)
-                                    .background(Color.black.opacity(0.6))
-                                    .clipShape(Circle())
-                            }
                             
                             Button(action: {
                                 hapticService.buttonTap()

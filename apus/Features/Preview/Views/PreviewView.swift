@@ -47,7 +47,6 @@ struct PreviewView: View {
     }
     
     @Injected private var imageClassificationManager: ImageClassificationProtocol
-    @Injected private var historyManager: ClassificationHistoryManager
     @Injected private var hapticService: HapticServiceProtocol
     @Injected private var contourDetectionManager: ContourDetectionProtocol
     @Injected private var unifiedObjectDetectionManager: UnifiedObjectDetectionProtocol
@@ -351,7 +350,7 @@ struct PreviewView: View {
             Text(alertMessage)
         }
         .sheet(isPresented: $showingHistory) {
-            ClassificationHistoryView()
+            ResultsDashboardView()
         }
         .onChange(of: capturedImage) { oldValue, newValue in
             // Clear all caches when image changes
@@ -389,10 +388,8 @@ struct PreviewView: View {
                     
                     // Save to history if we have results and an image
                     if !results.isEmpty, let originalImage = self.capturedImage {
-                        let historyItem = ClassificationHistoryItem(results: results, image: originalImage)
-                        Task { @MainActor in
-                            self.historyManager.addHistoryItem(historyItem)
-                        }
+                        // Save to consolidated results system
+                        detectionResultsManager.saveClassificationResult(classificationResults: results, image: originalImage)
                     }
                     
                 case .failure(let error):
