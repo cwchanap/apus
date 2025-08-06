@@ -140,34 +140,34 @@ struct PreviewView: View {
                 VStack(spacing: 12) {
                     // Top row: Analysis buttons
                     VStack(spacing: 8) {
-                        // First row: Classification and Object Detection
+                        // First row: OCR + Classification and Object Detection
                         HStack(spacing: 12) {
-                        // Classify button
+                        // OCR + Classify button
                         Button(action: {
                             hapticService.actionFeedback()
-                            toggleClassification()
+                            performOCRAndClassification()
                         }) {
                             HStack(spacing: 4) {
-                                if isClassifying {
+                                if isDetectingTexts || isClassifying {
                                     ProgressView()
                                         .progressViewStyle(CircularProgressViewStyle(tint: .white))
                                         .scaleEffect(0.7)
-                                    Text("Classifying...")
+                                    Text(isDetectingTexts ? "Reading Text..." : "Classifying Text...")
                                         .font(.caption)
                                 } else {
-                                    Image(systemName: showingClassificationResults ? "brain.head.profile.fill" : "brain.head.profile")
+                                    Image(systemName: "textformat.abc")
                                         .font(.caption)
-                                    Text(getClassificationButtonText())
+                                    Text("OCR + Classify")
                                         .font(.caption)
                                 }
                             }
                             .foregroundColor(.white)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 8)
-                            .background(getClassificationButtonColor())
+                            .background(Color.purple)
                             .clipShape(Capsule())
                         }
-                        .disabled(isClassifying)
+                        .disabled(isDetectingTexts || isClassifying)
                         
                         // Object detection button
                         Button(action: {
@@ -197,7 +197,7 @@ struct PreviewView: View {
                         .disabled(isDetectingObjects)
                         }
                         
-                        // Second row: Contour Detection and Text Recognition
+                        // Second row: Contour Detection
                         HStack(spacing: 12) {
                         // Contour detection button
                         Button(action: {
@@ -226,64 +226,7 @@ struct PreviewView: View {
                         }
                         .disabled(isDetectingContours)
                         
-                        // Text recognition button
-                        Button(action: {
-                            hapticService.actionFeedback()
-                            toggleTextRecognition()
-                        }) {
-                            HStack(spacing: 4) {
-                                if isDetectingTexts {
-                                    ProgressView()
-                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                        .scaleEffect(0.7)
-                                    Text("Detecting...")
-                                        .font(.caption)
-                                } else {
-                                    Image(systemName: showingTexts ? "textformat.alt" : "textformat")
-                                        .font(.caption)
-                                    Text(getTextRecognitionButtonText())
-                                        .font(.caption)
-                                }
-                            }
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(getTextRecognitionButtonColor())
-                            .clipShape(Capsule())
-                        }
-                        .disabled(isDetectingTexts)
-                        }
-                        
-                        // Third row: OCR + Classification workflow
-                        HStack(spacing: 12) {
-                        // OCR + Classify button
-                        Button(action: {
-                            hapticService.actionFeedback()
-                            performOCRAndClassification()
-                        }) {
-                            HStack(spacing: 4) {
-                                if isDetectingTexts || isClassifying {
-                                    ProgressView()
-                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                        .scaleEffect(0.7)
-                                    Text(isDetectingTexts ? "Reading Text..." : "Classifying Text...")
-                                        .font(.caption)
-                                } else {
-                                    Image(systemName: "textformat.abc")
-                                        .font(.caption)
-                                    Text("OCR + Classify")
-                                        .font(.caption)
-                                }
-                            }
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(.cyan)
-                            .clipShape(Capsule())
-                        }
-                        .disabled(isDetectingTexts || isClassifying)
-                        
-                        Spacer() // Balance the layout
+                        Spacer() // Fill remaining space
                         }
                     }
                     
