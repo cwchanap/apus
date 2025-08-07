@@ -23,6 +23,11 @@ class DetectionResultsManager: ObservableObject {
     @Published var ocrResults: [StoredOCRResult] = []
     @Published var objectDetectionResults: [StoredObjectDetectionResult] = []
     @Published var classificationResults: [StoredClassificationResult] = []
+    @Published var isLoading: Bool = true
+    
+    // Cached computed properties to avoid recalculation
+    @Published private(set) var cachedTotalCount: Int = 0
+    @Published private(set) var cachedHasResults: Bool = false
     
     // MARK: - Constants
     
@@ -47,6 +52,7 @@ class DetectionResultsManager: ObservableObject {
             ocrResults = Array(ocrResults.prefix(maxResultsPerCategory))
         }
         
+        updateCachedValues()
         saveOCRResults()
     }
     
@@ -91,6 +97,7 @@ class DetectionResultsManager: ObservableObject {
             objectDetectionResults = Array(objectDetectionResults.prefix(maxResultsPerCategory))
         }
         
+        updateCachedValues()
         saveObjectDetectionResults()
     }
     
@@ -135,6 +142,7 @@ class DetectionResultsManager: ObservableObject {
             self.classificationResults = Array(self.classificationResults.prefix(maxResultsPerCategory))
         }
         
+        updateCachedValues()
         saveClassificationResults()
     }
     
@@ -216,6 +224,10 @@ class DetectionResultsManager: ObservableObject {
         if let classificationResults = results["classifications"] as? [StoredClassificationResult] {
             self.classificationResults = classificationResults
         }
+        
+        // Update cached values and mark loading as complete
+        updateCachedValues()
+        self.isLoading = false
     }
     
     private func loadOCRResultsAsync(from data: Data) async -> [StoredOCRResult] {
@@ -275,11 +287,17 @@ class DetectionResultsManager: ObservableObject {
     // MARK: - Statistics
     
     var totalResultsCount: Int {
-        return ocrResults.count + objectDetectionResults.count + classificationResults.count
+        return cachedTotalCount
     }
     
     var hasAnyResults: Bool {
-        return totalResultsCount > 0
+        return cachedHasResults
+    }
+    
+    private func updateCachedValues() {
+        let newTotalCount = ocrResults.count + objectDetectionResults.count + classificationResults.count
+        cachedTotalCount = newTotalCount
+        cachedHasResults = newTotalCount > 0
     }
     
     func getResultsCount(for category: DetectionCategory) -> Int {
