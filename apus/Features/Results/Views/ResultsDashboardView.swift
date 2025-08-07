@@ -183,3 +183,71 @@ struct ResultsDashboardView: View {
         }
     }
 }
+
+// MARK: - Supporting Views
+
+struct StorageInfoRow: View {
+    let label: String
+    let count: Int
+    let maxCount: Int
+    let color: Color
+    
+    var body: some View {
+        HStack {
+            HStack(spacing: 8) {
+                Circle()
+                    .fill(color)
+                    .frame(width: 8, height: 8)
+                
+                Text(label)
+                    .font(.body)
+                    .foregroundColor(.primary)
+            }
+            
+            Spacer()
+            
+            HStack(spacing: 4) {
+                Text("\(count)")
+                    .font(.body)
+                    .fontWeight(.medium)
+                    .foregroundColor(.primary)
+                
+                Text("/ \(maxCount)")
+                    .font(.body)
+                    .foregroundColor(.secondary)
+            }
+            
+            // Progress bar
+            GeometryReader { geometry in
+                ZStack(alignment: .leading) {
+                    Rectangle()
+                        .fill(Color.gray.opacity(0.2))
+                        .frame(height: 4)
+                    
+                    Rectangle()
+                        .fill(color)
+                        .frame(width: geometry.size.width * CGFloat(count) / CGFloat(maxCount), height: 4)
+                }
+            }
+            .frame(width: 60, height: 4)
+        }
+    }
+}
+
+struct CategoryResultsView: View {
+    let category: DetectionCategory
+    @ObservedObject var resultsManager: DetectionResultsManager
+    
+    var body: some View {
+        Group {
+            switch category {
+            case .ocr:
+                OCRResultsView(resultsManager: resultsManager)
+            case .objectDetection:
+                ObjectDetectionResultsView(resultsManager: resultsManager)
+            case .classification:
+                ClassificationResultsView(resultsManager: resultsManager)
+            }
+        }
+    }
+}
