@@ -12,7 +12,7 @@ struct VisionTextRecognitionOverlay: View {
     let imageSize: CGSize
     let displaySize: CGSize
     @State private var opacity: Double = 0.9
-    
+
     var body: some View {
         ZStack {
             ForEach(detectedTexts) { detectedText in
@@ -37,11 +37,11 @@ struct TextDetectionBox: View {
     let imageSize: CGSize
     let displaySize: CGSize
     let opacity: Double
-    
+
     private var displayBoundingBox: CGRect {
         detectedText.displayBoundingBox(imageSize: imageSize, displaySize: displaySize)
     }
-    
+
     private var textColor: Color {
         // Use different colors based on confidence level
         if detectedText.confidence > 0.9 {
@@ -52,12 +52,12 @@ struct TextDetectionBox: View {
             return .red
         }
     }
-    
+
     private var lineWidth: CGFloat {
         // Thicker lines for higher confidence
         return detectedText.confidence > 0.8 ? 2.0 : 1.5
     }
-    
+
     var body: some View {
         ZStack(alignment: .topLeading) {
             // Bounding box rectangle
@@ -72,7 +72,7 @@ struct TextDetectionBox: View {
                     x: displayBoundingBox.midX,
                     y: displayBoundingBox.midY
                 )
-            
+
             // Text label with confidence
             Text("\(detectedText.text) (\(Int(detectedText.confidence * 100))%)")
                 .font(.caption)
@@ -91,7 +91,7 @@ struct TextDetectionBox: View {
         }
         .opacity(opacity)
     }
-    
+
 }
 
 // MARK: - Preview
@@ -119,7 +119,7 @@ struct VisionTextRecognitionOverlay_Previews: PreviewProvider {
                 characterBoxes: []
             )
         ]
-        
+
         VisionTextRecognitionOverlay(
             detectedTexts: mockTexts,
             imageSize: CGSize(width: 400, height: 300),

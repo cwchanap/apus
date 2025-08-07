@@ -15,16 +15,16 @@ struct DetectedObject {
     let className: String
     let confidence: Float
     let framework: ObjectDetectionFramework
-    
+
     /// Convert bounding box to display coordinates
     func displayBoundingBox(imageSize: CGSize, displaySize: CGSize) -> CGRect {
         // Calculate how the image is actually displayed within the view bounds
         let imageAspectRatio = imageSize.width / imageSize.height
         let displayAspectRatio = displaySize.width / displaySize.height
-        
+
         var imageDisplaySize: CGSize
         var imageOffset: CGPoint
-        
+
         if imageAspectRatio > displayAspectRatio {
             // Image is wider - fit to width
             imageDisplaySize = CGSize(
@@ -46,7 +46,7 @@ struct DetectedObject {
                 y: 0
             )
         }
-        
+
         // Scale normalized coordinates to display coordinates
         return CGRect(
             x: boundingBox.minX * imageDisplaySize.width + imageOffset.x,
@@ -62,7 +62,7 @@ protocol UnifiedObjectDetectionProtocol: ObservableObject {
     var isDetecting: Bool { get }
     var lastDetectedObjects: [DetectedObject] { get }
     var framework: ObjectDetectionFramework { get }
-    
+
     func detectObjects(in image: UIImage, completion: @escaping (Result<[DetectedObject], Error>) -> Void)
 }
 
@@ -72,7 +72,7 @@ class ObjectDetectionFactory {
         // Use default framework to avoid circular dependency with AppSettings
         // The actual framework will be determined when detection is first used
         let defaultFramework = ObjectDetectionFramework.vision
-        
+
         #if DEBUG || targetEnvironment(simulator)
         // Use mock implementation for simulator/debug
         return MockUnifiedObjectDetectionManager(framework: defaultFramework)
@@ -82,7 +82,7 @@ class ObjectDetectionFactory {
         return VisionUnifiedObjectDetectionManager()
         #endif
     }
-    
+
     /// Create object detection manager with specific framework (for runtime switching)
     static func createObjectDetectionManager(framework: ObjectDetectionFramework) -> any UnifiedObjectDetectionProtocol {
         #if DEBUG || targetEnvironment(simulator)
@@ -104,35 +104,35 @@ class MockUnifiedObjectDetectionManager: UnifiedObjectDetectionProtocol {
     @Published var isDetecting = false
     @Published var lastDetectedObjects: [DetectedObject] = []
     let framework: ObjectDetectionFramework
-    
+
     init(framework: ObjectDetectionFramework) {
         self.framework = framework
     }
-    
+
     func detectObjects(in image: UIImage, completion: @escaping (Result<[DetectedObject], Error>) -> Void) {
         isDetecting = true
-        
+
         // Simulate processing delay (TensorFlow Lite takes longer)
         let delay = framework == .tensorflowLite ? 2.0 : 1.2
-        
+
         DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
             self.isDetecting = false
-            
+
             // Generate varied mock detections based on image characteristics and framework
             let mockDetections = self.generateMockDetections(for: image)
-            
+
             self.lastDetectedObjects = mockDetections
             completion(.success(mockDetections))
         }
     }
-    
+
     private func generateMockDetections(for image: UIImage) -> [DetectedObject] {
         // Create a simple hash based on image properties to ensure different results
         let imageHash = self.simpleImageHash(image)
-        
+
         // Define different detection scenarios based on framework
         let detectionSets: [[DetectedObject]]
-        
+
         switch framework {
         case .vision:
             // Vision framework tends to detect more general objects
@@ -155,25 +155,25 @@ class MockUnifiedObjectDetectionManager: UnifiedObjectDetectionProtocol {
                 createTensorFlowMixedDetections()
             ]
         }
-        
+
         // Select detection set based on image hash
         let selectedIndex = imageHash % detectionSets.count
         var selectedDetections = detectionSets[selectedIndex]
-        
+
         // Add some randomness to positions and confidence scores
         selectedDetections = selectedDetections.map { detection in
             let positionVariation = Float.random(in: -0.05...0.05)
             let confidenceVariation = Float.random(in: -0.1...0.1)
-            
+
             let adjustedBoundingBox = CGRect(
                 x: max(0, min(0.8, detection.boundingBox.minX + CGFloat(positionVariation))),
                 y: max(0, min(0.8, detection.boundingBox.minY + CGFloat(positionVariation))),
                 width: detection.boundingBox.width,
                 height: detection.boundingBox.height
             )
-            
+
             let adjustedConfidence = max(0.1, min(0.99, detection.confidence + confidenceVariation))
-            
+
             return DetectedObject(
                 boundingBox: adjustedBoundingBox,
                 className: detection.className,
@@ -181,19 +181,19 @@ class MockUnifiedObjectDetectionManager: UnifiedObjectDetectionProtocol {
                 framework: framework
             )
         }
-        
+
         return selectedDetections
     }
-    
+
     private func simpleImageHash(_ image: UIImage) -> Int {
         let width = Int(image.size.width)
         let height = Int(image.size.height)
         let scale = Int(image.scale * 100)
         let orientation = image.imageOrientation.rawValue
-        
+
         return (width * 31 + height * 17 + scale * 7 + orientation * 3) % 1000
     }
-    
+
     // MARK: - Vision Framework Mock Detections
     private func createVisionPeopleDetections() -> [DetectedObject] {
         return [
@@ -211,7 +211,7 @@ class MockUnifiedObjectDetectionManager: UnifiedObjectDetectionProtocol {
             )
         ]
     }
-    
+
     private func createVisionAnimalDetections() -> [DetectedObject] {
         return [
             DetectedObject(
@@ -228,7 +228,7 @@ class MockUnifiedObjectDetectionManager: UnifiedObjectDetectionProtocol {
             )
         ]
     }
-    
+
     private func createVisionVehicleDetections() -> [DetectedObject] {
         return [
             DetectedObject(
@@ -245,7 +245,7 @@ class MockUnifiedObjectDetectionManager: UnifiedObjectDetectionProtocol {
             )
         ]
     }
-    
+
     private func createVisionFoodDetections() -> [DetectedObject] {
         return [
             DetectedObject(
@@ -262,7 +262,7 @@ class MockUnifiedObjectDetectionManager: UnifiedObjectDetectionProtocol {
             )
         ]
     }
-    
+
     private func createVisionObjectDetections() -> [DetectedObject] {
         return [
             DetectedObject(
@@ -279,7 +279,7 @@ class MockUnifiedObjectDetectionManager: UnifiedObjectDetectionProtocol {
             )
         ]
     }
-    
+
     private func createVisionMixedDetections() -> [DetectedObject] {
         return [
             DetectedObject(
@@ -296,7 +296,7 @@ class MockUnifiedObjectDetectionManager: UnifiedObjectDetectionProtocol {
             )
         ]
     }
-    
+
     // MARK: - TensorFlow Lite Mock Detections (More specific/technical)
     private func createTensorFlowPeopleDetections() -> [DetectedObject] {
         return [
@@ -314,7 +314,7 @@ class MockUnifiedObjectDetectionManager: UnifiedObjectDetectionProtocol {
             )
         ]
     }
-    
+
     private func createTensorFlowAnimalDetections() -> [DetectedObject] {
         return [
             DetectedObject(
@@ -331,7 +331,7 @@ class MockUnifiedObjectDetectionManager: UnifiedObjectDetectionProtocol {
             )
         ]
     }
-    
+
     private func createTensorFlowVehicleDetections() -> [DetectedObject] {
         return [
             DetectedObject(
@@ -348,7 +348,7 @@ class MockUnifiedObjectDetectionManager: UnifiedObjectDetectionProtocol {
             )
         ]
     }
-    
+
     private func createTensorFlowFoodDetections() -> [DetectedObject] {
         return [
             DetectedObject(
@@ -371,7 +371,7 @@ class MockUnifiedObjectDetectionManager: UnifiedObjectDetectionProtocol {
             )
         ]
     }
-    
+
     private func createTensorFlowObjectDetections() -> [DetectedObject] {
         return [
             DetectedObject(
@@ -388,7 +388,7 @@ class MockUnifiedObjectDetectionManager: UnifiedObjectDetectionProtocol {
             )
         ]
     }
-    
+
     private func createTensorFlowMixedDetections() -> [DetectedObject] {
         return [
             DetectedObject(

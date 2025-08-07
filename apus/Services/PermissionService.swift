@@ -23,7 +23,7 @@ enum PermissionStatus {
     case denied
     case notDetermined
     case restricted
-    
+
     var isAuthorized: Bool {
         return self == .authorized
     }
@@ -38,7 +38,7 @@ protocol PermissionServiceProtocol {
 
 // MARK: - Permission Service Implementation
 class PermissionService: PermissionServiceProtocol {
-    
+
     func requestPermission(for type: PermissionType) -> AnyPublisher<PermissionStatus, Never> {
         switch type {
         case .camera:
@@ -49,7 +49,7 @@ class PermissionService: PermissionServiceProtocol {
             return requestMicrophonePermission()
         }
     }
-    
+
     func getPermissionStatus(for type: PermissionType) -> PermissionStatus {
         switch type {
         case .camera:
@@ -60,17 +60,17 @@ class PermissionService: PermissionServiceProtocol {
             return convertAVAuthorizationStatus(AVCaptureDevice.authorizationStatus(for: .audio))
         }
     }
-    
+
     func openAppSettings() {
         guard let settingsUrl = URL(string: UIApplication.openSettingsURLString) else { return }
-        
+
         if UIApplication.shared.canOpenURL(settingsUrl) {
             UIApplication.shared.open(settingsUrl)
         }
     }
-    
+
     // MARK: - Private Methods
-    
+
     private func requestCameraPermission() -> AnyPublisher<PermissionStatus, Never> {
         Future<PermissionStatus, Never> { promise in
             AVCaptureDevice.requestAccess(for: .video) { granted in
@@ -82,7 +82,7 @@ class PermissionService: PermissionServiceProtocol {
         }
         .eraseToAnyPublisher()
     }
-    
+
     private func requestPhotoLibraryPermission() -> AnyPublisher<PermissionStatus, Never> {
         Future<PermissionStatus, Never> { promise in
             PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
@@ -93,7 +93,7 @@ class PermissionService: PermissionServiceProtocol {
         }
         .eraseToAnyPublisher()
     }
-    
+
     private func requestMicrophonePermission() -> AnyPublisher<PermissionStatus, Never> {
         Future<PermissionStatus, Never> { promise in
             AVCaptureDevice.requestAccess(for: .audio) { granted in
@@ -105,7 +105,7 @@ class PermissionService: PermissionServiceProtocol {
         }
         .eraseToAnyPublisher()
     }
-    
+
     private func convertAVAuthorizationStatus(_ status: AVAuthorizationStatus) -> PermissionStatus {
         switch status {
         case .authorized:
@@ -120,7 +120,7 @@ class PermissionService: PermissionServiceProtocol {
             return .denied
         }
     }
-    
+
     private func convertPHAuthorizationStatus(_ status: PHAuthorizationStatus) -> PermissionStatus {
         switch status {
         case .authorized:
@@ -143,18 +143,18 @@ class PermissionService: PermissionServiceProtocol {
 class MockPermissionService: PermissionServiceProtocol {
     var mockPermissions: [PermissionType: PermissionStatus] = [:]
     var shouldGrantPermissions = true
-    
+
     func requestPermission(for type: PermissionType) -> AnyPublisher<PermissionStatus, Never> {
         let status: PermissionStatus = shouldGrantPermissions ? .authorized : .denied
         mockPermissions[type] = status
         return Just(status)
             .eraseToAnyPublisher()
     }
-    
+
     func getPermissionStatus(for type: PermissionType) -> PermissionStatus {
         return mockPermissions[type] ?? .notDetermined
     }
-    
+
     func openAppSettings() {
         // Mock implementation - do nothing
         print("Mock: Opening app settings")

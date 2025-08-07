@@ -12,10 +12,10 @@ struct UnifiedObjectDetectionOverlay: View {
     let imageSize: CGSize
     let displaySize: CGSize
     @State private var overlayOpacity: Double = 0.9
-    
+
     var body: some View {
         ZStack {
-            ForEach(Array(detections.enumerated()), id: \.element.id) { index, detection in
+            ForEach(Array(detections.enumerated()), id: \.element.id) { _, detection in
                 UnifiedDetectionBox(
                     detection: detection,
                     imageSize: imageSize,
@@ -37,12 +37,12 @@ struct UnifiedDetectionBox: View {
     let imageSize: CGSize
     let displaySize: CGSize
     let opacity: Double
-    
+
     // Use the built-in display bounding box calculation from DetectedObject
     private var displayBoundingBox: CGRect {
         detection.displayBoundingBox(imageSize: imageSize, displaySize: displaySize)
     }
-    
+
     private var boxColor: Color {
         // Color based on framework first, then object class
         switch detection.framework {
@@ -52,7 +52,7 @@ struct UnifiedDetectionBox: View {
             return tensorFlowFrameworkColor(for: detection.className)
         }
     }
-    
+
     private func visionFrameworkColor(for className: String) -> Color {
         // Apple Vision framework colors (more iOS-native feel)
         switch className.lowercased() {
@@ -74,7 +74,7 @@ struct UnifiedDetectionBox: View {
             return .blue.opacity(0.8)
         }
     }
-    
+
     private func tensorFlowFrameworkColor(for className: String) -> Color {
         // TensorFlow Lite colors (more technical/vibrant feel)
         switch className.lowercased() {
@@ -96,14 +96,14 @@ struct UnifiedDetectionBox: View {
             return .orange.opacity(0.8)
         }
     }
-    
+
     private var strokeWidth: CGFloat {
         // Vary stroke width based on confidence and framework
         let baseWidth: CGFloat = detection.framework == .tensorflowLite ? 2.5 : 2.0
         let confidenceMultiplier = CGFloat(detection.confidence)
         return baseWidth * (0.5 + confidenceMultiplier * 0.5)
     }
-    
+
     private var frameworkBadge: some View {
         Text(detection.framework.displayName.prefix(2).uppercased())
             .font(.system(size: 8, weight: .bold))
@@ -115,7 +115,7 @@ struct UnifiedDetectionBox: View {
                     .fill(detection.framework == .vision ? Color.blue : Color.orange)
             )
     }
-    
+
     var body: some View {
         ZStack(alignment: .topLeading) {
             // Bounding box
@@ -133,7 +133,7 @@ struct UnifiedDetectionBox: View {
                     x: displayBoundingBox.midX,
                     y: displayBoundingBox.midY
                 )
-            
+
             // Label background and text
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 4) {
@@ -141,10 +141,10 @@ struct UnifiedDetectionBox: View {
                         .font(.caption)
                         .fontWeight(.semibold)
                         .foregroundColor(.white)
-                    
+
                     frameworkBadge
                 }
-                
+
                 Text("\(Int(detection.confidence * 100))%")
                     .font(.caption2)
                     .foregroundColor(.white.opacity(0.9))
@@ -170,7 +170,7 @@ struct UnifiedDetectionBox: View {
     GeometryReader { geometry in
         ZStack {
             Color.black
-            
+
             UnifiedObjectDetectionOverlay(
                 detections: [
                     DetectedObject(

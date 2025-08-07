@@ -9,9 +9,9 @@ import SwiftUI
 import SwiftData
 
 @main
-struct apusApp: App {
+struct ApusApp: App {
     @StateObject private var appDependencies = AppDependencies.shared
-    
+
     init() {
         // Ensure dependencies are configured at app startup
         _ = AppDependencies.shared.diContainer
@@ -19,7 +19,7 @@ struct apusApp: App {
     }
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
-            Item.self,
+            Item.self
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 

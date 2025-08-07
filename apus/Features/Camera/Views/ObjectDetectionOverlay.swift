@@ -9,12 +9,12 @@ import SwiftUI
 
 struct ObjectDetectionOverlay: View {
     let detections: [Detection]
-    
+
     var body: some View {
         GeometryReader { geometry in
             ForEach(detections.indices, id: \.self) { index in
                 let detection = detections[index]
-                
+
                 Rectangle()
                     .stroke(Color.red, lineWidth: 2)
                     .frame(

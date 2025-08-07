@@ -19,26 +19,26 @@ protocol DIContainerProtocol {
 /// Main dependency injection container
 class DIContainer: DIContainerProtocol, ObservableObject {
     static let shared = DIContainer()
-    
+
     private var services: [String: Any] = [:]
     private var factories: [String: () -> Any] = [:]
-    
+
     private init() {
         // Don't register dependencies immediately - do it lazily
     }
-    
+
     /// Register a factory function for a type
     func register<T>(_ type: T.Type, factory: @escaping () -> T) {
         let key = String(describing: type)
         factories[key] = factory
     }
-    
+
     /// Register a singleton instance for a type
     func register<T>(_ type: T.Type, instance: T) {
         let key = String(describing: type)
         services[key] = instance
     }
-    
+
     /// Resolve a dependency (force unwrap - use when dependency is guaranteed)
     func resolve<T>(_ type: T.Type) -> T {
         guard let resolved: T = resolve(type) else {
@@ -46,45 +46,48 @@ class DIContainer: DIContainerProtocol, ObservableObject {
         }
         return resolved
     }
-    
+
     /// Resolve a dependency (optional - use when dependency might not exist)
     func resolve<T>(_ type: T.Type) -> T? {
         let key = String(describing: type)
-        
+
         // Check if we have a singleton instance
         if let instance = services[key] as? T {
             return instance
         }
-        
+
         // Check if we have a factory
         if let factory = factories[key] {
-            let instance = factory() as! T
+            guard let instance = factory() as? T else {
+                print("❌ Factory for \(type) returned wrong type")
+                return nil
+            }
             return instance
         }
-        
+
         // If not found, dependencies should be registered by AppDependencies
         if services.isEmpty && factories.isEmpty {
             print("❌ No dependencies registered in DIContainer - AppDependencies may not be initialized")
             print("   Requested type: \(type)")
             print("   Make sure AppDependencies.shared is accessed before using @Injected properties")
         }
-        
+
         return nil
     }
-    
+
     /// Register default dependencies - REMOVED to prevent conflicts with AppDependencies
     private func registerDefaultDependencies() {
         // Dependencies are now managed by AppDependencies.shared
         // This prevents conflicts between factory and singleton registrations
         print("⚠️ DIContainer.registerDefaultDependencies() called - dependencies should be managed by AppDependencies")
     }
-    
+
     /// Clear all registrations (useful for testing)
     func clear() {
         services.removeAll()
         factories.removeAll()
     }
-    
+
     /// Reset to default registrations
     func reset() {
         clear()
@@ -96,11 +99,11 @@ class DIContainer: DIContainerProtocol, ObservableObject {
 @propertyWrapper
 struct Injected<T> {
     private let container: DIContainerProtocol
-    
+
     var wrappedValue: T {
         return container.resolve(T.self)
     }
-    
+
     init(container: DIContainerProtocol = DIContainer.shared) {
         self.container = container
     }
@@ -110,11 +113,11 @@ struct Injected<T> {
 @propertyWrapper
 struct OptionalInjected<T> {
     private let container: DIContainerProtocol
-    
+
     var wrappedValue: T? {
         return container.resolve(T.self)
     }
-    
+
     init(container: DIContainerProtocol = DIContainer.shared) {
         self.container = container
     }

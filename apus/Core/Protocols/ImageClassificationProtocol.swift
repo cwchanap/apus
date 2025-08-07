@@ -16,7 +16,7 @@ struct ClassificationResult {
 protocol ImageClassificationProtocol: ObservableObject {
     var isClassifying: Bool { get }
     var lastClassificationResults: [ClassificationResult] { get }
-    
+
     func classifyImage(_ image: UIImage, completion: @escaping (Result<[ClassificationResult], Error>) -> Void)
 }
 
@@ -25,26 +25,26 @@ protocol ImageClassificationProtocol: ObservableObject {
 class MockImageClassificationManager: ImageClassificationProtocol {
     @Published var isClassifying = false
     @Published var lastClassificationResults: [ClassificationResult] = []
-    
+
     func classifyImage(_ image: UIImage, completion: @escaping (Result<[ClassificationResult], Error>) -> Void) {
         isClassifying = true
-        
+
         // Simulate processing delay
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
             self.isClassifying = false
-            
+
             // Generate varied mock results based on image characteristics
             let mockResults = self.generateMockResults(for: image)
-            
+
             self.lastClassificationResults = mockResults
             completion(.success(mockResults))
         }
     }
-    
+
     private func generateMockResults(for image: UIImage) -> [ClassificationResult] {
         // Create a simple hash based on image properties to ensure different results
         let imageHash = self.simpleImageHash(image)
-        
+
         // Define different result sets
         let resultSets: [[ClassificationResult]] = [
             [
@@ -88,28 +88,28 @@ class MockImageClassificationManager: ImageClassificationProtocol {
                 ClassificationResult(identifier: "botanical", confidence: 0.63)
             ]
         ]
-        
+
         // Select result set based on image hash
         let selectedIndex = imageHash % resultSets.count
         var selectedResults = resultSets[selectedIndex]
-        
+
         // Add some randomness to confidence scores
         selectedResults = selectedResults.map { result in
             let variation = Float.random(in: -0.1...0.1)
             let newConfidence = max(0.1, min(0.99, result.confidence + variation))
             return ClassificationResult(identifier: result.identifier, confidence: newConfidence)
         }
-        
+
         return selectedResults
     }
-    
+
     private func simpleImageHash(_ image: UIImage) -> Int {
         // Create a simple hash based on image properties
         let width = Int(image.size.width)
         let height = Int(image.size.height)
         let scale = Int(image.scale * 100)
         let orientation = image.imageOrientation.rawValue
-        
+
         // Simple hash combination
         return (width * 31 + height * 17 + scale * 7 + orientation * 3) % 1000
     }

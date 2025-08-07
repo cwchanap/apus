@@ -13,19 +13,19 @@ struct EmptyResultsView: View {
     let category: DetectionCategory
     let message: String
     let description: String
-    
+
     var body: some View {
         VStack(spacing: 20) {
             Image(systemName: category.icon)
                 .font(.system(size: 60))
                 .foregroundColor(category.color.opacity(0.6))
-            
+
             VStack(spacing: 8) {
                 Text(message)
                     .font(.title2)
                     .fontWeight(.semibold)
                     .foregroundColor(.primary)
-                
+
                 Text(description)
                     .font(.body)
                     .foregroundColor(.secondary)
@@ -43,15 +43,15 @@ struct EmptyResultsView: View {
 struct StatRow: View {
     let label: String
     let value: String
-    
+
     var body: some View {
         HStack {
             Text(label)
                 .font(.body)
                 .foregroundColor(.secondary)
-            
+
             Spacer()
-            
+
             Text(value)
                 .font(.body)
                 .fontWeight(.medium)
@@ -68,7 +68,7 @@ struct ImageDetailView: View {
     @State private var scale: CGFloat = 1.0
     @State private var offset: CGSize = .zero
     @State private var lastOffset: CGSize = .zero
-    
+
     var body: some View {
         NavigationView {
             GeometryReader { geometry in
@@ -134,7 +134,7 @@ struct ResultsSummaryCard: View {
     let category: DetectionCategory
     let count: Int
     let onTap: () -> Void
-    
+
     var body: some View {
         Button(action: onTap) {
             VStack(spacing: 12) {
@@ -142,23 +142,23 @@ struct ResultsSummaryCard: View {
                     Image(systemName: category.icon)
                         .font(.title2)
                         .foregroundColor(category.color)
-                    
+
                     Spacer()
-                    
+
                     Text("\(count)")
                         .font(.title)
                         .fontWeight(.bold)
                         .foregroundColor(.primary)
                 }
-                
+
                 HStack {
                     Text(category.rawValue)
                         .font(.body)
                         .fontWeight(.medium)
                         .foregroundColor(.primary)
-                    
+
                     Spacer()
-                    
+
                     Image(systemName: "chevron.right")
                         .font(.caption)
                         .foregroundColor(.secondary)
@@ -182,23 +182,23 @@ struct RecentResultsPreview: View {
     @ObservedObject var resultsManager: DetectionResultsManager
     let category: DetectionCategory
     let maxItems: Int = 3
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 Text("Recent \(category.rawValue)")
                     .font(.headline)
                     .foregroundColor(.primary)
-                
+
                 Spacer()
-                
+
                 if resultsManager.getResultsCount(for: category) > 0 {
                     Text("View All")
                         .font(.caption)
                         .foregroundColor(category.color)
                 }
             }
-            
+
             if resultsManager.getResultsCount(for: category) == 0 {
                 Text("No recent results")
                     .font(.body)
@@ -231,7 +231,7 @@ struct RecentResultsPreview: View {
 
 struct RecentOCRRow: View {
     let result: StoredOCRResult
-    
+
     var body: some View {
         HStack(spacing: 8) {
             if let image = result.image {
@@ -241,20 +241,20 @@ struct RecentOCRRow: View {
                     .frame(width: 40, height: 40)
                     .clipShape(RoundedRectangle(cornerRadius: 6))
             }
-            
+
             VStack(alignment: .leading, spacing: 2) {
                 Text(result.allText.isEmpty ? "No text" : String(result.allText.prefix(30)) + (result.allText.count > 30 ? "..." : ""))
                     .font(.caption)
                     .lineLimit(1)
                     .foregroundColor(.primary)
-                
+
                 Text("\(result.totalTextCount) texts • \(Int(result.averageConfidence * 100))%")
                     .font(.caption2)
                     .foregroundColor(.secondary)
             }
-            
+
             Spacer()
-            
+
             Text(result.timestamp, style: .relative)
                 .font(.caption2)
                 .foregroundColor(Color.secondary)
@@ -264,7 +264,7 @@ struct RecentOCRRow: View {
 
 struct RecentObjectDetectionRow: View {
     let result: StoredObjectDetectionResult
-    
+
     var body: some View {
         HStack(spacing: 8) {
             if let image = result.image {
@@ -274,20 +274,20 @@ struct RecentObjectDetectionRow: View {
                     .frame(width: 40, height: 40)
                     .clipShape(RoundedRectangle(cornerRadius: 6))
             }
-            
+
             VStack(alignment: .leading, spacing: 2) {
                 Text(result.uniqueClasses.isEmpty ? "No objects" : result.uniqueClasses.prefix(2).joined(separator: ", "))
                     .font(.caption)
                     .lineLimit(1)
                     .foregroundColor(.primary)
-                
+
                 Text("\(result.totalObjectCount) objects • \(result.framework)")
                     .font(.caption2)
                     .foregroundColor(.secondary)
             }
-            
+
             Spacer()
-            
+
             Text(result.timestamp, style: .relative)
                 .font(.caption2)
                 .foregroundColor(Color.secondary)
@@ -297,7 +297,7 @@ struct RecentObjectDetectionRow: View {
 
 struct RecentClassificationRow: View {
     let result: StoredClassificationResult
-    
+
     var body: some View {
         HStack(spacing: 8) {
             if let image = result.image {
@@ -307,22 +307,22 @@ struct RecentClassificationRow: View {
                     .frame(width: 40, height: 40)
                     .clipShape(RoundedRectangle(cornerRadius: 6))
             }
-            
+
             VStack(alignment: .leading, spacing: 2) {
                 Text(result.topResult?.identifier.capitalized ?? "No classification")
                     .font(.caption)
                     .lineLimit(1)
                     .foregroundColor(.primary)
-                
+
                 if let topResult = result.topResult {
                     Text("\(Int(topResult.confidence * 100))% confidence")
                         .font(.caption2)
                         .foregroundColor(.secondary)
                 }
             }
-            
+
             Spacer()
-            
+
             Text(result.timestamp, style: .relative)
                 .font(.caption2)
                 .foregroundColor(Color.secondary)
@@ -340,11 +340,11 @@ struct SharedResultComponents_Previews: PreviewProvider {
                 description: "Perform text recognition on images to see results here"
             )
             .frame(height: 200)
-            
+
             ResultsSummaryCard(category: .objectDetection, count: 5) {
                 // Action
             }
-            
+
             StatRow(label: "Total Results", value: "42")
         }
         .padding()

@@ -22,7 +22,7 @@ enum PhotoLibraryError: LocalizedError {
     case permissionDenied
     case saveFailed(Error)
     case unknown
-    
+
     var errorDescription: String? {
         switch self {
         case .permissionDenied:
@@ -37,7 +37,7 @@ enum PhotoLibraryError: LocalizedError {
 
 // MARK: - Photo Library Service Implementation
 class PhotoLibraryService: PhotoLibraryServiceProtocol {
-    
+
     func requestPermission() -> AnyPublisher<Bool, Never> {
         Future<Bool, Never> { promise in
             PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
@@ -48,7 +48,7 @@ class PhotoLibraryService: PhotoLibraryServiceProtocol {
         }
         .eraseToAnyPublisher()
     }
-    
+
     func saveImage(_ image: UIImage) -> AnyPublisher<Bool, PhotoLibraryError> {
         Future<Bool, PhotoLibraryError> { promise in
             // Check permission first
@@ -57,7 +57,7 @@ class PhotoLibraryService: PhotoLibraryServiceProtocol {
                 promise(.failure(.permissionDenied))
                 return
             }
-            
+
             // Save the image
             PHPhotoLibrary.shared().performChanges({
                 PHAssetCreationRequest.creationRequestForAsset(from: image)
@@ -75,7 +75,7 @@ class PhotoLibraryService: PhotoLibraryServiceProtocol {
         }
         .eraseToAnyPublisher()
     }
-    
+
     func getPermissionStatus() -> PHAuthorizationStatus {
         return PHPhotoLibrary.authorizationStatus(for: .addOnly)
     }
@@ -85,12 +85,12 @@ class PhotoLibraryService: PhotoLibraryServiceProtocol {
 class MockPhotoLibraryService: PhotoLibraryServiceProtocol {
     var shouldSucceed = true
     var mockPermissionStatus: PHAuthorizationStatus = .authorized
-    
+
     func requestPermission() -> AnyPublisher<Bool, Never> {
         Just(shouldSucceed)
             .eraseToAnyPublisher()
     }
-    
+
     func saveImage(_ image: UIImage) -> AnyPublisher<Bool, PhotoLibraryError> {
         if shouldSucceed {
             return Just(true)
@@ -101,7 +101,7 @@ class MockPhotoLibraryService: PhotoLibraryServiceProtocol {
                 .eraseToAnyPublisher()
         }
     }
-    
+
     func getPermissionStatus() -> PHAuthorizationStatus {
         return mockPermissionStatus
     }

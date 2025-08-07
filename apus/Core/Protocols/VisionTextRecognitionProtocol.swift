@@ -16,20 +16,20 @@ struct DetectedText: Identifiable, Equatable {
     let boundingBox: CGRect // Normalized coordinates (0-1) with top-left origin
     let confidence: Float
     let characterBoxes: [CGRect] // Individual character bounding boxes
-    
+
     static func == (lhs: DetectedText, rhs: DetectedText) -> Bool {
         lhs.id == rhs.id
     }
-    
+
     /// Convert bounding box to display coordinates (same logic as DetectedObject)
     func displayBoundingBox(imageSize: CGSize, displaySize: CGSize) -> CGRect {
         // Calculate how the image is actually displayed within the view bounds
         let imageAspectRatio = imageSize.width / imageSize.height
         let displayAspectRatio = displaySize.width / displaySize.height
-        
+
         var imageDisplaySize: CGSize
         var imageOffset: CGPoint
-        
+
         if imageAspectRatio > displayAspectRatio {
             // Image is wider - fit to width
             imageDisplaySize = CGSize(
@@ -51,7 +51,7 @@ struct DetectedText: Identifiable, Equatable {
                 y: 0
             )
         }
-        
+
         // Scale normalized coordinates to display coordinates
         return CGRect(
             x: boundingBox.minX * imageDisplaySize.width + imageOffset.x,
@@ -74,7 +74,7 @@ protocol VisionTextRecognitionProtocol: ObservableObject {
 // MARK: - Mock Implementation for Testing/Simulator
 
 class MockVisionTextRecognitionManager: VisionTextRecognitionProtocol {
-    
+
     func detectText(in image: UIImage, completion: @escaping (Result<[DetectedText], Error>) -> Void) {
         // Simulate processing delay
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
@@ -82,11 +82,11 @@ class MockVisionTextRecognitionManager: VisionTextRecognitionProtocol {
             completion(.success(mockTexts))
         }
     }
-    
+
     private func generateMockTextDetections(for image: UIImage) -> [DetectedText] {
         let imageSize = image.size
         let aspectRatio = imageSize.width / imageSize.height
-        
+
         // Generate different mock text scenarios based on image characteristics
         if aspectRatio > 1.5 {
             // Landscape - document/receipt scenario
@@ -99,7 +99,7 @@ class MockVisionTextRecognitionManager: VisionTextRecognitionProtocol {
             return createSignScenario()
         }
     }
-    
+
     private func createDocumentScenario() -> [DetectedText] {
         return [
             DetectedText(
@@ -140,7 +140,7 @@ class MockVisionTextRecognitionManager: VisionTextRecognitionProtocol {
             )
         ]
     }
-    
+
     private func createPhoneScreenScenario() -> [DetectedText] {
         return [
             DetectedText(
@@ -175,7 +175,7 @@ class MockVisionTextRecognitionManager: VisionTextRecognitionProtocol {
             )
         ]
     }
-    
+
     private func createSignScenario() -> [DetectedText] {
         return [
             DetectedText(

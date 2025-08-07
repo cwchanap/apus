@@ -11,7 +11,7 @@ import Foundation
 enum ObjectDetectionFramework: String, CaseIterable {
     case vision = "vision"
     case tensorflowLite = "tensorflow_lite"
-    
+
     var displayName: String {
         switch self {
         case .vision:
@@ -20,7 +20,7 @@ enum ObjectDetectionFramework: String, CaseIterable {
             return "TensorFlow Lite"
         }
     }
-    
+
     var description: String {
         switch self {
         case .vision:
@@ -29,7 +29,7 @@ enum ObjectDetectionFramework: String, CaseIterable {
             return "Google's lightweight ML framework"
         }
     }
-    
+
     var icon: String {
         switch self {
         case .vision:
@@ -43,27 +43,27 @@ enum ObjectDetectionFramework: String, CaseIterable {
 /// Centralized app settings management
 class AppSettings: ObservableObject {
     static let shared = AppSettings()
-    
+
     @Published var isRealTimeObjectDetectionEnabled: Bool {
         didSet {
             UserDefaults.standard.set(isRealTimeObjectDetectionEnabled, forKey: UserDefaults.Keys.isRealTimeObjectDetectionEnabled)
         }
     }
-    
+
     @Published var objectDetectionFramework: ObjectDetectionFramework {
         didSet {
             UserDefaults.standard.set(objectDetectionFramework.rawValue, forKey: UserDefaults.Keys.objectDetectionFramework)
         }
     }
-    
+
     private init() {
         // Load saved settings or defaults
         self.isRealTimeObjectDetectionEnabled = UserDefaults.standard.object(forKey: UserDefaults.Keys.isRealTimeObjectDetectionEnabled) as? Bool ?? true
-        
+
         let frameworkRawValue = UserDefaults.standard.string(forKey: UserDefaults.Keys.objectDetectionFramework) ?? ObjectDetectionFramework.vision.rawValue
         self.objectDetectionFramework = ObjectDetectionFramework(rawValue: frameworkRawValue) ?? .vision
     }
-    
+
     func resetToDefaults() {
         isRealTimeObjectDetectionEnabled = true
         objectDetectionFramework = .vision

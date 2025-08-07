@@ -12,10 +12,10 @@ struct VisionObjectDetectionOverlay: View {
     let imageSize: CGSize
     let displaySize: CGSize
     @State private var overlayOpacity: Double = 0.9
-    
+
     var body: some View {
         ZStack {
-            ForEach(Array(detections.enumerated()), id: \.element.id) { index, detection in
+            ForEach(Array(detections.enumerated()), id: \.element.id) { _, detection in
                 VisionDetectionBox(
                     detection: detection,
                     imageSize: imageSize,
@@ -37,33 +37,33 @@ struct VisionDetectionBox: View {
     let imageSize: CGSize
     let displaySize: CGSize
     let opacity: Double
-    
+
     // Convert normalized coordinates to display coordinates
     private var displayBoundingBox: CGRect {
         // Calculate how the image is actually displayed within the view bounds
         let (imageDisplaySize, imageOffset) = calculateImageDisplayBounds()
-        
+
         // Convert from Vision normalized coordinates to display coordinates
         let visionBox = detection.displayBoundingBox  // Already flipped for SwiftUI
-        
+
         let displayBox = CGRect(
             x: visionBox.minX * imageDisplaySize.width + imageOffset.x,
             y: visionBox.minY * imageDisplaySize.height + imageOffset.y,
             width: visionBox.width * imageDisplaySize.width,
             height: visionBox.height * imageDisplaySize.height
         )
-        
+
         return displayBox
     }
-    
+
     // Calculate how the image is actually displayed within the view bounds
     private func calculateImageDisplayBounds() -> (size: CGSize, offset: CGPoint) {
         let imageAspectRatio = imageSize.width / imageSize.height
         let displayAspectRatio = displaySize.width / displaySize.height
-        
+
         var imageDisplaySize: CGSize
         var imageOffset: CGPoint
-        
+
         if imageAspectRatio > displayAspectRatio {
             // Image is wider - fit to width
             imageDisplaySize = CGSize(
@@ -85,10 +85,10 @@ struct VisionDetectionBox: View {
                 y: 0
             )
         }
-        
+
         return (imageDisplaySize, imageOffset)
     }
-    
+
     private var boxColor: Color {
         // Color based on object class
         switch detection.className.lowercased() {
@@ -110,14 +110,14 @@ struct VisionDetectionBox: View {
             return .yellow
         }
     }
-    
+
     private var strokeWidth: CGFloat {
         // Vary stroke width based on confidence
         let baseWidth: CGFloat = 2.0
         let confidenceMultiplier = CGFloat(detection.confidence)
         return baseWidth * (0.5 + confidenceMultiplier * 0.5)
     }
-    
+
     var body: some View {
         ZStack(alignment: .topLeading) {
             // Bounding box
@@ -135,14 +135,14 @@ struct VisionDetectionBox: View {
                     x: displayBoundingBox.midX,
                     y: displayBoundingBox.midY
                 )
-            
+
             // Label background and text
             VStack(alignment: .leading, spacing: 2) {
                 Text(detection.className.capitalized)
                     .font(.caption)
                     .fontWeight(.semibold)
                     .foregroundColor(.white)
-                
+
                 Text("\(Int(detection.confidence * 100))%")
                     .font(.caption2)
                     .foregroundColor(.white.opacity(0.9))
@@ -168,7 +168,7 @@ struct VisionDetectionBox: View {
     GeometryReader { geometry in
         ZStack {
             Color.black
-            
+
             VisionObjectDetectionOverlay(
                 detections: [
                     VisionDetection(

@@ -18,7 +18,7 @@ enum AppError: LocalizedError, Equatable {
     case networkError(String)
     case fileSystemError(String)
     case unknown(String)
-    
+
     var errorDescription: String? {
         switch self {
         case .cameraPermissionDenied:
@@ -37,7 +37,7 @@ enum AppError: LocalizedError, Equatable {
             return "An unexpected error occurred: \(message)"
         }
     }
-    
+
     var recoverySuggestion: String? {
         switch self {
         case .cameraPermissionDenied, .photoLibraryPermissionDenied:
@@ -54,7 +54,7 @@ enum AppError: LocalizedError, Equatable {
             return "Please try again. If the problem persists, contact support."
         }
     }
-    
+
     var shouldShowSettings: Bool {
         switch self {
         case .cameraPermissionDenied, .photoLibraryPermissionDenied:
@@ -73,7 +73,7 @@ struct ErrorPresentation {
     let shouldShowSettings: Bool
     let primaryAction: String
     let secondaryAction: String?
-    
+
     init(from error: AppError) {
         self.title = "Error"
         self.message = error.localizedDescription
@@ -88,7 +88,7 @@ struct ErrorPresentation {
 protocol ErrorServiceProtocol {
     var currentError: ErrorPresentation? { get }
     var errorPublisher: AnyPublisher<ErrorPresentation?, Never> { get }
-    
+
     func handleError(_ error: Error)
     func handleAppError(_ error: AppError)
     func clearError()
@@ -98,17 +98,17 @@ protocol ErrorServiceProtocol {
 // MARK: - Error Service Implementation
 class ErrorService: ErrorServiceProtocol, ObservableObject {
     @Published private(set) var currentError: ErrorPresentation?
-    
+
     var errorPublisher: AnyPublisher<ErrorPresentation?, Never> {
         $currentError.eraseToAnyPublisher()
     }
-    
+
     private let permissionService: PermissionServiceProtocol
-    
+
     init(permissionService: PermissionServiceProtocol) {
         self.permissionService = permissionService
     }
-    
+
     func handleError(_ error: Error) {
         if let appError = error as? AppError {
             handleAppError(appError)
@@ -118,26 +118,26 @@ class ErrorService: ErrorServiceProtocol, ObservableObject {
             handleAppError(.unknown(error.localizedDescription))
         }
     }
-    
+
     func handleAppError(_ error: AppError) {
         DispatchQueue.main.async {
             self.currentError = ErrorPresentation(from: error)
         }
     }
-    
+
     func clearError() {
         DispatchQueue.main.async {
             self.currentError = nil
         }
     }
-    
+
     func openSettings() {
         permissionService.openAppSettings()
         clearError()
     }
-    
+
     // MARK: - Private Methods
-    
+
     private func handlePhotoLibraryError(_ error: PhotoLibraryError) {
         let appError: AppError
         switch error {
@@ -155,28 +155,28 @@ class ErrorService: ErrorServiceProtocol, ObservableObject {
 // MARK: - Mock Error Service for Testing
 class MockErrorService: ErrorServiceProtocol, ObservableObject {
     @Published private(set) var currentError: ErrorPresentation?
-    
+
     var errorPublisher: AnyPublisher<ErrorPresentation?, Never> {
         $currentError.eraseToAnyPublisher()
     }
-    
+
     var capturedErrors: [AppError] = []
-    
+
     func handleError(_ error: Error) {
         if let appError = error as? AppError {
             handleAppError(appError)
         }
     }
-    
+
     func handleAppError(_ error: AppError) {
         capturedErrors.append(error)
         currentError = ErrorPresentation(from: error)
     }
-    
+
     func clearError() {
         currentError = nil
     }
-    
+
     func openSettings() {
         // Mock implementation
         clearError()

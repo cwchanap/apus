@@ -13,47 +13,47 @@ import UIKit
 class ContourDetectionManager: ObservableObject, ContourDetectionProtocol {
     @Published var isDetecting = false
     @Published var lastDetectedContours: [DetectedContour] = []
-    
+
     func detectContours(in image: UIImage, completion: @escaping (Result<[DetectedContour], Error>) -> Void) {
         guard let cgImage = image.cgImage else {
             completion(.failure(ContourDetectionError.invalidImage))
             return
         }
-        
+
         DispatchQueue.main.async {
             self.isDetecting = true
         }
-        
+
         // Create contour detection request for edge detection
         let request = VNDetectContoursRequest { [weak self] request, error in
             DispatchQueue.main.async {
                 self?.isDetecting = false
-                
+
                 if let error = error {
                     completion(.failure(error))
                     return
                 }
-                
+
                 guard let observations = request.results as? [VNContoursObservation] else {
                     completion(.failure(ContourDetectionError.processingFailed))
                     return
                 }
-                
+
                 let contours = self?.processContourObservations(observations, imageSize: image.size) ?? []
                 self?.lastDetectedContours = contours
                 completion(.success(contours))
             }
         }
-        
+
         // Configure for edge/contour detection
         request.contrastAdjustment = 1.5  // Moderate contrast adjustment
         request.detectsDarkOnLight = true
         request.maximumImageDimension = 1024  // Higher resolution for better accuracy
-        
+
         // Handle image orientation properly
         let orientation = CGImagePropertyOrientation(image.imageOrientation)
         let handler = VNImageRequestHandler(cgImage: cgImage, orientation: orientation, options: [:])
-        
+
         DispatchQueue.global(qos: .userInitiated).async {
             do {
                 try handler.perform([request])
@@ -65,34 +65,34 @@ class ContourDetectionManager: ObservableObject, ContourDetectionProtocol {
             }
         }
     }
-    
+
     private func processContourObservations(_ observations: [VNContoursObservation], imageSize: CGSize) -> [DetectedContour] {
         var detectedContours: [DetectedContour] = []
-        
+
         for observation in observations {
             // Process all contours (including nested ones) for complete edge detection
             let allContours = getAllContours(from: observation)
-            
+
             for contour in allContours {
                 // Convert contour points to normalized coordinates
                 let normalizedPoints = contour.normalizedPoints
-                
+
                 // Filter out contours with too few points
                 guard normalizedPoints.count >= 3 else { continue }
-                
+
                 // Calculate bounding box
                 let boundingBox = calculateBoundingBox(for: normalizedPoints)
-                
+
                 // Filter by minimum size (0.5% of image area)
                 let area = boundingBox.width * boundingBox.height
                 guard area > 0.005 else { continue }
-                
+
                 // Filter by confidence
                 guard observation.confidence > 0.3 else { continue }
-                
+
                 // Calculate aspect ratio
                 let aspectRatio = boundingBox.width / boundingBox.height
-                
+
                 // Create detected contour
                 let detectedContour = DetectedContour(
                     points: normalizedPoints,
@@ -101,50 +101,50 @@ class ContourDetectionManager: ObservableObject, ContourDetectionProtocol {
                     aspectRatio: aspectRatio,
                     area: area
                 )
-                
+
                 detectedContours.append(detectedContour)
             }
         }
-        
+
         // Sort by confidence and area, return top contours
         return Array(detectedContours
-            .sorted { $0.confidence > $1.confidence }
-            .prefix(20))
+                        .sorted { $0.confidence > $1.confidence }
+                        .prefix(20))
     }
-    
+
     private func getAllContours(from observation: VNContoursObservation) -> [VNContour] {
         var allContours: [VNContour] = []
-        
+
         // Add top-level contours
         allContours.append(contentsOf: observation.topLevelContours)
-        
+
         // Recursively add child contours for complete edge detection
         for topContour in observation.topLevelContours {
             allContours.append(contentsOf: getChildContours(from: topContour))
         }
-        
+
         return allContours
     }
-    
+
     private func getChildContours(from contour: VNContour) -> [VNContour] {
         var childContours: [VNContour] = []
-        
+
         for child in contour.childContours {
             childContours.append(child)
             childContours.append(contentsOf: getChildContours(from: child))
         }
-        
+
         return childContours
     }
-    
+
     private func calculateBoundingBox(for points: [CGPoint]) -> CGRect {
         guard !points.isEmpty else { return .zero }
-        
+
         let minX = points.map { $0.x }.min() ?? 0
         let maxX = points.map { $0.x }.max() ?? 0
         let minY = points.map { $0.y }.min() ?? 0
         let maxY = points.map { $0.y }.max() ?? 0
-        
+
         return CGRect(
             x: minX,
             y: minY,
@@ -158,7 +158,7 @@ enum ContourDetectionError: Error, LocalizedError {
     case invalidImage
     case processingFailed
     case noContoursFound
-    
+
     var errorDescription: String? {
         switch self {
         case .invalidImage:

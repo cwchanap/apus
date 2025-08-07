@@ -11,7 +11,7 @@ struct ResultsDashboardView: View {
     @Injected private var resultsManager: DetectionResultsManager
     @State private var selectedCategory: DetectionCategory?
     @State private var showingCategoryView = false
-    
+
     var body: some View {
         NavigationView {
             Group {
@@ -35,7 +35,7 @@ struct ResultsDashboardView: View {
                                     .font(.largeTitle)
                                     .fontWeight(.bold)
                                     .foregroundColor(.primary)
-                                
+
                                 if resultsManager.hasAnyResults {
                                     Text("\(resultsManager.totalResultsCount) total results stored")
                                         .font(.subheadline)
@@ -47,7 +47,7 @@ struct ResultsDashboardView: View {
                                 }
                             }
                             .padding(.top)
-                            
+
                             if resultsManager.hasAnyResults {
                                 // Category summary cards
                                 LazyVGrid(columns: [
@@ -64,7 +64,7 @@ struct ResultsDashboardView: View {
                                         }
                                     }
                                 }
-                                
+
                                 // Recent results preview for each category
                                 ForEach(DetectionCategory.allCases, id: \.rawValue) { category in
                                     if resultsManager.getResultsCount(for: category) > 0 {
@@ -80,13 +80,13 @@ struct ResultsDashboardView: View {
                                         .buttonStyle(PlainButtonStyle())
                                     }
                                 }
-                                
+
                                 // Storage management section
                                 VStack(alignment: .leading, spacing: 12) {
                                     Text("Storage Management")
                                         .font(.headline)
                                         .foregroundColor(.primary)
-                                    
+
                                     VStack(spacing: 8) {
                                         StorageInfoRow(
                                             label: "OCR Results",
@@ -94,14 +94,14 @@ struct ResultsDashboardView: View {
                                             maxCount: 10,
                                             color: .purple
                                         )
-                                        
+
                                         StorageInfoRow(
                                             label: "Object Detection",
                                             count: resultsManager.objectDetectionResults.count,
                                             maxCount: 10,
                                             color: .blue
                                         )
-                                        
+
                                         StorageInfoRow(
                                             label: "Classification",
                                             count: resultsManager.classificationResults.count,
@@ -109,7 +109,7 @@ struct ResultsDashboardView: View {
                                             color: .green
                                         )
                                     }
-                                    
+
                                     Text("Only the most recent 10 results are kept for each category")
                                         .font(.caption)
                                         .foregroundColor(.secondary)
@@ -118,17 +118,17 @@ struct ResultsDashboardView: View {
                                 .padding()
                                 .background(Color.gray.opacity(0.1))
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
-                                
+
                                 // Clear all data section
                                 VStack(alignment: .leading, spacing: 12) {
                                     Text("Data Management")
                                         .font(.headline)
                                         .foregroundColor(.primary)
-                                    
+
                                     Text("Clear all stored detection results. This action cannot be undone.")
                                         .font(.subheadline)
                                         .foregroundColor(.secondary)
-                                    
+
                                     Button(action: {
                                         resultsManager.clearAllResults()
                                     }) {
@@ -152,12 +152,12 @@ struct ResultsDashboardView: View {
                                     Image(systemName: "doc.text.magnifyingglass")
                                         .font(.system(size: 60))
                                         .foregroundColor(.gray)
-                                    
+
                                     Text("No Detection Results")
                                         .font(.title2)
                                         .fontWeight(.semibold)
                                         .foregroundColor(.primary)
-                                    
+
                                     Text("Start using the camera to detect objects, text, or classify images. Your results will appear here.")
                                         .font(.body)
                                         .foregroundColor(.secondary)
@@ -191,39 +191,39 @@ struct StorageInfoRow: View {
     let count: Int
     let maxCount: Int
     let color: Color
-    
+
     var body: some View {
         HStack {
             HStack(spacing: 8) {
                 Circle()
                     .fill(color)
                     .frame(width: 8, height: 8)
-                
+
                 Text(label)
                     .font(.body)
                     .foregroundColor(.primary)
             }
-            
+
             Spacer()
-            
+
             HStack(spacing: 4) {
                 Text("\(count)")
                     .font(.body)
                     .fontWeight(.medium)
                     .foregroundColor(.primary)
-                
+
                 Text("/ \(maxCount)")
                     .font(.body)
                     .foregroundColor(.secondary)
             }
-            
+
             // Progress bar
             GeometryReader { geometry in
                 ZStack(alignment: .leading) {
                     Rectangle()
                         .fill(Color.gray.opacity(0.2))
                         .frame(height: 4)
-                    
+
                     Rectangle()
                         .fill(color)
                         .frame(width: geometry.size.width * CGFloat(count) / CGFloat(maxCount), height: 4)
@@ -237,7 +237,7 @@ struct StorageInfoRow: View {
 struct CategoryResultsView: View {
     let category: DetectionCategory
     @ObservedObject var resultsManager: DetectionResultsManager
-    
+
     var body: some View {
         Group {
             switch category {

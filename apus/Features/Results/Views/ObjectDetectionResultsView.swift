@@ -11,7 +11,7 @@ struct ObjectDetectionResultsView: View {
     @ObservedObject var resultsManager: DetectionResultsManager
     @State private var selectedResult: StoredObjectDetectionResult?
     @State private var showingDetailView = false
-    
+
     var body: some View {
         NavigationView {
             Group {
@@ -55,7 +55,7 @@ struct ObjectDetectionResultsView: View {
             }
         }
     }
-    
+
     private func deleteResults(at offsets: IndexSet) {
         resultsManager.objectDetectionResults.remove(atOffsets: offsets)
     }
@@ -64,7 +64,7 @@ struct ObjectDetectionResultsView: View {
 struct ObjectDetectionResultRow: View {
     let result: StoredObjectDetectionResult
     let onTap: () -> Void
-    
+
     var body: some View {
         Button(action: onTap) {
             HStack(spacing: 12) {
@@ -84,37 +84,37 @@ struct ObjectDetectionResultRow: View {
                                 .foregroundColor(.gray)
                         )
                 }
-                
+
                 VStack(alignment: .leading, spacing: 4) {
                     // Object classes preview
                     Text(result.uniqueClasses.isEmpty ? "No objects detected" : result.uniqueClasses.prefix(3).joined(separator: ", "))
                         .font(.body)
                         .lineLimit(2)
                         .foregroundColor(.primary)
-                    
+
                     // Statistics
                     HStack(spacing: 16) {
                         Label("\(result.totalObjectCount)", systemImage: "viewfinder")
                             .font(.caption)
                             .foregroundColor(.secondary)
-                        
+
                         Label("\(Int(result.averageConfidence * 100))%", systemImage: "checkmark.circle")
                             .font(.caption)
                             .foregroundColor(.secondary)
-                        
+
                         Label(result.framework, systemImage: "cpu")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
-                    
+
                     // Timestamp
                     Text(result.timestamp, style: .relative)
                         .font(.caption2)
                         .foregroundColor(.secondary)
                 }
-                
+
                 Spacer()
-                
+
                 Image(systemName: "chevron.right")
                     .font(.caption)
                     .foregroundColor(.secondary)
@@ -130,7 +130,7 @@ struct ObjectDetectionResultDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var showingImage = false
     @State private var showingOverlay = true
-    
+
     var body: some View {
         NavigationView {
             ScrollView {
@@ -141,16 +141,16 @@ struct ObjectDetectionResultDetailView: View {
                             HStack {
                                 Text("Image")
                                     .font(.headline)
-                                
+
                                 Spacer()
-                                
+
                                 Button(showingOverlay ? "Hide Overlay" : "Show Overlay") {
                                     showingOverlay.toggle()
                                 }
                                 .font(.caption)
                                 .foregroundColor(.blue)
                             }
-                            
+
                             Button(action: { showingImage = true }) {
                                 ZStack {
                                     Image(uiImage: image)
@@ -158,7 +158,7 @@ struct ObjectDetectionResultDetailView: View {
                                         .aspectRatio(contentMode: .fit)
                                         .frame(maxHeight: 250)
                                         .clipShape(RoundedRectangle(cornerRadius: 12))
-                                    
+
                                     if showingOverlay {
                                         GeometryReader { geometry in
                                             ForEach(result.detectedObjects) { obj in
@@ -167,7 +167,7 @@ struct ObjectDetectionResultDetailView: View {
                                                     imageSize: result.imageSize,
                                                     displaySize: geometry.size
                                                 )
-                                                
+
                                                 Rectangle()
                                                     .stroke(frameworkColor(obj.framework), lineWidth: 2)
                                                     .frame(width: displayBox.width, height: displayBox.height)
@@ -185,12 +185,12 @@ struct ObjectDetectionResultDetailView: View {
                             .buttonStyle(PlainButtonStyle())
                         }
                     }
-                    
+
                     // Statistics section
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Statistics")
                             .font(.headline)
-                        
+
                         VStack(spacing: 12) {
                             StatRow(label: "Objects Detected", value: "\(result.totalObjectCount)")
                             StatRow(label: "Unique Classes", value: "\(result.uniqueClasses.count)")
@@ -203,12 +203,12 @@ struct ObjectDetectionResultDetailView: View {
                         .background(Color.gray.opacity(0.1))
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                     }
-                    
+
                     // Detected objects section
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Detected Objects")
                             .font(.headline)
-                        
+
                         if result.detectedObjects.isEmpty {
                             Text("No objects detected")
                                 .foregroundColor(.secondary)
@@ -243,7 +243,7 @@ struct ObjectDetectionResultDetailView: View {
             }
         }
     }
-    
+
     private func frameworkColor(_ framework: String) -> Color {
         return framework.lowercased().contains("vision") ? .blue : .orange
     }
@@ -251,7 +251,7 @@ struct ObjectDetectionResultDetailView: View {
 
 struct DetectedObjectRow: View {
     let detectedObject: StoredDetectedObject
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
@@ -259,14 +259,14 @@ struct DetectedObjectRow: View {
                     Text(detectedObject.className.capitalized)
                         .font(.body)
                         .foregroundColor(.primary)
-                    
+
                     Text("Framework: \(detectedObject.framework)")
                         .font(.caption2)
                         .foregroundColor(.secondary)
                 }
-                
+
                 Spacer()
-                
+
                 VStack(alignment: .trailing, spacing: 2) {
                     Text("\(Int(detectedObject.confidence * 100))%")
                         .font(.caption)
@@ -275,7 +275,7 @@ struct DetectedObjectRow: View {
                         .padding(.vertical, 4)
                         .background(confidenceColor.opacity(0.2))
                         .clipShape(Capsule())
-                    
+
                     Text(frameworkBadge)
                         .font(.caption2)
                         .foregroundColor(.white)
@@ -285,7 +285,7 @@ struct DetectedObjectRow: View {
                         .clipShape(Capsule())
                 }
             }
-            
+
             Text("Position: (\(String(format: "%.2f", detectedObject.boundingBox.origin.x)), \(String(format: "%.2f", detectedObject.boundingBox.origin.y)))")
                 .font(.caption2)
                 .foregroundColor(.secondary)
@@ -294,7 +294,7 @@ struct DetectedObjectRow: View {
         .background(Color.gray.opacity(0.05))
         .clipShape(RoundedRectangle(cornerRadius: 8))
     }
-    
+
     private var confidenceColor: Color {
         if detectedObject.confidence > 0.9 {
             return .green
@@ -304,11 +304,11 @@ struct DetectedObjectRow: View {
             return .red
         }
     }
-    
+
     private var frameworkColor: Color {
         return detectedObject.framework.lowercased().contains("vision") ? .blue : .orange
     }
-    
+
     private var frameworkBadge: String {
         return detectedObject.framework.lowercased().contains("vision") ? "VN" : "TF"
     }
@@ -318,16 +318,16 @@ struct DetectedObjectRow: View {
 struct ObjectDetectionResultsView_Previews: PreviewProvider {
     static var previews: some View {
         let manager = DetectionResultsManager()
-        
+
         // Add sample data
         let sampleImage = UIImage(systemName: "photo") ?? UIImage()
         let sampleObjects = [
             DetectedObject(boundingBox: CGRect(x: 0.1, y: 0.1, width: 0.3, height: 0.4), className: "person", confidence: 0.92, framework: .vision),
             DetectedObject(boundingBox: CGRect(x: 0.6, y: 0.2, width: 0.25, height: 0.3), className: "dog", confidence: 0.87, framework: .tensorflowLite)
         ]
-        
+
         manager.saveObjectDetectionResult(detectedObjects: sampleObjects, image: sampleImage)
-        
+
         return ObjectDetectionResultsView(resultsManager: manager)
     }
 }

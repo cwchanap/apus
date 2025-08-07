@@ -11,7 +11,7 @@ import Vision
 
 /// Manager for text recognition using Apple Vision framework
 class VisionTextRecognitionManager: ObservableObject, VisionTextRecognitionProtocol {
-    
+
     func detectText(in image: UIImage, completion: @escaping (Result<[DetectedText], Error>) -> Void) {
         guard let cgImage = image.cgImage else {
             DispatchQueue.main.async {
@@ -19,7 +19,7 @@ class VisionTextRecognitionManager: ObservableObject, VisionTextRecognitionProto
             }
             return
         }
-        
+
         // Create text recognition request
         let request = VNRecognizeTextRequest { [weak self] request, error in
             DispatchQueue.main.async {
@@ -27,28 +27,28 @@ class VisionTextRecognitionManager: ObservableObject, VisionTextRecognitionProto
                     completion(.failure(error))
                     return
                 }
-                
+
                 guard let observations = request.results as? [VNRecognizedTextObservation] else {
                     completion(.failure(VisionTextRecognitionError.processingFailed))
                     return
                 }
-                
+
                 let detectedTexts = self?.processTextObservations(observations, imageSize: image.size) ?? []
                 completion(.success(detectedTexts))
             }
         }
-        
+
         // Configure request for optimal text recognition
         request.recognitionLevel = .accurate
         request.usesLanguageCorrection = true
         request.minimumTextHeight = 0.01 // Detect small text
-        
+
         // Set up image orientation
         let orientation = CGImagePropertyOrientation(image.imageOrientation)
-        
+
         // Perform the request
         let handler = VNImageRequestHandler(cgImage: cgImage, orientation: orientation, options: [:])
-        
+
         DispatchQueue.global(qos: .userInitiated).async {
             do {
                 try handler.perform([request])
@@ -59,59 +59,59 @@ class VisionTextRecognitionManager: ObservableObject, VisionTextRecognitionProto
             }
         }
     }
-    
+
     private func processTextObservations(_ observations: [VNRecognizedTextObservation], imageSize: CGSize) -> [DetectedText] {
         var detectedTexts: [DetectedText] = []
-        
+
         for observation in observations {
             // Get the top candidate for recognized text
             guard let topCandidate = observation.topCandidates(1).first else { continue }
-            
+
             // Convert Vision coordinates to UIKit coordinates
             let boundingBox = convertVisionToUIKit(
                 visionRect: observation.boundingBox,
                 imageSize: imageSize
             )
-            
+
             // Get character-level bounding boxes if available
             let characterBoxes = getCharacterBoundingBoxes(
                 from: observation,
                 text: topCandidate.string,
                 imageSize: imageSize
             )
-            
+
             let detectedText = DetectedText(
                 text: topCandidate.string,
                 boundingBox: boundingBox,
                 confidence: topCandidate.confidence,
                 characterBoxes: characterBoxes
             )
-            
+
             detectedTexts.append(detectedText)
         }
-        
+
         return detectedTexts
     }
-    
+
     private func convertVisionToUIKit(visionRect: CGRect, imageSize: CGSize) -> CGRect {
         // Vision framework uses bottom-left origin, UIKit uses top-left
         // Vision coordinates are normalized (0-1), we need to convert to image coordinates
-        
+
         let x = visionRect.origin.x * imageSize.width
         let y = (1.0 - visionRect.origin.y - visionRect.height) * imageSize.height
         let width = visionRect.width * imageSize.width
         let height = visionRect.height * imageSize.height
-        
+
         return CGRect(x: x, y: y, width: width, height: height)
     }
-    
+
     private func getCharacterBoundingBoxes(from observation: VNRecognizedTextObservation, text: String, imageSize: CGSize) -> [CGRect] {
         var characterBoxes: [CGRect] = []
-        
+
         // For now, return empty array - character-level detection is optional
         // The main text bounding box is sufficient for most use cases
         // Future enhancement: implement proper character-level detection if needed
-        
+
         return characterBoxes
     }
 }
@@ -122,7 +122,7 @@ enum VisionTextRecognitionError: Error, LocalizedError {
     case invalidImage
     case processingFailed
     case noTextFound
-    
+
     var errorDescription: String? {
         switch self {
         case .invalidImage:

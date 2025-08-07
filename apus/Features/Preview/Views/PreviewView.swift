@@ -1,4 +1,3 @@
-
 //
 //  PreviewView.swift
 //  apus
@@ -35,17 +34,17 @@ struct PreviewView: View {
     @State private var isDetectingTexts = false
     @State private var cachedTexts: [DetectedText] = []
     @State private var hasDetectedTexts = false
-    
+
     // Computed property for normalized display image
     private var displayImage: UIImage? {
         capturedImage?.preparedForDisplay()
     }
-    
+
     // Computed property for processing image
     private var processingImage: UIImage? {
         capturedImage?.preparedForProcessing()
     }
-    
+
     @Injected private var imageClassificationManager: ImageClassificationProtocol
     @Injected private var hapticService: HapticServiceProtocol
     @Injected private var contourDetectionManager: ContourDetectionProtocol
@@ -75,7 +74,7 @@ struct PreviewView: View {
                                                     displaySize: geometry.size
                                                 )
                                             }
-                                            
+
                                             // Object detection overlay
                                             if showingObjects && !detectedObjects.isEmpty {
                                                 UnifiedObjectDetectionOverlay(
@@ -84,7 +83,7 @@ struct PreviewView: View {
                                                     displaySize: geometry.size
                                                 )
                                             }
-                                            
+
                                             // Text recognition overlay
                                             if showingTexts && !detectedTexts.isEmpty {
                                                 VisionTextRecognitionOverlay(
@@ -102,7 +101,7 @@ struct PreviewView: View {
                             .fill(Color.black)
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
-                    
+
                     // Classification results overlay
                     if showingClassificationResults && !classificationResults.isEmpty {
                         VStack {
@@ -112,7 +111,7 @@ struct PreviewView: View {
                                     .font(.headline)
                                     .foregroundColor(.white)
                                     .padding(.horizontal)
-                                
+
                                 ForEach(classificationResults.prefix(3), id: \.identifier) { result in
                                     HStack {
                                         Text(result.identifier.capitalized)
@@ -135,101 +134,101 @@ struct PreviewView: View {
                     }
                 }
                 .frame(height: geometry.size.height - 120) // Reserve space for buttons
-                
+
                 // Action buttons in two rows - fixed height
                 VStack(spacing: 12) {
                     // Top row: Analysis buttons
                     VStack(spacing: 8) {
                         // First row: OCR + Classification and Object Detection
                         HStack(spacing: 12) {
-                        // OCR + Classify button
-                        Button(action: {
-                            hapticService.actionFeedback()
-                            performOCRAndClassification()
-                        }) {
-                            HStack(spacing: 4) {
-                                if isDetectingTexts || isClassifying {
-                                    ProgressView()
-                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                        .scaleEffect(0.7)
-                                    Text(isDetectingTexts ? "Reading Text..." : "Classifying Text...")
-                                        .font(.caption)
-                                } else {
-                                    Image(systemName: "textformat.abc")
-                                        .font(.caption)
-                                    Text("OCR + Classify")
-                                        .font(.caption)
+                            // OCR + Classify button
+                            Button(action: {
+                                hapticService.actionFeedback()
+                                performOCRAndClassification()
+                            }) {
+                                HStack(spacing: 4) {
+                                    if isDetectingTexts || isClassifying {
+                                        ProgressView()
+                                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                            .scaleEffect(0.7)
+                                        Text(isDetectingTexts ? "Reading Text..." : "Classifying Text...")
+                                            .font(.caption)
+                                    } else {
+                                        Image(systemName: "textformat.abc")
+                                            .font(.caption)
+                                        Text("OCR + Classify")
+                                            .font(.caption)
+                                    }
                                 }
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 8)
+                                .background(Color.purple)
+                                .clipShape(Capsule())
                             }
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(Color.purple)
-                            .clipShape(Capsule())
-                        }
-                        .disabled(isDetectingTexts || isClassifying)
-                        
-                        // Object detection button
-                        Button(action: {
-                            hapticService.actionFeedback()
-                            toggleObjects()
-                        }) {
-                            HStack(spacing: 4) {
-                                if isDetectingObjects {
-                                    ProgressView()
-                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                        .scaleEffect(0.7)
-                                    Text("Detecting...")
-                                        .font(.caption)
-                                } else {
-                                    Image(systemName: showingObjects ? "viewfinder.circle.fill" : "viewfinder.circle")
-                                        .font(.caption)
-                                    Text(getObjectButtonText())
-                                        .font(.caption)
+                            .disabled(isDetectingTexts || isClassifying)
+
+                            // Object detection button
+                            Button(action: {
+                                hapticService.actionFeedback()
+                                toggleObjects()
+                            }) {
+                                HStack(spacing: 4) {
+                                    if isDetectingObjects {
+                                        ProgressView()
+                                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                            .scaleEffect(0.7)
+                                        Text("Detecting...")
+                                            .font(.caption)
+                                    } else {
+                                        Image(systemName: showingObjects ? "viewfinder.circle.fill" : "viewfinder.circle")
+                                            .font(.caption)
+                                        Text(getObjectButtonText())
+                                            .font(.caption)
+                                    }
                                 }
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 8)
+                                .background(getObjectButtonColor())
+                                .clipShape(Capsule())
                             }
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(getObjectButtonColor())
-                            .clipShape(Capsule())
+                            .disabled(isDetectingObjects)
                         }
-                        .disabled(isDetectingObjects)
-                        }
-                        
+
                         // Second row: Contour Detection
                         HStack(spacing: 12) {
-                        // Contour detection button
-                        Button(action: {
-                            hapticService.actionFeedback()
-                            toggleContours()
-                        }) {
-                            HStack(spacing: 4) {
-                                if isDetectingContours {
-                                    ProgressView()
-                                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                        .scaleEffect(0.7)
-                                    Text("Detecting...")
-                                        .font(.caption)
-                                } else {
-                                    Image(systemName: showingContours ? "eye.slash" : "eye")
-                                        .font(.caption)
-                                    Text(getContourButtonText())
-                                        .font(.caption)
+                            // Contour detection button
+                            Button(action: {
+                                hapticService.actionFeedback()
+                                toggleContours()
+                            }) {
+                                HStack(spacing: 4) {
+                                    if isDetectingContours {
+                                        ProgressView()
+                                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                            .scaleEffect(0.7)
+                                        Text("Detecting...")
+                                            .font(.caption)
+                                    } else {
+                                        Image(systemName: showingContours ? "eye.slash" : "eye")
+                                            .font(.caption)
+                                        Text(getContourButtonText())
+                                            .font(.caption)
+                                    }
                                 }
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 8)
+                                .background(getContourButtonColor())
+                                .clipShape(Capsule())
                             }
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(getContourButtonColor())
-                            .clipShape(Capsule())
-                        }
-                        .disabled(isDetectingContours)
-                        
-                        Spacer() // Fill remaining space
+                            .disabled(isDetectingContours)
+
+                            Spacer() // Fill remaining space
                         }
                     }
-                    
+
                     // Bottom row: Action buttons
                     HStack(spacing: 20) {
                         // Discard button
@@ -246,7 +245,7 @@ struct PreviewView: View {
                                 .background(Color.black.opacity(0.7))
                                 .clipShape(Capsule())
                         }
-                        
+
                         // Save button
                         Button(action: {
                             hapticService.actionFeedback()
@@ -305,36 +304,36 @@ struct PreviewView: View {
 
     private func classifyImage() {
         guard let image = processingImage else { return }
-        
+
         isClassifying = true
         showingClassificationResults = false
-        
+
         imageClassificationManager.classifyImage(image) { result in
             DispatchQueue.main.async {
                 self.isClassifying = false
-                
+
                 switch result {
                 case .success(let results):
                     self.classificationResults = results
                     self.cachedClassificationResults = results // Cache the results
                     self.hasClassificationResults = true
-                    
+
                     // Save results to storage
                     if let image = self.capturedImage {
                         self.detectionResultsManager.saveClassificationResult(classificationResults: results, image: image)
                     }
-                    
+
                     withAnimation(.easeInOut(duration: 0.5)) {
                         self.showingClassificationResults = true
                     }
                     self.hapticService.success() // Success haptic feedback
-                    
+
                     // Save to history if we have results and an image
                     if !results.isEmpty, let originalImage = self.capturedImage {
                         // Save to consolidated results system
                         detectionResultsManager.saveClassificationResult(classificationResults: results, image: originalImage)
                     }
-                    
+
                 case .failure(let error):
                     self.alertMessage = "Classification failed: \(error.localizedDescription)"
                     self.showingAlert = true
@@ -343,10 +342,10 @@ struct PreviewView: View {
             }
         }
     }
-    
+
     private func toggleContours() {
         guard let _ = capturedImage else { return }
-        
+
         if showingContours {
             // Hide contours - keep them cached
             withAnimation(.easeInOut(duration: 0.3)) {
@@ -355,7 +354,7 @@ struct PreviewView: View {
             hapticService.buttonTap()
             return
         }
-        
+
         // Check if we have cached contours for quick show
         if hasDetectedContours && !cachedContours.isEmpty {
             // Use cached contours for instant display
@@ -366,20 +365,20 @@ struct PreviewView: View {
             hapticService.buttonTap()
             return
         }
-        
+
         // No cached contours - perform detection
         detectContours()
     }
-    
+
     private func detectContours() {
         guard let image = processingImage else { return }
-        
+
         isDetectingContours = true
-        
+
         contourDetectionManager.detectContours(in: image) { result in
             DispatchQueue.main.async {
                 self.isDetectingContours = false
-                
+
                 switch result {
                 case .success(let contours):
                     self.detectedContours = contours
@@ -389,7 +388,7 @@ struct PreviewView: View {
                         self.showingContours = true
                     }
                     self.hapticService.success() // Success haptic feedback
-                    
+
                 case .failure(let error):
                     self.alertMessage = "Contour detection failed: \(error.localizedDescription)"
                     self.showingAlert = true
@@ -398,7 +397,7 @@ struct PreviewView: View {
             }
         }
     }
-    
+
     private func getContourButtonText() -> String {
         if showingContours {
             return "Hide Contours"
@@ -408,7 +407,7 @@ struct PreviewView: View {
             return "Detect Contours"
         }
     }
-    
+
     private func getContourButtonColor() -> Color {
         if showingContours {
             return .orange  // Orange when showing
@@ -418,10 +417,10 @@ struct PreviewView: View {
             return .green   // Green when needs detection
         }
     }
-    
+
     private func toggleObjects() {
         guard let _ = capturedImage else { return }
-        
+
         if showingObjects {
             // Hide objects - keep them cached
             withAnimation(.easeInOut(duration: 0.3)) {
@@ -430,7 +429,7 @@ struct PreviewView: View {
             hapticService.buttonTap()
             return
         }
-        
+
         // Check if we have cached objects for quick show
         if hasDetectedObjects && !cachedObjects.isEmpty {
             // Use cached objects for instant display
@@ -441,36 +440,36 @@ struct PreviewView: View {
             hapticService.buttonTap()
             return
         }
-        
+
         // No cached objects - perform detection
         detectObjects()
     }
-    
+
     private func detectObjects() {
         guard let image = processingImage else { return }
-        
+
         isDetectingObjects = true
-        
+
         unifiedObjectDetectionManager.detectObjects(in: image) { result in
             DispatchQueue.main.async {
                 self.isDetectingObjects = false
-                
+
                 switch result {
                 case .success(let objects):
                     self.detectedObjects = objects
                     self.cachedObjects = objects // Cache the results
                     self.hasDetectedObjects = true
-                    
+
                     // Save results to storage
                     if let image = self.capturedImage {
                         self.detectionResultsManager.saveObjectDetectionResult(detectedObjects: objects, image: image)
                     }
-                    
+
                     withAnimation(.easeInOut(duration: 0.5)) {
                         self.showingObjects = true
                     }
                     self.hapticService.success() // Success haptic feedback
-                    
+
                 case .failure(let error):
                     self.alertMessage = "Object detection failed: \(error.localizedDescription)"
                     self.showingAlert = true
@@ -479,7 +478,7 @@ struct PreviewView: View {
             }
         }
     }
-    
+
     private func getObjectButtonText() -> String {
         if showingObjects {
             return "Hide Objects"
@@ -489,7 +488,7 @@ struct PreviewView: View {
             return "Detect Objects"
         }
     }
-    
+
     private func getObjectButtonColor() -> Color {
         if showingObjects {
             return .red      // Red when showing
@@ -499,7 +498,7 @@ struct PreviewView: View {
             return .teal     // Teal when needs detection
         }
     }
-    
+
     private func getTextRecognitionButtonText() -> String {
         if showingTexts {
             return "Hide Text"
@@ -509,7 +508,7 @@ struct PreviewView: View {
             return "Detect Text"
         }
     }
-    
+
     private func getTextRecognitionButtonColor() -> Color {
         if showingTexts {
             return .red      // Red when showing
@@ -519,31 +518,31 @@ struct PreviewView: View {
             return .purple   // Purple for text recognition
         }
     }
-    
+
     private func clearContourCache() {
         cachedContours = []
         detectedContours = []
         hasDetectedContours = false
         showingContours = false
     }
-    
+
     private func clearObjectCache() {
         cachedObjects = []
         detectedObjects = []
         hasDetectedObjects = false
         showingObjects = false
     }
-    
+
     private func clearTextCache() {
         cachedTexts = []
         detectedTexts = []
         hasDetectedTexts = false
         showingTexts = false
     }
-    
+
     private func toggleClassification() {
         guard let _ = capturedImage else { return }
-        
+
         if showingClassificationResults {
             // Hide classification results - keep them cached
             withAnimation(.easeInOut(duration: 0.3)) {
@@ -552,7 +551,7 @@ struct PreviewView: View {
             hapticService.buttonTap()
             return
         }
-        
+
         // Check if we have cached results for quick show
         if hasClassificationResults && !cachedClassificationResults.isEmpty {
             // Use cached results for instant display
@@ -563,14 +562,14 @@ struct PreviewView: View {
             hapticService.buttonTap()
             return
         }
-        
+
         // No cached results - perform classification
         classifyImage()
     }
-    
+
     private func toggleTextRecognition() {
         guard let _ = capturedImage else { return }
-        
+
         if showingTexts {
             // Hide text recognition results - keep them cached
             withAnimation(.easeInOut(duration: 0.3)) {
@@ -579,7 +578,7 @@ struct PreviewView: View {
             hapticService.buttonTap()
             return
         }
-        
+
         // Check if we have cached text results for quick show
         if hasDetectedTexts && !cachedTexts.isEmpty {
             // Use cached texts for instant display
@@ -590,36 +589,36 @@ struct PreviewView: View {
             hapticService.buttonTap()
             return
         }
-        
+
         // No cached texts - perform text recognition
         detectText()
     }
-    
+
     private func detectText() {
         guard let image = processingImage else { return }
-        
+
         isDetectingTexts = true
-        
+
         textRecognitionManager.detectText(in: image) { result in
             DispatchQueue.main.async {
                 self.isDetectingTexts = false
-                
+
                 switch result {
                 case .success(let texts):
                     self.detectedTexts = texts
                     self.cachedTexts = texts // Cache the results
                     self.hasDetectedTexts = true
-                    
+
                     // Save results to storage
                     if let image = self.capturedImage {
                         self.detectionResultsManager.saveOCRResult(detectedTexts: texts, image: image)
                     }
-                    
+
                     withAnimation(.easeInOut(duration: 0.5)) {
                         self.showingTexts = true
                     }
                     self.hapticService.success() // Success haptic feedback
-                    
+
                 case .failure(let error):
                     self.alertMessage = "Text recognition failed: \(error.localizedDescription)"
                     self.showingAlert = true
@@ -628,37 +627,37 @@ struct PreviewView: View {
             }
         }
     }
-    
+
     private func performOCRAndClassification() {
         guard let image = processingImage else { return }
-        
+
         // Step 1: Perform OCR first
         isDetectingTexts = true
-        
+
         textRecognitionManager.detectText(in: image) { result in
             DispatchQueue.main.async {
                 self.isDetectingTexts = false
-                
+
                 switch result {
                 case .success(let texts):
                     // Cache OCR results
                     self.detectedTexts = texts
                     self.cachedTexts = texts
                     self.hasDetectedTexts = true
-                    
+
                     // Save OCR results to storage
                     if let image = self.capturedImage {
                         self.detectionResultsManager.saveOCRResult(detectedTexts: texts, image: image)
                     }
-                    
+
                     // Show OCR results briefly
                     withAnimation(.easeInOut(duration: 0.3)) {
                         self.showingTexts = true
                     }
-                    
+
                     // Step 2: Now classify the detected text content
                     self.classifyDetectedText(texts)
-                    
+
                 case .failure(let error):
                     self.alertMessage = "OCR failed: \(error.localizedDescription)"
                     self.showingAlert = true
@@ -667,48 +666,48 @@ struct PreviewView: View {
             }
         }
     }
-    
+
     private func classifyDetectedText(_ texts: [DetectedText]) {
         // Combine all detected text into a single string for classification
         let combinedText = texts.map { $0.text }.joined(separator: " ")
-        
+
         // Create a text-based image for classification
         // For now, we'll classify the original image but show text-aware results
         guard let image = processingImage else { return }
-        
+
         isClassifying = true
-        
+
         imageClassificationManager.classifyImage(image) { result in
             DispatchQueue.main.async {
                 self.isClassifying = false
-                
+
                 switch result {
                 case .success(let results):
                     // Enhance classification results with text context
                     let enhancedResults = self.enhanceClassificationWithText(results, detectedText: combinedText)
-                    
+
                     self.classificationResults = enhancedResults
                     self.cachedClassificationResults = enhancedResults
                     self.hasClassificationResults = true
-                    
+
                     // Save enhanced classification results to storage
                     if let image = self.capturedImage {
                         self.detectionResultsManager.saveClassificationResult(classificationResults: enhancedResults, image: image)
                     }
-                    
+
                     // Hide OCR overlay and show classification results
                     withAnimation(.easeInOut(duration: 0.5)) {
                         self.showingTexts = false
                         self.showingClassificationResults = true
                     }
-                    
+
                     self.hapticService.success()
-                    
+
                     // Show success message with text context
                     let textSummary = texts.count > 0 ? "Found \(texts.count) text elements" : "No text detected"
                     self.alertMessage = "OCR + Classification complete!\n\(textSummary)\nTop result: \(enhancedResults.first?.identifier.capitalized ?? "Unknown")"
                     self.showingAlert = true
-                    
+
                 case .failure(let error):
                     self.alertMessage = "Classification failed: \(error.localizedDescription)"
                     self.showingAlert = true
@@ -717,18 +716,18 @@ struct PreviewView: View {
             }
         }
     }
-    
+
     private func enhanceClassificationWithText(_ results: [ClassificationResult], detectedText: String) -> [ClassificationResult] {
         // Enhance classification results by considering detected text
         var enhancedResults = results
-        
+
         // Add text-based classification hints
         let textLower = detectedText.lowercased()
-        
+
         // Boost confidence for text-related classifications
         for i in 0..<enhancedResults.count {
             let identifier = enhancedResults[i].identifier.lowercased()
-            
+
             // Boost confidence if classification matches detected text content
             if textLower.contains(identifier) || identifier.contains("text") || identifier.contains("document") {
                 enhancedResults[i] = ClassificationResult(
@@ -737,7 +736,7 @@ struct PreviewView: View {
                 )
             }
         }
-        
+
         // Add text-specific classifications if significant text was found
         if !detectedText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             let textClassification = ClassificationResult(
@@ -746,10 +745,10 @@ struct PreviewView: View {
             )
             enhancedResults.insert(textClassification, at: 0)
         }
-        
+
         return enhancedResults.sorted { $0.confidence > $1.confidence }
     }
-    
+
     private func getClassificationButtonText() -> String {
         if showingClassificationResults {
             return "Hide Results"
@@ -759,7 +758,7 @@ struct PreviewView: View {
             return "Classify"
         }
     }
-    
+
     private func getClassificationButtonColor() -> Color {
         if showingClassificationResults {
             return .indigo   // Indigo when showing
@@ -769,21 +768,21 @@ struct PreviewView: View {
             return .purple   // Purple when needs classification
         }
     }
-    
+
     private func clearClassificationCache() {
         cachedClassificationResults = []
         classificationResults = []
         hasClassificationResults = false
         showingClassificationResults = false
     }
-    
+
     private func clearAllCaches() {
         clearClassificationCache()
         clearContourCache()
         clearObjectCache()
         clearTextCache()
     }
-    
+
     private func saveImageToPhotos(_ image: UIImage) {
         PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
             if status == .authorized {

@@ -16,12 +16,12 @@ struct DetectedContour {
     let confidence: Float
     let aspectRatio: Float
     let area: Float
-    
+
     var isRectangular: Bool {
         // Consider rectangular if aspect ratio is reasonable and has 4+ significant points
         return points.count >= 4 && aspectRatio > 0.3 && aspectRatio < 3.0
     }
-    
+
     var contourType: ContourType {
         if isRectangular {
             if aspectRatio > 1.2 && aspectRatio < 1.8 {
@@ -45,7 +45,7 @@ enum ContourType: String, CaseIterable {
     case square = "Square"
     case complex = "Complex Shape"
     case simple = "Simple Shape"
-    
+
     var color: UIColor {
         switch self {
         case .document:
@@ -65,7 +65,7 @@ enum ContourType: String, CaseIterable {
 protocol ContourDetectionProtocol: ObservableObject {
     var isDetecting: Bool { get }
     var lastDetectedContours: [DetectedContour] { get }
-    
+
     func detectContours(in image: UIImage, completion: @escaping (Result<[DetectedContour], Error>) -> Void)
 }
 
@@ -74,65 +74,65 @@ protocol ContourDetectionProtocol: ObservableObject {
 class MockContourDetectionManager: ContourDetectionProtocol {
     @Published var isDetecting = false
     @Published var lastDetectedContours: [DetectedContour] = []
-    
+
     func detectContours(in image: UIImage, completion: @escaping (Result<[DetectedContour], Error>) -> Void) {
         isDetecting = true
-        
+
         // Simulate processing delay
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
             self.isDetecting = false
-            
+
             // Generate varied mock contours based on image characteristics
             let mockContours = self.generateMockContours(for: image)
-            
+
             self.lastDetectedContours = mockContours
             completion(.success(mockContours))
         }
     }
-    
+
     private func generateMockContours(for image: UIImage) -> [DetectedContour] {
         // Create a simple hash based on image properties to ensure different results
         let imageHash = self.simpleImageHash(image)
-        
+
         // Define different contour patterns based on image characteristics
         let contourSets: [[DetectedContour]] = [
             // Document-like contours (rectangular shapes)
             self.createDocumentContours(),
-            
+
             // Natural object contours (curved, organic shapes)
             self.createNaturalContours(),
-            
+
             // Geometric contours (squares, circles, triangles)
             self.createGeometricContours(),
-            
+
             // Edge-heavy contours (many small edges)
             self.createEdgeHeavyContours(),
-            
+
             // Simple contours (few large shapes)
             self.createSimpleContours(),
-            
+
             // Complex scene contours (mixed shapes and sizes)
             self.createComplexSceneContours()
         ]
-        
+
         // Select contour set based on image hash
         let selectedIndex = imageHash % contourSets.count
         var selectedContours = contourSets[selectedIndex]
-        
+
         // Add some randomness to positions and confidence scores
         selectedContours = selectedContours.map { contour in
             let positionVariation = Float.random(in: -0.05...0.05)
             let confidenceVariation = Float.random(in: -0.1...0.1)
-            
+
             let adjustedPoints = contour.points.map { point in
                 CGPoint(
                     x: max(0, min(1, point.x + CGFloat(positionVariation))),
                     y: max(0, min(1, point.y + CGFloat(positionVariation)))
                 )
             }
-            
+
             let adjustedConfidence = max(0.1, min(0.99, contour.confidence + confidenceVariation))
-            
+
             return DetectedContour(
                 points: adjustedPoints,
                 boundingBox: contour.boundingBox,
@@ -141,21 +141,21 @@ class MockContourDetectionManager: ContourDetectionProtocol {
                 area: contour.area
             )
         }
-        
+
         return selectedContours
     }
-    
+
     private func simpleImageHash(_ image: UIImage) -> Int {
         // Create a simple hash based on image properties
         let width = Int(image.size.width)
         let height = Int(image.size.height)
         let scale = Int(image.scale * 100)
         let orientation = image.imageOrientation.rawValue
-        
+
         // Simple hash combination
         return (width * 31 + height * 17 + scale * 7 + orientation * 3) % 1000
     }
-    
+
     private func createDocumentContours() -> [DetectedContour] {
         return [
             // Main document outline
@@ -194,7 +194,7 @@ class MockContourDetectionManager: ContourDetectionProtocol {
             )
         ]
     }
-    
+
     private func createNaturalContours() -> [DetectedContour] {
         return [
             // Organic curved shape (like a leaf or cloud)
@@ -230,7 +230,7 @@ class MockContourDetectionManager: ContourDetectionProtocol {
             )
         ]
     }
-    
+
     private func createGeometricContours() -> [DetectedContour] {
         return [
             // Square
@@ -277,7 +277,7 @@ class MockContourDetectionManager: ContourDetectionProtocol {
             )
         ]
     }
-    
+
     private func createEdgeHeavyContours() -> [DetectedContour] {
         return [
             // Many small horizontal edges
@@ -319,7 +319,7 @@ class MockContourDetectionManager: ContourDetectionProtocol {
             )
         ]
     }
-    
+
     private func createSimpleContours() -> [DetectedContour] {
         return [
             // One large dominant shape
@@ -350,7 +350,7 @@ class MockContourDetectionManager: ContourDetectionProtocol {
             )
         ]
     }
-    
+
     private func createComplexSceneContours() -> [DetectedContour] {
         return [
             // Mix of different shapes and sizes

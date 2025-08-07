@@ -10,12 +10,12 @@ import SwiftUI
 struct CameraControlsView: View {
     @ObservedObject var viewModel: CameraViewModel
     @Injected private var hapticService: HapticServiceProtocol
-    
+
     var body: some View {
         GeometryReader { geometry in
             VStack {
                 Spacer()
-                
+
                 // Camera controls positioned at bottom with perfect center alignment
                 HStack {
                     // Gallery button (left side)
@@ -31,9 +31,9 @@ struct CameraControlsView: View {
                             .clipShape(Circle())
                     }
                     .frame(width: 70) // Fixed width for consistent spacing
-                    
+
                     Spacer()
-                    
+
                     // Capture button (center)
                     Button(action: {
                         hapticService.actionFeedback()
@@ -48,9 +48,9 @@ struct CameraControlsView: View {
                                     .frame(width: 60, height: 60)
                             )
                     }
-                    
+
                     Spacer()
-                    
+
                     // Flash button (right side)
                     Button(action: {
                         hapticService.buttonTap()

@@ -17,7 +17,7 @@ enum NavigationPage {
 struct ContentView: View {
     @State private var currentPage: NavigationPage = .home
     @Injected private var hapticService: HapticServiceProtocol
-    
+
     var body: some View {
         ZStack {
             // Main content based on current page
@@ -49,7 +49,7 @@ struct ContentView: View {
                         }
                 }
             }
-            
+
             // Floating menu buttons for camera view
             if currentPage == .home {
                 VStack {
@@ -66,8 +66,7 @@ struct ContentView: View {
                                     .background(Color.black.opacity(0.6))
                                     .clipShape(Circle())
                             }
-                            
-                            
+
                             Button(action: {
                                 hapticService.buttonTap()
                                 currentPage = .results
@@ -82,7 +81,7 @@ struct ContentView: View {
                         }
                         .padding(.leading, 20)
                         .padding(.top, 50) // Account for status bar
-                        
+
                         Spacer()
                     }
                     Spacer()

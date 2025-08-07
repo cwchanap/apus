@@ -14,7 +14,7 @@ struct VisionDetection {
     let boundingBox: CGRect  // Normalized coordinates (0-1)
     let className: String
     let confidence: Float
-    
+
     var displayBoundingBox: CGRect {
         // Convert from Vision coordinates (bottom-left origin) to SwiftUI coordinates (top-left origin)
         return CGRect(
@@ -29,7 +29,7 @@ struct VisionDetection {
 protocol VisionObjectDetectionProtocol: ObservableObject {
     var isDetecting: Bool { get }
     var lastDetectedObjects: [VisionDetection] { get }
-    
+
     func detectObjects(in image: UIImage, completion: @escaping (Result<[VisionDetection], Error>) -> Void)
 }
 
@@ -38,86 +38,86 @@ protocol VisionObjectDetectionProtocol: ObservableObject {
 class MockVisionObjectDetectionManager: VisionObjectDetectionProtocol {
     @Published var isDetecting = false
     @Published var lastDetectedObjects: [VisionDetection] = []
-    
+
     func detectObjects(in image: UIImage, completion: @escaping (Result<[VisionDetection], Error>) -> Void) {
         isDetecting = true
-        
+
         // Simulate processing delay
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
             self.isDetecting = false
-            
+
             // Generate varied mock detections based on image characteristics
             let mockDetections = self.generateMockDetections(for: image)
-            
+
             self.lastDetectedObjects = mockDetections
             completion(.success(mockDetections))
         }
     }
-    
+
     private func generateMockDetections(for image: UIImage) -> [VisionDetection] {
         // Create a simple hash based on image properties to ensure different results
         let imageHash = self.simpleImageHash(image)
-        
+
         // Define different detection scenarios
         let detectionSets: [[VisionDetection]] = [
             // People scenario
             self.createPeopleDetections(),
-            
+
             // Animals scenario
             self.createAnimalDetections(),
-            
+
             // Vehicles scenario
             self.createVehicleDetections(),
-            
+
             // Food scenario
             self.createFoodDetections(),
-            
+
             // Objects scenario
             self.createObjectDetections(),
-            
+
             // Mixed scenario
             self.createMixedDetections()
         ]
-        
+
         // Select detection set based on image hash
         let selectedIndex = imageHash % detectionSets.count
         var selectedDetections = detectionSets[selectedIndex]
-        
+
         // Add some randomness to positions and confidence scores
         selectedDetections = selectedDetections.map { detection in
             let positionVariation = Float.random(in: -0.05...0.05)
             let confidenceVariation = Float.random(in: -0.1...0.1)
-            
+
             let adjustedBoundingBox = CGRect(
                 x: max(0, min(0.8, detection.boundingBox.minX + CGFloat(positionVariation))),
                 y: max(0, min(0.8, detection.boundingBox.minY + CGFloat(positionVariation))),
                 width: detection.boundingBox.width,
                 height: detection.boundingBox.height
             )
-            
+
             let adjustedConfidence = max(0.1, min(0.99, detection.confidence + confidenceVariation))
-            
+
             return VisionDetection(
                 boundingBox: adjustedBoundingBox,
                 className: detection.className,
                 confidence: adjustedConfidence
             )
         }
-        
+
         return selectedDetections
     }
-    
+
     private func simpleImageHash(_ image: UIImage) -> Int {
         // Create a simple hash based on image properties
         let width = Int(image.size.width)
         let height = Int(image.size.height)
         let scale = Int(image.scale * 100)
         let orientation = image.imageOrientation.rawValue
-        
+
         // Simple hash combination
         return (width * 31 + height * 17 + scale * 7 + orientation * 3) % 1000
     }
-    
+
     private func createPeopleDetections() -> [VisionDetection] {
         return [
             VisionDetection(
@@ -132,7 +132,7 @@ class MockVisionObjectDetectionManager: VisionObjectDetectionProtocol {
             )
         ]
     }
-    
+
     private func createAnimalDetections() -> [VisionDetection] {
         return [
             VisionDetection(
@@ -147,7 +147,7 @@ class MockVisionObjectDetectionManager: VisionObjectDetectionProtocol {
             )
         ]
     }
-    
+
     private func createVehicleDetections() -> [VisionDetection] {
         return [
             VisionDetection(
@@ -162,7 +162,7 @@ class MockVisionObjectDetectionManager: VisionObjectDetectionProtocol {
             )
         ]
     }
-    
+
     private func createFoodDetections() -> [VisionDetection] {
         return [
             VisionDetection(
@@ -182,7 +182,7 @@ class MockVisionObjectDetectionManager: VisionObjectDetectionProtocol {
             )
         ]
     }
-    
+
     private func createObjectDetections() -> [VisionDetection] {
         return [
             VisionDetection(
@@ -197,7 +197,7 @@ class MockVisionObjectDetectionManager: VisionObjectDetectionProtocol {
             )
         ]
     }
-    
+
     private func createMixedDetections() -> [VisionDetection] {
         return [
             VisionDetection(

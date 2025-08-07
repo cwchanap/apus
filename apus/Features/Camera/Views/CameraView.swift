@@ -10,7 +10,7 @@ import AVFoundation
 
 struct CameraView: View {
     @StateObject private var viewModel = CameraViewModel()
-    
+
     var body: some View {
         GeometryReader { geometry in
             ZStack {
@@ -18,10 +18,10 @@ struct CameraView: View {
                 CameraPreview(camera: viewModel.concreteCameraManager)
                     .frame(width: geometry.size.width, height: geometry.size.height)
                     .clipped()
-                
+
                 // Object detection overlay - fill entire screen
                 ObjectDetectionOverlay(detections: viewModel.detections)
-                
+
                 // Camera controls - respect safe areas for interaction
                 CameraControlsView(viewModel: viewModel)
             }

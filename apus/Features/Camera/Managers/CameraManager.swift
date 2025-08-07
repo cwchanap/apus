@@ -10,30 +10,29 @@ import AVFoundation
 import UIKit
 import CoreVideo
 
-
 class CameraManager: NSObject, ObservableObject, CameraManagerProtocol {
     @Published var isSessionRunning = false
     @Published var isFlashOn = false
     @Published var currentZoomFactor: CGFloat = 1.0
-    
+
     let session = AVCaptureSession()
     private var videoOutput = AVCaptureVideoDataOutput()
     private var photoOutput = AVCapturePhotoOutput()
     private var videoDevice: AVCaptureDevice?
     private var videoDeviceInput: AVCaptureDeviceInput?
-    
+
     private var photoCompletionHandler: ((UIImage?) -> Void)?
     private var objectDetectionHandler: ((CVPixelBuffer) -> Void)?
-    
+
     override init() {
         super.init()
         // Don't setup camera immediately - wait for permission
     }
-    
+
     private func setupCamera() {
         // Clear any existing configuration
         session.beginConfiguration()
-        
+
         // Remove existing inputs and outputs
         for input in session.inputs {
             session.removeInput(input)
@@ -41,37 +40,37 @@ class CameraManager: NSObject, ObservableObject, CameraManagerProtocol {
         for output in session.outputs {
             session.removeOutput(output)
         }
-        
+
         session.sessionPreset = .photo
-        
+
         // Try to get back camera first, fallback to any available camera
         var videoDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back)
-        
+
         // If no back camera (simulator), try front camera
         if videoDevice == nil {
             videoDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front)
             print("⚠️ Using front camera (likely running on simulator)")
         }
-        
+
         // If still no camera, try any available camera
         if videoDevice == nil {
             videoDevice = AVCaptureDevice.default(for: .video)
             print("⚠️ Using default camera device")
         }
-        
+
         guard let videoDevice = videoDevice else {
             print("❌ Failed to get any video device - camera functionality will not work")
             session.commitConfiguration()
             return
         }
-        
+
         print("✅ Using camera device: \(videoDevice.localizedName)")
-        
+
         self.videoDevice = videoDevice
-        
+
         do {
             let videoDeviceInput = try AVCaptureDeviceInput(device: videoDevice)
-            
+
             if session.canAddInput(videoDeviceInput) {
                 session.addInput(videoDeviceInput)
                 self.videoDeviceInput = videoDeviceInput
@@ -80,18 +79,18 @@ class CameraManager: NSObject, ObservableObject, CameraManagerProtocol {
                 session.commitConfiguration()
                 return
             }
-            
+
             if session.canAddOutput(photoOutput) {
                 session.addOutput(photoOutput)
             } else {
                 print("Could not add photo output to the session")
             }
-            
+
             if session.canAddOutput(videoOutput) {
                 session.addOutput(videoOutput)
-                
+
                 videoOutput.setSampleBufferDelegate(self, queue: DispatchQueue(label: "VideoDataOutput", qos: .userInitiated, attributes: [], autoreleaseFrequency: .workItem))
-                
+
                 if let connection = videoOutput.connection(with: .video) {
                     connection.isEnabled = true
                     if connection.isVideoOrientationSupported {
@@ -101,44 +100,44 @@ class CameraManager: NSObject, ObservableObject, CameraManagerProtocol {
             } else {
                 print("Could not add video output to the session")
             }
-            
+
             session.commitConfiguration()
-            
+
         } catch {
             print("Error setting up camera: \(error)")
             session.commitConfiguration()
         }
     }
-    
+
     func startSession() {
         requestCameraPermission()
     }
-    
+
     private func actuallyStartSession() {
-        guard !session.isRunning else { 
+        guard !session.isRunning else {
             DispatchQueue.main.async {
                 self.isSessionRunning = true
             }
-            return 
+            return
         }
-        
+
         // Start session on background queue to avoid blocking UI
         let startSessionWork = { [self] in
             self.session.startRunning()
-            
+
             // Update UI on main thread
             DispatchQueue.main.async {
                 self.isSessionRunning = self.session.isRunning
             }
         }
-        
+
         if Thread.isMainThread {
             DispatchQueue.global(qos: .userInitiated).async(execute: startSessionWork)
         } else {
             startSessionWork()
         }
     }
-    
+
     func stopSession() {
         if session.isRunning {
             DispatchQueue.global(qos: .userInitiated).async { [weak self] in
@@ -149,37 +148,37 @@ class CameraManager: NSObject, ObservableObject, CameraManagerProtocol {
             }
         }
     }
-    
+
     func capturePhoto(completion: @escaping (UIImage?) -> Void) {
         guard session.isRunning else {
             completion(nil)
             return
         }
-        
+
         guard photoOutput.connection(with: .video) != nil else {
             completion(nil)
             return
         }
-        
+
         photoCompletionHandler = completion
-        
+
         let settings = AVCapturePhotoSettings()
         if isFlashOn && photoOutput.supportedFlashModes.contains(.on) {
             settings.flashMode = .on
         } else {
             settings.flashMode = .off
         }
-        
+
         photoOutput.capturePhoto(with: settings, delegate: self)
     }
-    
+
     func toggleFlash() {
         isFlashOn.toggle()
     }
-    
+
     func zoom(factor: CGFloat) {
         guard let device = videoDevice else { return }
-        
+
         do {
             try device.lockForConfiguration()
             let clampedFactor = max(1.0, min(factor, device.activeFormat.videoMaxZoomFactor))
@@ -190,18 +189,18 @@ class CameraManager: NSObject, ObservableObject, CameraManagerProtocol {
             print("Error setting zoom: \(error)")
         }
     }
-    
+
     func setObjectDetectionHandler(_ handler: @escaping (CVPixelBuffer) -> Void) {
         objectDetectionHandler = handler
     }
-    
+
     func processFrame(_ pixelBuffer: CVPixelBuffer) {
         objectDetectionHandler?(pixelBuffer)
     }
-    
+
     private func requestCameraPermission() {
         print("🔍 Checking camera permission...")
-        
+
         switch AVCaptureDevice.authorizationStatus(for: .video) {
         case .authorized:
             print("✅ Camera permission already granted")
@@ -236,13 +235,13 @@ extension CameraManager: AVCapturePhotoCaptureDelegate {
             photoCompletionHandler?(nil)
             return
         }
-        
+
         guard let imageData = photo.fileDataRepresentation(),
               let image = UIImage(data: imageData) else {
             photoCompletionHandler?(nil)
             return
         }
-        
+
         photoCompletionHandler?(image)
         photoCompletionHandler = nil
     }

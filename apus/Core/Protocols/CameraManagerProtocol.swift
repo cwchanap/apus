@@ -15,7 +15,7 @@ protocol CameraManagerProtocol: ObservableObject {
     var isSessionRunning: Bool { get }
     var isFlashOn: Bool { get }
     var currentZoomFactor: CGFloat { get }
-    
+
     func startSession()
     func stopSession()
     func capturePhoto(completion: @escaping (UIImage?) -> Void)

@@ -17,14 +17,14 @@ class CameraViewModel: ObservableObject {
     @Published var showingImagePicker = false
     @Published var isFlashOn = false
     @Published var currentZoomFactor: CGFloat = 1.0
-    
+
     // MARK: - Dependencies (Injected)
     @Injected private var cameraManager: CameraManagerProtocol
     @Injected private var objectDetectionManager: ObjectDetectionProtocol
-    
+
     // MARK: - Settings
     @ObservedObject private var appSettings = AppSettings.shared
-    
+
     // MARK: - Computed Properties
     var isShowingPreview: Binding<Bool> {
         Binding<Bool>(
@@ -32,26 +32,26 @@ class CameraViewModel: ObservableObject {
             set: { if !$0 { self.capturedImage = nil } }
         )
     }
-    
+
     var detections: [Detection] {
         // Only return detections if real-time object detection is enabled
         return appSettings.isRealTimeObjectDetectionEnabled ? objectDetectionManager.detections : []
     }
-    
+
     var isRealTimeObjectDetectionEnabled: Bool {
         return appSettings.isRealTimeObjectDetectionEnabled
     }
-    
+
     // Expose concrete camera manager for UI components that need it
-    var concreteCameraManager: CameraManager {
-        return cameraManager as! CameraManager
+    var concreteCameraManager: CameraManager? {
+        return cameraManager as? CameraManager
     }
-    
+
     // MARK: - Initialization
     init() {
         setupBindings()
     }
-    
+
     // MARK: - Alternative initializer for testing
     init(cameraManager: CameraManagerProtocol, objectDetectionManager: ObjectDetectionProtocol) {
         // Register test dependencies
@@ -59,7 +59,7 @@ class CameraViewModel: ObservableObject {
         DIContainer.shared.register(ObjectDetectionProtocol.self, instance: objectDetectionManager)
         setupBindings()
     }
-    
+
     // MARK: - Private Methods
     private func setupBindings() {
         // Set up object detection processing with settings check
@@ -68,16 +68,16 @@ class CameraViewModel: ObservableObject {
             self.objectDetectionManager.processFrame(pixelBuffer)
         }
     }
-    
+
     // MARK: - Public Methods
     func startCamera() {
         cameraManager.startSession()
     }
-    
+
     func stopCamera() {
         cameraManager.stopSession()
     }
-    
+
     func capturePhoto() {
         cameraManager.capturePhoto { [weak self] image in
             DispatchQueue.main.async {
@@ -85,21 +85,21 @@ class CameraViewModel: ObservableObject {
             }
         }
     }
-    
+
     func toggleFlash() {
         isFlashOn.toggle()
         cameraManager.toggleFlash()
     }
-    
+
     func zoom(factor: CGFloat) {
         currentZoomFactor = factor
         cameraManager.zoom(factor: factor)
     }
-    
+
     func selectImageFromLibrary() {
         showingImagePicker = true
     }
-    
+
     func handleSelectedImage(_ image: UIImage?) {
         capturedImage = image
         showingImagePicker = false

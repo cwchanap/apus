@@ -16,7 +16,7 @@ protocol ObjectDetectionProtocol: ObservableObject {
 // Use mock implementation for simulator and previews/debug builds
 class MockObjectDetectionManager: ObjectDetectionProtocol {
     @Published var detections: [Detection] = []
-    
+
     func processFrame(_ pixelBuffer: CVPixelBuffer) {
         // Mock implementation - no actual detection
     }

@@ -13,21 +13,21 @@ import Combine
 class SettingsViewModel: ObservableObject {
     // MARK: - Settings Reference
     @ObservedObject private var appSettings = AppSettings.shared
-    
+
     // MARK: - Published Properties (for direct binding)
     @Published var isRealTimeObjectDetectionEnabled: Bool = true
     @Published var objectDetectionFramework: ObjectDetectionFramework = .vision
-    
+
     // MARK: - Initialization
     init() {
         // Initialize with current settings
         self.isRealTimeObjectDetectionEnabled = appSettings.isRealTimeObjectDetectionEnabled
         self.objectDetectionFramework = appSettings.objectDetectionFramework
-        
+
         // Set up two-way binding
         setupBindings()
     }
-    
+
     private func setupBindings() {
         // Update ViewModel when AppSettings changes (but avoid loops)
         appSettings.$isRealTimeObjectDetectionEnabled
@@ -38,7 +38,7 @@ class SettingsViewModel: ObservableObject {
                 }
             }
             .store(in: &cancellables)
-        
+
         appSettings.$objectDetectionFramework
             .removeDuplicates()
             .sink { [weak self] newValue in
@@ -47,7 +47,7 @@ class SettingsViewModel: ObservableObject {
                 }
             }
             .store(in: &cancellables)
-        
+
         // Update AppSettings when ViewModel changes (but avoid loops)
         $isRealTimeObjectDetectionEnabled
             .dropFirst() // Skip initial value
@@ -58,7 +58,7 @@ class SettingsViewModel: ObservableObject {
                 }
             }
             .store(in: &cancellables)
-        
+
         $objectDetectionFramework
             .dropFirst() // Skip initial value
             .removeDuplicates()
@@ -69,14 +69,14 @@ class SettingsViewModel: ObservableObject {
             }
             .store(in: &cancellables)
     }
-    
+
     private var cancellables = Set<AnyCancellable>()
-    
+
     // MARK: - Public Methods
     func resetToDefaults() {
         appSettings.resetToDefaults()
     }
-    
+
     func getAppVersion() -> String {
         let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.0"
         let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"

@@ -13,10 +13,10 @@ struct ZoomableImageView: View {
     @State private var lastScale: CGFloat = 1.0
     @State private var offset: CGSize = .zero
     @State private var lastOffset: CGSize = .zero
-    
+
     private let minScale: CGFloat = 1.0
     private let maxScale: CGFloat = 4.0
-    
+
     var body: some View {
         GeometryReader { geometry in
             Image(uiImage: image)
@@ -35,7 +35,7 @@ struct ZoomableImageView: View {
                             }
                             .onEnded { _ in
                                 lastScale = scale
-                                
+
                                 // Reset to fit if zoomed out too much
                                 if scale <= minScale {
                                     withAnimation(.easeOut(duration: 0.3)) {
@@ -46,7 +46,7 @@ struct ZoomableImageView: View {
                                 }
                                 lastScale = scale
                             },
-                        
+
                         // Drag gesture for panning
                         DragGesture()
                             .onChanged { value in
@@ -54,12 +54,12 @@ struct ZoomableImageView: View {
                                     width: lastOffset.width + value.translation.width,
                                     height: lastOffset.height + value.translation.height
                                 )
-                                
+
                                 // Limit panning based on zoom level and image bounds
                                 let imageSize = getImageDisplaySize(in: geometry)
                                 let maxOffsetX = max(0, (imageSize.width * scale - geometry.size.width) / 2)
                                 let maxOffsetY = max(0, (imageSize.height * scale - geometry.size.height) / 2)
-                                
+
                                 offset = CGSize(
                                     width: min(max(newOffset.width, -maxOffsetX), maxOffsetX),
                                     height: min(max(newOffset.height, -maxOffsetY), maxOffsetY)
@@ -86,11 +86,11 @@ struct ZoomableImageView: View {
                 .clipped()
         }
     }
-    
+
     private func getImageDisplaySize(in geometry: GeometryProxy) -> CGSize {
         let imageAspectRatio = image.size.width / image.size.height
         let containerAspectRatio = geometry.size.width / geometry.size.height
-        
+
         if imageAspectRatio > containerAspectRatio {
             // Image is wider than container
             let displayWidth = geometry.size.width
