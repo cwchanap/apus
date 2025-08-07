@@ -725,14 +725,14 @@ struct PreviewView: View {
         let textLower = detectedText.lowercased()
 
         // Boost confidence for text-related classifications
-        for i in 0..<enhancedResults.count {
-            let identifier = enhancedResults[i].identifier.lowercased()
+        for index in 0..<enhancedResults.count {
+            let identifier = enhancedResults[index].identifier.lowercased()
 
             // Boost confidence if classification matches detected text content
             if textLower.contains(identifier) || identifier.contains("text") || identifier.contains("document") {
-                enhancedResults[i] = ClassificationResult(
-                    identifier: enhancedResults[i].identifier + " (Text-Enhanced)",
-                    confidence: min(1.0, enhancedResults[i].confidence * 1.2)
+                enhancedResults[index] = ClassificationResult(
+                    identifier: enhancedResults[index].identifier + " (Text-Enhanced)",
+                    confidence: min(1.0, enhancedResults[index].confidence * 1.2)
                 )
             }
         }

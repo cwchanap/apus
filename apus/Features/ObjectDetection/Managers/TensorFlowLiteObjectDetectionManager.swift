@@ -172,14 +172,14 @@ class TensorFlowLiteObjectDetectionManager: ObservableObject, UnifiedObjectDetec
 
         // Convert to float32 and normalize to [0, 1]
         var floatData = [Float32]()
-        for i in stride(from: 0, to: pixelData.count, by: 4) {
-            let r = Float32(pixelData[i]) / 255.0
-            let g = Float32(pixelData[i + 1]) / 255.0
-            let b = Float32(pixelData[i + 2]) / 255.0
+        for index in stride(from: 0, to: pixelData.count, by: 4) {
+            let red = Float32(pixelData[index]) / 255.0
+            let green = Float32(pixelData[index + 1]) / 255.0
+            let blue = Float32(pixelData[index + 2]) / 255.0
 
-            floatData.append(r)
-            floatData.append(g)
-            floatData.append(b)
+            floatData.append(red)
+            floatData.append(green)
+            floatData.append(blue)
         }
 
         return Data(bytes: floatData, count: floatData.count * MemoryLayout<Float32>.size)
@@ -205,18 +205,18 @@ class TensorFlowLiteObjectDetectionManager: ObservableObject, UnifiedObjectDetec
         var detections: [DetectedObject] = []
         let maxDetections = min(Int(numDetections[0]), 25)
 
-        for i in 0..<maxDetections {
-            let score = scores[i]
+        for index in 0..<maxDetections {
+            let score = scores[index]
             guard score > 0.3 else { continue } // Confidence threshold
 
-            let classIndex = Int(classes[i])
+            let classIndex = Int(classes[index])
             guard classIndex < labels.count else { continue }
 
             // Boxes are in format [y_min, x_min, y_max, x_max] normalized
-            let yMin = CGFloat(boxes[i * 4])
-            let xMin = CGFloat(boxes[i * 4 + 1])
-            let yMax = CGFloat(boxes[i * 4 + 2])
-            let xMax = CGFloat(boxes[i * 4 + 3])
+            let yMin = CGFloat(boxes[index * 4])
+            let xMin = CGFloat(boxes[index * 4 + 1])
+            let yMax = CGFloat(boxes[index * 4 + 2])
+            let xMax = CGFloat(boxes[index * 4 + 3])
 
             // Convert to our format (top-left origin, normalized)
             let boundingBox = CGRect(

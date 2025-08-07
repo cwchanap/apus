@@ -93,8 +93,8 @@ struct ContourEdgePath: View {
 
         path.move(to: scaledPoints[0])
 
-        for i in 1..<scaledPoints.count {
-            path.addLine(to: scaledPoints[i])
+        for index in 1..<scaledPoints.count {
+            path.addLine(to: scaledPoints[index])
         }
 
         // Close path if it's a significant contour with enough points

@@ -97,12 +97,12 @@ class VisionTextRecognitionManager: ObservableObject, VisionTextRecognitionProto
         // Vision framework uses bottom-left origin, UIKit uses top-left
         // Vision coordinates are normalized (0-1), we need to convert to image coordinates
 
-        let x = visionRect.origin.x * imageSize.width
-        let y = (1.0 - visionRect.origin.y - visionRect.height) * imageSize.height
+        let xCoord = visionRect.origin.x * imageSize.width
+        let yCoord = (1.0 - visionRect.origin.y - visionRect.height) * imageSize.height
         let width = visionRect.width * imageSize.width
         let height = visionRect.height * imageSize.height
 
-        return CGRect(x: x, y: y, width: width, height: height)
+        return CGRect(x: xCoord, y: yCoord, width: width, height: height)
     }
 
     private func getCharacterBoundingBoxes(from observation: VNRecognizedTextObservation, text: String, imageSize: CGSize) -> [CGRect] {
