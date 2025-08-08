@@ -41,29 +41,7 @@ extension PreviewView {
         }
     }
     
-    // MARK: - Text Enhancement Helpers
-    func enhanceClassificationWithText(_ results: [ClassificationResult]) -> [ClassificationResult] {
-        guard !detectedTexts.isEmpty else { return results }
-        
-        var enhancedResults = results
-        let allDetectedText = detectedTexts.map { $0.text }.joined(separator: " ").lowercased()
-        let textLower = allDetectedText
-        
-        // Boost confidence for text-related classifications
-        for index in 0..<enhancedResults.count {
-            let identifier = enhancedResults[index].identifier.lowercased()
-            
-            // Boost confidence if classification matches detected text content
-            if textLower.contains(identifier) || identifier.contains("text") || identifier.contains("document") {
-                enhancedResults[index] = ClassificationResult(
-                    identifier: enhancedResults[index].identifier + " (Text-Enhanced)",
-                    confidence: min(1.0, enhancedResults[index].confidence * 1.2)
-                )
-            }
-        }
-        
-        return enhancedResults
-    }
+    // Text enhancement removed as OCR and image classification are separate workflows.
     
     // MARK: - Reset Helpers
     func resetAllDetections() {

@@ -110,11 +110,11 @@ extension PreviewView {
     
     func getTextRecognitionButtonText() -> String {
         if showingTexts {
-            return "Hide Text"
+            return "Hide OCR"
         } else if hasDetectedTexts {
-            return "Show Text"
+            return "Show OCR"
         } else {
-            return "Detect Text"
+            return "OCR"
         }
     }
     

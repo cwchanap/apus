@@ -15,14 +15,16 @@ struct CameraView: View {
         GeometryReader { geometry in
             ZStack {
                 // Camera preview - fill entire screen
-                if let cameraManager = viewModel.concreteCameraManager {
-                    CameraPreview(camera: cameraManager)
-                } else {
-                    Text("Camera not available")
-                        .foregroundColor(.white)
+                Group {
+                    if let cameraManager = viewModel.concreteCameraManager {
+                        CameraPreview(camera: cameraManager)
+                    } else {
+                        Text("Camera not available")
+                            .foregroundColor(.white)
+                    }
                 }
-                    .frame(width: geometry.size.width, height: geometry.size.height)
-                    .clipped()
+                .frame(width: geometry.size.width, height: geometry.size.height)
+                .clipped()
 
                 // Object detection overlay - fill entire screen
                 ObjectDetectionOverlay(detections: viewModel.detections)

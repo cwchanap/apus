@@ -16,32 +16,32 @@ extension PreviewView {
         VStack(spacing: 12) {
             // First row: OCR + Classification and Object Detection
             HStack(spacing: 12) {
-                // OCR + Classify button
+                // Classification button
                 Button(action: {
                     hapticService.actionFeedback()
-                    performOCRAndClassification()
+                    toggleClassification()
                 }) {
                     HStack(spacing: 4) {
-                        if isDetectingTexts || isClassifying {
+                        if isClassifying {
                             ProgressView()
                                 .progressViewStyle(CircularProgressViewStyle(tint: .white))
                                 .scaleEffect(0.7)
-                            Text(isDetectingTexts ? "Reading Text..." : "Classifying Text...")
+                            Text("Classifying...")
                                 .font(.caption)
                         } else {
-                            Image(systemName: "textformat.abc")
+                            Image(systemName: showingClassificationResults ? "brain.head.profile.fill" : "brain.head.profile")
                                 .font(.caption)
-                            Text("OCR + Classify")
+                            Text(getClassificationButtonText())
                                 .font(.caption)
                         }
                     }
                     .foregroundColor(.white)
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
-                    .background(Color.purple)
+                    .background(getClassificationButtonColor())
                     .clipShape(Capsule())
                 }
-                .disabled(isDetectingTexts || isClassifying)
+                .disabled(isClassifying)
                 
                 // Object detection button
                 Button(action: {
@@ -99,6 +99,33 @@ extension PreviewView {
                     .clipShape(Capsule())
                 }
                 .disabled(isDetectingContours)
+                
+                // Text recognition (OCR) button
+                Button(action: {
+                    hapticService.actionFeedback()
+                    toggleTextRecognition()
+                }) {
+                    HStack(spacing: 4) {
+                        if isDetectingTexts {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                                .scaleEffect(0.7)
+                            Text("Reading Text...")
+                                .font(.caption)
+                        } else {
+                            Image(systemName: showingTexts ? "textformat.abc" : "textformat")
+                                .font(.caption)
+                            Text(getTextRecognitionButtonText())
+                                .font(.caption)
+                        }
+                    }
+                    .foregroundColor(.white)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+                    .background(getTextRecognitionButtonColor())
+                    .clipShape(Capsule())
+                }
+                .disabled(isDetectingTexts)
                 
                 Spacer() // Fill remaining space
             }
@@ -175,7 +202,7 @@ extension PreviewView {
             // Object detection overlay
             if showingObjects && !detectedObjects.isEmpty {
                 UnifiedObjectDetectionOverlay(
-                    detectedObjects: detectedObjects,
+                    detections: detectedObjects,
                     imageSize: image.size,
                     displaySize: geometry.size
                 )

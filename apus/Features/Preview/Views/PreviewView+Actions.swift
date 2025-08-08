@@ -175,48 +175,9 @@ extension PreviewView {
         }
     }
     
-    // MARK: - Combined OCR + Classification
-    func performOCRAndClassification() {
-        guard let image = processingImage else { return }
-        
-        // Step 1: Perform text recognition
-        performTextRecognition(on: image)
-        
-        // Step 2: Wait a moment then perform classification with text context
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            self.performEnhancedClassification(on: image)
-        }
-    }
-    
-    func performEnhancedClassification(on image: UIImage) {
-        isClassifying = true
-        
-        imageClassificationManager.classifyImage(image) { [self] result in
-            DispatchQueue.main.async {
-                self.isClassifying = false
-                
-                switch result {
-                case .success(let results):
-                    // Enhance classification with text context
-                    let enhancedResults = self.enhanceClassificationWithText(results)
-                    
-                    self.classificationResults = enhancedResults
-                    self.cachedClassificationResults = enhancedResults
-                    self.hasClassificationResults = true
-                    self.showingClassificationResults = true
-                    
-                    // Save to results manager
-                    self.detectionResultsManager.saveClassificationResult(
-                        classificationResults: enhancedResults,
-                        image: image
-                    )
-                    
-                case .failure(let error):
-                    self.showAlert(message: "Classification failed: \(error.localizedDescription)")
-                }
-            }
-        }
-    }
+    // Combined OCR + Classification pipeline removed.
+    // OCR is text detection + text recognition handled by VisionTextRecognitionManager.
+    // Image classification is a separate workflow via ImageClassificationManager.
     
     // MARK: - Helper Methods
     func showAlert(message: String) {

@@ -39,12 +39,12 @@ struct PreviewView: View {
     @State var hasDetectedTexts = false
 
     // Injected dependencies
-    @Injected private var imageClassificationManager: ImageClassificationProtocol
-    @Injected private var hapticService: HapticServiceProtocol
-    @Injected private var contourDetectionManager: ContourDetectionProtocol
-    @Injected private var unifiedObjectDetectionManager: UnifiedObjectDetectionProtocol
-    @Injected private var textRecognitionManager: VisionTextRecognitionProtocol
-    @Injected private var detectionResultsManager: DetectionResultsManager
+    @Injected var imageClassificationManager: ImageClassificationProtocol
+    @Injected var hapticService: HapticServiceProtocol
+    @Injected var contourDetectionManager: ContourDetectionProtocol
+    @Injected var unifiedObjectDetectionManager: UnifiedObjectDetectionProtocol
+    @Injected var textRecognitionManager: VisionTextRecognitionProtocol
+    @Injected var detectionResultsManager: DetectionResultsManager
 
     var body: some View {
         GeometryReader { geometry in
