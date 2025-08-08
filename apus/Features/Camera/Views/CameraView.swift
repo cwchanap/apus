@@ -15,7 +15,12 @@ struct CameraView: View {
         GeometryReader { geometry in
             ZStack {
                 // Camera preview - fill entire screen
-                CameraPreview(camera: viewModel.concreteCameraManager)
+                if let cameraManager = viewModel.concreteCameraManager {
+                    CameraPreview(camera: cameraManager)
+                } else {
+                    Text("Camera not available")
+                        .foregroundColor(.white)
+                }
                     .frame(width: geometry.size.width, height: geometry.size.height)
                     .clipped()
 
