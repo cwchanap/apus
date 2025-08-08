@@ -103,7 +103,7 @@ struct ResultsDashboardView: View {
                                         )
 
                                         StorageInfoRow(
-                                            label: "Classification",
+                                            label: "Image Classification",
                                             count: resultsManager.classificationResults.count,
                                             maxCount: 10,
                                             color: .green
