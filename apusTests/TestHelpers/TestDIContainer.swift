@@ -12,42 +12,52 @@ import XCTest
 class TestDIContainer: DIContainerProtocol {
     private var services: [String: Any] = [:]
     private var factories: [String: () -> Any] = [:]
-    
+
     func register<T>(_ type: T.Type, factory: @escaping () -> T) {
         let key = String(describing: type)
         factories[key] = factory
     }
-    
+
     func register<T>(_ type: T.Type, instance: T) {
         let key = String(describing: type)
         services[key] = instance
     }
-    
+
     func resolve<T>(_ type: T.Type) -> T {
-        guard let resolved: T = resolve(type) else {
-            XCTFail("Test dependency \(type) not registered in TestDIContainer")
-            fatalError("Test dependency \(type) not registered")
-        }
-        return resolved
-    }
-    
-    func resolve<T>(_ type: T.Type) -> T? {
         let key = String(describing: type)
-        
+
         // Check if we have a singleton instance
         if let instance = services[key] as? T {
             return instance
         }
-        
+
         // Check if we have a factory
-        if let factory = factories[key] {
-            let instance = factory() as! T
+        if let typedFactory = factories[key] as? () -> T {
+            let instance = typedFactory()
             return instance
         }
-        
+
+        XCTFail("Test dependency \\(type) not registered in TestDIContainer")
+        fatalError("Test dependency \\(type) not registered")
+    }
+
+    func resolveOptional<T>(_ type: T.Type) -> T? {
+        let key = String(describing: type)
+
+        // Check if we have a singleton instance
+        if let instance = services[key] as? T {
+            return instance
+        }
+
+        // Check if we have a factory
+        if let typedFactory = factories[key] as? () -> T {
+            let instance = typedFactory()
+            return instance
+        }
+
         return nil
     }
-    
+
     func clear() {
         services.removeAll()
         factories.removeAll()
@@ -60,13 +70,13 @@ class TestDependencySetup {
         // Register mock camera dependencies
         container.register(CameraManagerProtocol.self, instance: MockCameraManager())
         container.register(ObjectDetectionProtocol.self, instance: MockObjectDetectionManager())
-        
+
         // Register mock text recognition
         container.register(VisionTextRecognitionProtocol.self, instance: MockVisionTextRecognitionManager())
-        
+
         // Register mock image classification
         container.register(ImageClassificationProtocol.self, instance: MockImageClassificationManager())
-        
+
         // Register mock services
         container.register(PermissionServiceProtocol.self, instance: MockPermissionService())
         container.register(PhotoLibraryServiceProtocol.self, instance: MockPhotoLibraryService())
@@ -88,43 +98,43 @@ class MockHapticService: HapticServiceProtocol {
     var errorCalled = false
     var warningCalled = false
     var selectionChangedCalled = false
-    
+
     func impact(_ style: UIImpactFeedbackGenerator.FeedbackStyle) {
         impactCalled = true
     }
-    
+
     func notification(_ type: UINotificationFeedbackGenerator.FeedbackType) {
         notificationCalled = true
     }
-    
+
     func selection() {
         selectionCalled = true
     }
-    
+
     func actionFeedback() {
         actionFeedbackCalled = true
     }
-    
+
     func buttonTap() {
         buttonTapCalled = true
     }
-    
+
     func strongFeedback() {
         strongFeedbackCalled = true
     }
-    
+
     func success() {
         successCalled = true
     }
-    
+
     func error() {
         errorCalled = true
     }
-    
+
     func warning() {
         warningCalled = true
     }
-    
+
     func selectionChanged() {
         selectionChangedCalled = true
     }
@@ -135,11 +145,11 @@ class MockImageClassificationManager: ImageClassificationProtocol {
     @Published var lastClassificationResults: [ClassificationResult] = []
     var classifyImageCalled = false
     var lastClassifiedImage: UIImage?
-    
+
     func classifyImage(_ image: UIImage, completion: @escaping (Result<[ClassificationResult], Error>) -> Void) {
         classifyImageCalled = true
         lastClassifiedImage = image
-        
+
         // Simulate processing delay
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
             let mockResults = [

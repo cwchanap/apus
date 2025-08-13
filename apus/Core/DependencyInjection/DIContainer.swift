@@ -13,7 +13,7 @@ protocol DIContainerProtocol {
     func register<T>(_ type: T.Type, factory: @escaping () -> T)
     func register<T>(_ type: T.Type, instance: T)
     func resolve<T>(_ type: T.Type) -> T
-    func resolve<T>(_ type: T.Type) -> T?
+    func resolveOptional<T>(_ type: T.Type) -> T?
 }
 
 /// Main dependency injection container
@@ -41,14 +41,14 @@ class DIContainer: DIContainerProtocol, ObservableObject {
 
     /// Resolve a dependency (force unwrap - use when dependency is guaranteed)
     func resolve<T>(_ type: T.Type) -> T {
-        guard let resolved: T = resolve(type) else {
-            fatalError("Dependency \(type) not registered in DIContainer")
+        guard let resolved: T = resolveOptional(type) else {
+            fatalError("Dependency \\(type) not registered in DIContainer")
         }
         return resolved
     }
 
     /// Resolve a dependency (optional - use when dependency might not exist)
-    func resolve<T>(_ type: T.Type) -> T? {
+    func resolveOptional<T>(_ type: T.Type) -> T? {
         let key = String(describing: type)
 
         // Check if we have a singleton instance
@@ -115,7 +115,7 @@ struct OptionalInjected<T> {
     private let container: DIContainerProtocol
 
     var wrappedValue: T? {
-        return container.resolve(T.self)
+        return container.resolveOptional(T.self)
     }
 
     init(container: DIContainerProtocol = DIContainer.shared) {

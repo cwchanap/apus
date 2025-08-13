@@ -80,6 +80,11 @@ class AppDependencies: ObservableObject {
         let unifiedObjectDetectionManager = ObjectDetectionFactory.createObjectDetectionManager()
         container.register(UnifiedObjectDetectionProtocol.self, instance: unifiedObjectDetectionManager)
 
+        // Preload heavy models on background after DI is ready (non-blocking)
+        DispatchQueue.global(qos: .utility).async {
+            unifiedObjectDetectionManager.preload()
+        }
+
         // Register text recognition manager as singleton instance
         let textRecognitionManager = VisionTextRecognitionProvider()
         container.register(VisionTextRecognitionProtocol.self, instance: textRecognitionManager)

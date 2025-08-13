@@ -9,11 +9,10 @@ import SwiftUI
 
 struct ResultsDashboardView: View {
     @Injected private var resultsManager: DetectionResultsManager
-    @State private var selectedCategory: DetectionCategory?
-    @State private var showingCategoryView = false
+    @State private var path: [DetectionCategory] = []
 
     var body: some View {
-        NavigationView {
+        NavigationStack(path: $path) {
             Group {
                 if resultsManager.isLoading {
                     // Loading state
@@ -59,8 +58,8 @@ struct ResultsDashboardView: View {
                                             category: category,
                                             count: resultsManager.getResultsCount(for: category)
                                         ) {
-                                            selectedCategory = category
-                                            showingCategoryView = true
+                                            path.append(category)
+                                            // navigation handled by path.append above
                                         }
                                     }
                                 }
@@ -69,8 +68,7 @@ struct ResultsDashboardView: View {
                                 ForEach(DetectionCategory.allCases, id: \.rawValue) { category in
                                     if resultsManager.getResultsCount(for: category) > 0 {
                                         Button(action: {
-                                            selectedCategory = category
-                                            showingCategoryView = true
+                                            path.append(category)
                                         }) {
                                             RecentResultsPreview(
                                                 resultsManager: resultsManager,
@@ -176,10 +174,8 @@ struct ResultsDashboardView: View {
                 // Refresh results if needed
             }
         }
-        .sheet(isPresented: $showingCategoryView) {
-            if let category = selectedCategory {
-                CategoryResultsView(category: category, resultsManager: resultsManager)
-            }
+        .navigationDestination(for: DetectionCategory.self) { category in
+            CategoryResultsView(category: category, resultsManager: resultsManager)
         }
     }
 }
@@ -235,6 +231,7 @@ struct StorageInfoRow: View {
 }
 
 struct CategoryResultsView: View {
+    @Environment(\.dismiss) private var dismiss
     let category: DetectionCategory
     @ObservedObject var resultsManager: DetectionResultsManager
 

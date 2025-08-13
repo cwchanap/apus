@@ -17,16 +17,30 @@ struct StoredOCRResult: Codable, Identifiable {
     let detectedTexts: [StoredDetectedText]
     let imageData: Data
     let imageSize: CGSize
+    let thumbnailData: Data?
 
     init(detectedTexts: [DetectedText], image: UIImage) {
         self.timestamp = Date()
         self.detectedTexts = detectedTexts.map { StoredDetectedText(from: $0) }
         self.imageData = image.jpegData(compressionQuality: 0.7) ?? Data()
         self.imageSize = image.size
+        // Precompute a small thumbnail to avoid heavy decoding on lists
+        let maxThumb: CGFloat = 160
+        let thumb = image.resizedMaintainingAspectRatio(to: CGSize(width: maxThumb, height: maxThumb))
+        self.thumbnailData = thumb.jpegData(compressionQuality: 0.6)
     }
 
     var image: UIImage? {
         return UIImage(data: imageData)
+    }
+
+    var thumbnailImage: UIImage? {
+        if let data = thumbnailData { return UIImage(data: data) }
+        // Fallback: generate from full image data if older entries without thumbnail
+        guard let full = UIImage(data: imageData) else { return nil }
+        let maxThumb: CGFloat = 160
+        let thumb = full.resizedMaintainingAspectRatio(to: CGSize(width: maxThumb, height: maxThumb))
+        return thumb
     }
 
     var totalTextCount: Int {
@@ -75,6 +89,7 @@ struct StoredObjectDetectionResult: Codable, Identifiable {
     let imageData: Data
     let imageSize: CGSize
     let framework: String
+    let thumbnailData: Data?
 
     init(detectedObjects: [DetectedObject], image: UIImage) {
         self.timestamp = Date()
@@ -82,10 +97,21 @@ struct StoredObjectDetectionResult: Codable, Identifiable {
         self.imageData = image.jpegData(compressionQuality: 0.7) ?? Data()
         self.imageSize = image.size
         self.framework = detectedObjects.first?.framework.displayName ?? "Unknown"
+        let maxThumb: CGFloat = 160
+        let thumb = image.resizedMaintainingAspectRatio(to: CGSize(width: maxThumb, height: maxThumb))
+        self.thumbnailData = thumb.jpegData(compressionQuality: 0.6)
     }
 
     var image: UIImage? {
         return UIImage(data: imageData)
+    }
+
+    var thumbnailImage: UIImage? {
+        if let data = thumbnailData { return UIImage(data: data) }
+        guard let full = UIImage(data: imageData) else { return nil }
+        let maxThumb: CGFloat = 160
+        let thumb = full.resizedMaintainingAspectRatio(to: CGSize(width: maxThumb, height: maxThumb))
+        return thumb
     }
 
     var totalObjectCount: Int {
@@ -136,16 +162,28 @@ struct StoredClassificationResult: Codable, Identifiable {
     let classificationResults: [StoredClassification]
     let imageData: Data
     let imageSize: CGSize
+    let thumbnailData: Data?
 
     init(classificationResults: [ClassificationResult], image: UIImage) {
         self.timestamp = Date()
         self.classificationResults = classificationResults.map { StoredClassification(from: $0) }
         self.imageData = image.jpegData(compressionQuality: 0.7) ?? Data()
         self.imageSize = image.size
+        let maxThumb: CGFloat = 160
+        let thumb = image.resizedMaintainingAspectRatio(to: CGSize(width: maxThumb, height: maxThumb))
+        self.thumbnailData = thumb.jpegData(compressionQuality: 0.6)
     }
 
     var image: UIImage? {
         return UIImage(data: imageData)
+    }
+
+    var thumbnailImage: UIImage? {
+        if let data = thumbnailData { return UIImage(data: data) }
+        guard let full = UIImage(data: imageData) else { return nil }
+        let maxThumb: CGFloat = 160
+        let thumb = full.resizedMaintainingAspectRatio(to: CGSize(width: maxThumb, height: maxThumb))
+        return thumb
     }
 
     var topResult: StoredClassification? {

@@ -230,11 +230,12 @@ struct RecentResultsPreview: View {
 }
 
 struct RecentOCRRow: View {
+    // Prefer using precomputed thumbnail to avoid heavy decoding on main thread
     let result: StoredOCRResult
 
     var body: some View {
         HStack(spacing: 8) {
-            if let image = result.image {
+            if let image = result.thumbnailImage ?? result.image {
                 Image(uiImage: image)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
@@ -267,7 +268,7 @@ struct RecentObjectDetectionRow: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            if let image = result.image {
+            if let image = result.thumbnailImage ?? result.image {
                 Image(uiImage: image)
                     .resizable()
                     .aspectRatio(contentMode: .fill)
@@ -300,7 +301,7 @@ struct RecentClassificationRow: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            if let image = result.image {
+            if let image = result.thumbnailImage ?? result.image {
                 Image(uiImage: image)
                     .resizable()
                     .aspectRatio(contentMode: .fill)

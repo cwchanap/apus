@@ -13,36 +13,36 @@ import Photos
 final class PhotoLibraryServiceTests: XCTestCase {
     var sut: PhotoLibraryService!
     var cancellables: Set<AnyCancellable>!
-    
+
     override func setUp() {
         super.setUp()
         sut = PhotoLibraryService()
         cancellables = Set<AnyCancellable>()
     }
-    
+
     override func tearDown() {
         sut = nil
         cancellables = nil
         super.tearDown()
     }
-    
+
     // MARK: - Permission Status Tests
-    
+
     func testGetPermissionStatus_ReturnsCorrectStatus() {
         // Given & When
         let status = sut.getPermissionStatus()
-        
+
         // Then
         XCTAssertTrue([.authorized, .denied, .notDetermined, .restricted, .limited].contains(status))
     }
-    
+
     // MARK: - Permission Request Tests
-    
+
     func testRequestPermission_ReturnsPublisher() {
         // Given
         let expectation = XCTestExpectation(description: "Permission request completes")
         var receivedResult: Bool?
-        
+
         // When
         sut.requestPermission()
             .sink { result in
@@ -50,20 +50,20 @@ final class PhotoLibraryServiceTests: XCTestCase {
                 expectation.fulfill()
             }
             .store(in: &cancellables)
-        
+
         // Then
         wait(for: [expectation], timeout: 5.0)
         XCTAssertNotNil(receivedResult)
     }
-    
+
     // MARK: - Save Image Tests
-    
+
     func testSaveImage_WithoutPermission_ReturnsPermissionDeniedError() {
         // Given
         let testImage = UIImage(systemName: "camera")!
         let expectation = XCTestExpectation(description: "Save image fails with permission error")
         var receivedError: PhotoLibraryError?
-        
+
         // When
         sut.saveImage(testImage)
             .sink(
@@ -80,7 +80,7 @@ final class PhotoLibraryServiceTests: XCTestCase {
                 }
             )
             .store(in: &cancellables)
-        
+
         // Then
         wait(for: [expectation], timeout: 5.0)
         // Note: This test may pass or fail depending on actual permission state
@@ -94,25 +94,25 @@ final class PhotoLibraryServiceTests: XCTestCase {
 final class MockPhotoLibraryServiceTests: XCTestCase {
     var sut: MockPhotoLibraryService!
     var cancellables: Set<AnyCancellable>!
-    
+
     override func setUp() {
         super.setUp()
         sut = MockPhotoLibraryService()
         cancellables = Set<AnyCancellable>()
     }
-    
+
     override func tearDown() {
         sut = nil
         cancellables = nil
         super.tearDown()
     }
-    
+
     func testRequestPermission_WhenShouldSucceed_ReturnsTrue() {
         // Given
         sut.shouldSucceed = true
         let expectation = XCTestExpectation(description: "Permission request succeeds")
         var receivedResult: Bool?
-        
+
         // When
         sut.requestPermission()
             .sink { result in
@@ -120,18 +120,18 @@ final class MockPhotoLibraryServiceTests: XCTestCase {
                 expectation.fulfill()
             }
             .store(in: &cancellables)
-        
+
         // Then
         wait(for: [expectation], timeout: 1.0)
         XCTAssertEqual(receivedResult, true)
     }
-    
+
     func testRequestPermission_WhenShouldFail_ReturnsFalse() {
         // Given
         sut.shouldSucceed = false
         let expectation = XCTestExpectation(description: "Permission request fails")
         var receivedResult: Bool?
-        
+
         // When
         sut.requestPermission()
             .sink { result in
@@ -139,19 +139,19 @@ final class MockPhotoLibraryServiceTests: XCTestCase {
                 expectation.fulfill()
             }
             .store(in: &cancellables)
-        
+
         // Then
         wait(for: [expectation], timeout: 1.0)
         XCTAssertEqual(receivedResult, false)
     }
-    
+
     func testSaveImage_WhenShouldSucceed_ReturnsSuccess() {
         // Given
         sut.shouldSucceed = true
         let testImage = UIImage(systemName: "camera")!
         let expectation = XCTestExpectation(description: "Save image succeeds")
         var receivedResult: Bool?
-        
+
         // When
         sut.saveImage(testImage)
             .sink(
@@ -162,19 +162,19 @@ final class MockPhotoLibraryServiceTests: XCTestCase {
                 }
             )
             .store(in: &cancellables)
-        
+
         // Then
         wait(for: [expectation], timeout: 1.0)
         XCTAssertEqual(receivedResult, true)
     }
-    
+
     func testSaveImage_WhenShouldFail_ReturnsError() {
         // Given
         sut.shouldSucceed = false
         let testImage = UIImage(systemName: "camera")!
         let expectation = XCTestExpectation(description: "Save image fails")
         var receivedError: PhotoLibraryError?
-        
+
         // When
         sut.saveImage(testImage)
             .sink(
@@ -187,7 +187,7 @@ final class MockPhotoLibraryServiceTests: XCTestCase {
                 receiveValue: { _ in }
             )
             .store(in: &cancellables)
-        
+
         // Then
         wait(for: [expectation], timeout: 1.0)
         XCTAssertNotNil(receivedError)
@@ -195,14 +195,14 @@ final class MockPhotoLibraryServiceTests: XCTestCase {
             XCTAssertTrue(error is PhotoLibraryError)
         }
     }
-    
+
     func testGetPermissionStatus_ReturnsMockStatus() {
         // Given
         sut.mockPermissionStatus = .authorized
-        
+
         // When
         let status = sut.getPermissionStatus()
-        
+
         // Then
         XCTAssertEqual(status, .authorized)
     }

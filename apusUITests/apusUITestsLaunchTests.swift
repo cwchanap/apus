@@ -7,8 +7,9 @@
 
 import XCTest
 
-final class apusUITestsLaunchTests: XCTestCase {
+final class ApusUITestsLaunchTests: XCTestCase {
 
+    // swiftlint:disable:next static_over_final_class
     override class var runsForEachTargetApplicationUIConfiguration: Bool {
         true
     }

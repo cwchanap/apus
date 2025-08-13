@@ -13,7 +13,7 @@ struct ClassificationResultsView: View {
     @State private var showingDetailView = false
 
     var body: some View {
-        NavigationView {
+        Group {
             Group {
                 if resultsManager.classificationResults.isEmpty {
                     EmptyResultsView(
@@ -36,9 +36,10 @@ struct ClassificationResultsView: View {
                     }
                 }
             }
-            .navigationTitle("Classification")
+            .navigationTitle("Classification Results")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
+                
                 ToolbarItem(placement: .navigationBarTrailing) {
                     if !resultsManager.classificationResults.isEmpty {
                         Button("Clear All") {
@@ -69,7 +70,7 @@ struct ClassificationResultRow: View {
         Button(action: onTap) {
             HStack(spacing: 12) {
                 // Thumbnail
-                if let image = result.image {
+                if let image = result.thumbnailImage ?? result.image {
                     Image(uiImage: image)
                         .resizable()
                         .aspectRatio(contentMode: .fill)

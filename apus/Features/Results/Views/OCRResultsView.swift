@@ -13,7 +13,7 @@ struct OCRResultsView: View {
     @State private var showingDetailView = false
 
     var body: some View {
-        NavigationView {
+        Group {
             Group {
                 if resultsManager.ocrResults.isEmpty {
                     EmptyResultsView(
@@ -39,6 +39,7 @@ struct OCRResultsView: View {
             .navigationTitle("OCR Results")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
+                
                 ToolbarItem(placement: .navigationBarTrailing) {
                     if !resultsManager.ocrResults.isEmpty {
                         Button("Clear All") {
@@ -69,7 +70,7 @@ struct OCRResultRow: View {
         Button(action: onTap) {
             HStack(spacing: 12) {
                 // Thumbnail
-                if let image = result.image {
+                if let image = result.thumbnailImage ?? result.image {
                     Image(uiImage: image)
                         .resizable()
                         .aspectRatio(contentMode: .fill)

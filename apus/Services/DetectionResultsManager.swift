@@ -20,9 +20,15 @@ class DetectionResultsManager: ObservableObject {
 
     // MARK: - Published Properties
 
-    @Published var ocrResults: [StoredOCRResult] = []
-    @Published var objectDetectionResults: [StoredObjectDetectionResult] = []
-    @Published var classificationResults: [StoredClassificationResult] = []
+    @Published var ocrResults: [StoredOCRResult] = [] {
+        didSet { updateCachedValues() }
+    }
+    @Published var objectDetectionResults: [StoredObjectDetectionResult] = [] {
+        didSet { updateCachedValues() }
+    }
+    @Published var classificationResults: [StoredClassificationResult] = [] {
+        didSet { updateCachedValues() }
+    }
     @Published var isLoading: Bool = true
 
     // Cached computed properties to avoid recalculation
@@ -59,6 +65,8 @@ class DetectionResultsManager: ObservableObject {
     func clearOCRResults() {
         ocrResults.removeAll()
         saveOCRResults()
+        // Ensure cached values reflect immediate change
+        updateCachedValues()
     }
 
     private func saveOCRResults() {
@@ -104,6 +112,7 @@ class DetectionResultsManager: ObservableObject {
     func clearObjectDetectionResults() {
         objectDetectionResults.removeAll()
         saveObjectDetectionResults()
+        updateCachedValues()
     }
 
     private func saveObjectDetectionResults() {
@@ -149,6 +158,7 @@ class DetectionResultsManager: ObservableObject {
     func clearClassificationResults() {
         classificationResults.removeAll()
         saveClassificationResults()
+        updateCachedValues()
     }
 
     private func saveClassificationResults() {
@@ -282,6 +292,7 @@ class DetectionResultsManager: ObservableObject {
         clearOCRResults()
         clearObjectDetectionResults()
         clearClassificationResults()
+        updateCachedValues()
     }
 
     // MARK: - Statistics

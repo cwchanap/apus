@@ -10,22 +10,22 @@ import Photos
 
 // MARK: - PreviewView Helper Methods Extension
 extension PreviewView {
-    
+
     // MARK: - Image Processing Helpers
     var displayImage: UIImage? {
         capturedImage?.preparedForDisplay()
     }
-    
+
     var processingImage: UIImage? {
         capturedImage?.preparedForProcessing()
     }
-    
+
     // MARK: - Photo Library Helpers
     func saveImageToPhotoLibrary() {
         guard let image = capturedImage else { return }
-        
+
         // hapticService.actionFeedback() // Will be called from main view
-        
+
         PHPhotoLibrary.requestAuthorization { status in
             DispatchQueue.main.async {
                 if status == .authorized {
@@ -40,9 +40,9 @@ extension PreviewView {
             }
         }
     }
-    
+
     // Text enhancement removed as OCR and image classification are separate workflows.
-    
+
     // MARK: - Reset Helpers
     func resetAllDetections() {
         // Reset classification
@@ -50,19 +50,19 @@ extension PreviewView {
         classificationResults = []
         hasClassificationResults = false
         cachedClassificationResults = []
-        
+
         // Reset contours
         showingContours = false
         detectedContours = []
         hasDetectedContours = false
         cachedContours = []
-        
+
         // Reset objects
         showingObjects = false
         detectedObjects = []
         hasDetectedObjects = false
         cachedObjects = []
-        
+
         // Reset texts
         showingTexts = false
         detectedTexts = []

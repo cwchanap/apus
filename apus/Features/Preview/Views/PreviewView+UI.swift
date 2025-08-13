@@ -9,7 +9,7 @@ import SwiftUI
 
 // MARK: - PreviewView UI Components Extension
 extension PreviewView {
-    
+
     // MARK: - Action Buttons View
     @ViewBuilder
     func actionButtonsView() -> some View {
@@ -42,7 +42,7 @@ extension PreviewView {
                     .clipShape(Capsule())
                 }
                 .disabled(isClassifying)
-                
+
                 // Object detection button
                 Button(action: {
                     hapticService.actionFeedback()
@@ -70,7 +70,7 @@ extension PreviewView {
                 }
                 .disabled(isDetectingObjects)
             }
-            
+
             // Second row: Contour Detection
             HStack(spacing: 12) {
                 // Contour detection button
@@ -99,7 +99,7 @@ extension PreviewView {
                     .clipShape(Capsule())
                 }
                 .disabled(isDetectingContours)
-                
+
                 // Text recognition (OCR) button
                 Button(action: {
                     hapticService.actionFeedback()
@@ -126,12 +126,12 @@ extension PreviewView {
                     .clipShape(Capsule())
                 }
                 .disabled(isDetectingTexts)
-                
+
                 Spacer() // Fill remaining space
             }
         }
     }
-    
+
     // MARK: - Bottom Controls View
     @ViewBuilder
     func bottomControlsView() -> some View {
@@ -153,9 +153,9 @@ extension PreviewView {
                 .background(Color.red)
                 .clipShape(Capsule())
             }
-            
+
             Spacer()
-            
+
             // Save button
             Button(action: {
                 hapticService.actionFeedback()
@@ -185,7 +185,7 @@ extension PreviewView {
             .disabled(isSaved)
         }
     }
-    
+
     // MARK: - Image Overlay View
     @ViewBuilder
     func imageOverlayView(image: UIImage, geometry: GeometryProxy) -> some View {
@@ -198,7 +198,7 @@ extension PreviewView {
                     displaySize: geometry.size
                 )
             }
-            
+
             // Object detection overlay
             if showingObjects && !detectedObjects.isEmpty {
                 UnifiedObjectDetectionOverlay(
@@ -207,7 +207,7 @@ extension PreviewView {
                     displaySize: geometry.size
                 )
             }
-            
+
             // Text recognition overlay
             if showingTexts && !detectedTexts.isEmpty {
                 VisionTextRecognitionOverlay(
@@ -218,7 +218,7 @@ extension PreviewView {
             }
         }
     }
-    
+
     // MARK: - Results Panel View
     @ViewBuilder
     func resultsPanelView() -> some View {
@@ -227,7 +227,7 @@ extension PreviewView {
                 Text("Classification Results")
                     .font(.headline)
                     .foregroundColor(.primary)
-                
+
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
                         ForEach(Array(classificationResults.enumerated()), id: \.offset) { _, result in
@@ -237,7 +237,7 @@ extension PreviewView {
                                     .fontWeight(.medium)
                                     .foregroundColor(.primary)
                                     .lineLimit(2)
-                                
+
                                 Text("\(Int(result.confidence * 100))%")
                                     .font(.caption2)
                                     .foregroundColor(.secondary)
@@ -251,7 +251,7 @@ extension PreviewView {
                     .padding(.horizontal, 4)
                 }
             }
-            
+
             // Results history button
             Button(action: {
                 showingHistory = true

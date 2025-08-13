@@ -26,6 +26,11 @@ class TensorFlowLiteObjectDetectionManager: ObservableObject, UnifiedObjectDetec
         // Don't load model immediately - do it lazily when first needed
     }
 
+    func preload() {
+        // Trigger model loading in background without blocking UI
+        ensureModelLoaded { _ in }
+    }
+
     private func ensureModelLoaded(completion: @escaping (Bool) -> Void) {
         // If already loaded, return immediately
         if isModelLoaded {
@@ -36,9 +41,9 @@ class TensorFlowLiteObjectDetectionManager: ObservableObject, UnifiedObjectDetec
         // If currently loading, wait for completion
         if isModelLoading {
             modelLoadingQueue.async {
-                // Wait for loading to complete
+                // Poll in the background and return when done without blocking UI
                 while self.isModelLoading {
-                    Thread.sleep(forTimeInterval: 0.1)
+                    usleep(50_000) // 50ms
                 }
                 DispatchQueue.main.async {
                     completion(self.isModelLoaded)

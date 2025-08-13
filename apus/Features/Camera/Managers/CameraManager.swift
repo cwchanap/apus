@@ -32,80 +32,82 @@ class CameraManager: NSObject, ObservableObject, CameraManagerProtocol {
     private func setupCamera() {
         // Clear any existing configuration
         session.beginConfiguration()
-
-        // Remove existing inputs and outputs
-        for input in session.inputs {
-            session.removeInput(input)
-        }
-        for output in session.outputs {
-            session.removeOutput(output)
-        }
-
+        resetSessionIO()
         session.sessionPreset = .photo
 
-        // Try to get back camera first, fallback to any available camera
-        var videoDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back)
-
-        // If no back camera (simulator), try front camera
-        if videoDevice == nil {
-            videoDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front)
-            print("⚠️ Using front camera (likely running on simulator)")
-        }
-
-        // If still no camera, try any available camera
-        if videoDevice == nil {
-            videoDevice = AVCaptureDevice.default(for: .video)
-            print("⚠️ Using default camera device")
-        }
-
-        guard let videoDevice = videoDevice else {
+        guard let videoDevice = findAvailableVideoDevice() else {
             print("❌ Failed to get any video device - camera functionality will not work")
             session.commitConfiguration()
             return
         }
-
+        self.videoDevice = videoDevice
         print("✅ Using camera device: \(videoDevice.localizedName)")
 
-        self.videoDevice = videoDevice
-
         do {
-            let videoDeviceInput = try AVCaptureDeviceInput(device: videoDevice)
-
-            if session.canAddInput(videoDeviceInput) {
-                session.addInput(videoDeviceInput)
-                self.videoDeviceInput = videoDeviceInput
-            } else {
-                print("Could not add video device input to the session")
-                session.commitConfiguration()
-                return
-            }
-
-            if session.canAddOutput(photoOutput) {
-                session.addOutput(photoOutput)
-            } else {
-                print("Could not add photo output to the session")
-            }
-
-            if session.canAddOutput(videoOutput) {
-                session.addOutput(videoOutput)
-
-                videoOutput.setSampleBufferDelegate(self, queue: DispatchQueue(label: "VideoDataOutput", qos: .userInitiated, attributes: [], autoreleaseFrequency: .workItem))
-
-                if let connection = videoOutput.connection(with: .video) {
-                    connection.isEnabled = true
-                    if connection.isVideoOrientationSupported {
-                        connection.videoOrientation = .portrait
-                    }
-                }
-            } else {
-                print("Could not add video output to the session")
-            }
-
+            try configureVideoInput(with: videoDevice)
+            configurePhotoOutput()
+            configureVideoOutput()
             session.commitConfiguration()
-
         } catch {
             print("Error setting up camera: \(error)")
             session.commitConfiguration()
+        }
+    }
+
+    // MARK: - Private helpers (split for testability and lower complexity)
+    private func resetSessionIO() {
+        for input in session.inputs { session.removeInput(input) }
+        for output in session.outputs { session.removeOutput(output) }
+    }
+
+    private func findAvailableVideoDevice() -> AVCaptureDevice? {
+        // Try back camera first
+        if let back = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) {
+            return back
+        }
+        // Fallback to front camera (common on simulators)
+        if let front = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .front) {
+            print("⚠️ Using front camera (likely running on simulator)")
+            return front
+        }
+        // Any available camera
+        if let any = AVCaptureDevice.default(for: .video) {
+            print("⚠️ Using default camera device")
+            return any
+        }
+        return nil
+    }
+
+    private func configureVideoInput(with device: AVCaptureDevice) throws {
+        let deviceInput = try AVCaptureDeviceInput(device: device)
+        guard session.canAddInput(deviceInput) else {
+            throw NSError(domain: "CameraManager", code: 1, userInfo: [NSLocalizedDescriptionKey: "Cannot add video input"])
+        }
+        session.addInput(deviceInput)
+        self.videoDeviceInput = deviceInput
+    }
+
+    private func configurePhotoOutput() {
+        guard session.canAddOutput(photoOutput) else {
+            print("Could not add photo output to the session")
+            return
+        }
+        session.addOutput(photoOutput)
+    }
+
+    private func configureVideoOutput() {
+        guard session.canAddOutput(videoOutput) else {
+            print("Could not add video output to the session")
+            return
+        }
+        session.addOutput(videoOutput)
+        let queue = DispatchQueue(label: "VideoDataOutput", qos: .userInitiated, attributes: [], autoreleaseFrequency: .workItem)
+        videoOutput.setSampleBufferDelegate(self, queue: queue)
+        if let connection = videoOutput.connection(with: .video) {
+            connection.isEnabled = true
+            if connection.isVideoOrientationSupported {
+                connection.videoOrientation = .portrait
+            }
         }
     }
 

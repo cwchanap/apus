@@ -14,6 +14,7 @@ struct ApusApp: App {
 
     init() {
         // Ensure dependencies are configured at app startup
+        // Initialize DI and kick off background preloading
         _ = AppDependencies.shared.diContainer
         print("✅ App dependencies initialized at startup")
     }

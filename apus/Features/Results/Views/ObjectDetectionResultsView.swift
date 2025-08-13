@@ -13,7 +13,7 @@ struct ObjectDetectionResultsView: View {
     @State private var showingDetailView = false
 
     var body: some View {
-        NavigationView {
+        Group {
             Group {
                 if resultsManager.objectDetectionResults.isEmpty {
                     EmptyResultsView(
@@ -36,9 +36,10 @@ struct ObjectDetectionResultsView: View {
                     }
                 }
             }
-            .navigationTitle("Object Detection")
+            .navigationTitle("Object Detection Results")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
+                
                 ToolbarItem(placement: .navigationBarTrailing) {
                     if !resultsManager.objectDetectionResults.isEmpty {
                         Button("Clear All") {
@@ -69,7 +70,7 @@ struct ObjectDetectionResultRow: View {
         Button(action: onTap) {
             HStack(spacing: 12) {
                 // Thumbnail
-                if let image = result.image {
+                if let image = result.thumbnailImage ?? result.image {
                     Image(uiImage: image)
                         .resizable()
                         .aspectRatio(contentMode: .fill)
