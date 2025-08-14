@@ -42,6 +42,12 @@ extension PreviewView {
                     self.hasClassificationResults = true
                     self.showingClassificationResults = true
 
+                    // Save to results manager
+                    self.detectionResultsManager.saveClassificationResult(
+                        classificationResults: results,
+                        image: image
+                    )
+
                 case .failure(let error):
                     self.showAlert(message: "Classification failed: \(error.localizedDescription)")
                 }

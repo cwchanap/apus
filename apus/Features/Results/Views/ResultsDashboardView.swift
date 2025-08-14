@@ -9,10 +9,9 @@ import SwiftUI
 
 struct ResultsDashboardView: View {
     @Injected private var resultsManager: DetectionResultsManager
-    @State private var path: [DetectionCategory] = []
+    @Binding var path: [DetectionCategory]
 
     var body: some View {
-        NavigationStack(path: $path) {
             Group {
                 if resultsManager.isLoading {
                     // Loading state
@@ -30,11 +29,6 @@ struct ResultsDashboardView: View {
                         VStack(spacing: 20) {
                             // Header with total count
                             VStack(spacing: 8) {
-                                Text("Detection Results")
-                                    .font(.largeTitle)
-                                    .fontWeight(.bold)
-                                    .foregroundColor(.primary)
-
                                 if resultsManager.hasAnyResults {
                                     Text("\(resultsManager.totalResultsCount) total results stored")
                                         .font(.subheadline)
@@ -169,14 +163,11 @@ struct ResultsDashboardView: View {
                     }
                 }
             }
-            .navigationBarHidden(true)
+            .navigationTitle("Detection Results")
+            .navigationBarTitleDisplayMode(.large)
             .refreshable {
                 // Refresh results if needed
             }
-        }
-        .navigationDestination(for: DetectionCategory.self) { category in
-            CategoryResultsView(category: category, resultsManager: resultsManager)
-        }
     }
 }
 
