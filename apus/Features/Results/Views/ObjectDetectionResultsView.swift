@@ -48,6 +48,8 @@ struct ObjectDetectionResultsView: View {
         }
         .sheet(item: $selectedResult) { result in
             ObjectDetectionResultDetailView(result: result)
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
         }
     }
 
@@ -127,7 +129,7 @@ struct ObjectDetectionResultDetailView: View {
     @State private var showingOverlay = true
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     // Image section with overlay toggle

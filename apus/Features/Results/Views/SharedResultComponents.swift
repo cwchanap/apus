@@ -70,7 +70,7 @@ struct ImageDetailView: View {
     @State private var lastOffset: CGSize = .zero
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             GeometryReader { geometry in
                 ScrollView([.horizontal, .vertical], showsIndicators: false) {
                     Image(uiImage: image)

@@ -48,6 +48,8 @@ struct ClassificationResultsView: View {
         }
         .sheet(item: $selectedResult) { result in
             ClassificationResultDetailView(result: result)
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.visible)
         }
     }
 
@@ -154,7 +156,7 @@ struct ClassificationResultDetailView: View {
     @State private var showingImage = false
 
     var body: some View {
-        NavigationView {
+        NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     // Image section
