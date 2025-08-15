@@ -56,6 +56,13 @@ class SettingsViewModel: ObservableObject {
                 if self?.appSettings.isRealTimeObjectDetectionEnabled != newValue {
                     self?.appSettings.isRealTimeObjectDetectionEnabled = newValue
                 }
+                // When enabling real-time detection, proactively preload heavy models off-main
+                if newValue {
+                    DispatchQueue.global(qos: .utility).async {
+                        let manager: ObjectDetectionProtocol = DIContainer.shared.resolve(ObjectDetectionProtocol.self)
+                        manager.preload()
+                    }
+                }
             }
             .store(in: &cancellables)
 

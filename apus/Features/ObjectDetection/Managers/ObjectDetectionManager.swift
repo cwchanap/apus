@@ -22,6 +22,13 @@ class ObjectDetectionManager: ObservableObject, ObjectDetectionProtocol {
         // Don't load model immediately - do it lazily when first needed
     }
 
+    // Proactively load heavy resources off the main thread
+    func preload() {
+        modelLoadingQueue.async {
+            self.ensureModelLoaded { _ in /* no-op */ }
+        }
+    }
+
     private func ensureModelLoaded(completion: @escaping (Bool) -> Void) {
         // If already loaded, return immediately
         if isInitialized {
@@ -50,10 +57,10 @@ class ObjectDetectionManager: ObservableObject, ObjectDetectionProtocol {
             self.setupInterpreter()
             self.loadLabels()
 
-            DispatchQueue.main.async {
-                self.isModelLoading = false
-                completion(self.isInitialized)
-            }
+            // Flip loading flag and notify on a background thread to avoid
+            // briefly congesting the main thread right after heavy work.
+            self.isModelLoading = false
+            completion(self.isInitialized)
         }
     }
 
@@ -187,13 +194,13 @@ class ObjectDetectionManager: ObservableObject, ObjectDetectionProtocol {
         var detections: [Detection] = []
 
         for index in stride(from: 0, to: dataCount, by: 7) {
-            _ = data.withUnsafeBytes { $0.load(fromByteOffset: i * 4, as: Float32.self) }
-            let classId = data.withUnsafeBytes { $0.load(fromByteOffset: (i + 1) * 4, as: Float32.self) }
-            let score = data.withUnsafeBytes { $0.load(fromByteOffset: (i + 2) * 4, as: Float32.self) }
-            let xMin = data.withUnsafeBytes { $0.load(fromByteOffset: (i + 3) * 4, as: Float32.self) }
-            let yMin = data.withUnsafeBytes { $0.load(fromByteOffset: (i + 4) * 4, as: Float32.self) }
-            let xMax = data.withUnsafeBytes { $0.load(fromByteOffset: (i + 5) * 4, as: Float32.self) }
-            let yMax = data.withUnsafeBytes { $0.load(fromByteOffset: (i + 6) * 4, as: Float32.self) }
+            // Data format: [index, classId, score, xMin, yMin, xMax, yMax]
+            let classId = data.withUnsafeBytes { $0.load(fromByteOffset: (index + 1) * 4, as: Float32.self) }
+            let score = data.withUnsafeBytes { $0.load(fromByteOffset: (index + 2) * 4, as: Float32.self) }
+            let xMin = data.withUnsafeBytes { $0.load(fromByteOffset: (index + 3) * 4, as: Float32.self) }
+            let yMin = data.withUnsafeBytes { $0.load(fromByteOffset: (index + 4) * 4, as: Float32.self) }
+            let xMax = data.withUnsafeBytes { $0.load(fromByteOffset: (index + 5) * 4, as: Float32.self) }
+            let yMax = data.withUnsafeBytes { $0.load(fromByteOffset: (index + 6) * 4, as: Float32.self) }
 
             if score > 0.5 {
                 let boundingBox = CGRect(

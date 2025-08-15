@@ -1,5 +1,6 @@
 import Foundation
 import UIKit
+import CoreVideo
 
 struct Detection {
     let boundingBox: CGRect
@@ -10,6 +11,12 @@ struct Detection {
 protocol ObjectDetectionProtocol: ObservableObject {
     var detections: [Detection] { get }
     func processFrame(_ pixelBuffer: CVPixelBuffer)
+    // Optional: heavy model/resource preloading; default is no-op
+    func preload()
+}
+
+extension ObjectDetectionProtocol {
+    func preload() {}
 }
 
 #if DEBUG || targetEnvironment(simulator)

@@ -10,7 +10,6 @@ import SwiftUI
 struct OCRResultsView: View {
     @ObservedObject var resultsManager: DetectionResultsManager
     @State private var selectedResult: StoredOCRResult?
-    @State private var showingDetailView = false
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -26,7 +25,6 @@ struct OCRResultsView: View {
                     ForEach(resultsManager.ocrResults) { result in
                         OCRResultRow(result: result) {
                             selectedResult = result
-                            showingDetailView = true
                         }
                     }
                     .onDelete(perform: deleteResults)
@@ -38,16 +36,7 @@ struct OCRResultsView: View {
         }
         .navigationTitle("OCR Results")
         .navigationBarTitleDisplayMode(.large)
-        .navigationBarBackButtonHidden(false)
         .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button(action: { dismiss() }) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "chevron.left")
-                        Text("Back")
-                    }
-                }
-            }
             ToolbarItem(placement: .navigationBarTrailing) {
                 if !resultsManager.ocrResults.isEmpty {
                     Button("Clear All") {
@@ -57,10 +46,8 @@ struct OCRResultsView: View {
                 }
             }
         }
-        .sheet(isPresented: $showingDetailView) {
-            if let result = selectedResult {
-                OCRResultDetailView(result: result)
-            }
+        .sheet(item: $selectedResult) { result in
+            OCRResultDetailView(result: result)
         }
     }
 

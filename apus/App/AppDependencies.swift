@@ -75,6 +75,11 @@ class AppDependencies: ObservableObject {
         let contourDetectionManager = ContourDetectionProvider()
         container.register(ContourDetectionProtocol.self, instance: contourDetectionManager)
 
+        // Preload heavy real-time object detection resources (non-blocking)
+        DispatchQueue.global(qos: .utility).async {
+            objectDetectionManager.preload()
+        }
+
         // Register unified object detection manager as singleton instance
         // Use default factory to avoid circular dependency with AppSettings
         let unifiedObjectDetectionManager = ObjectDetectionFactory.createObjectDetectionManager()

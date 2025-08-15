@@ -10,7 +10,6 @@ import SwiftUI
 struct ObjectDetectionResultsView: View {
     @ObservedObject var resultsManager: DetectionResultsManager
     @State private var selectedResult: StoredObjectDetectionResult?
-    @State private var showingDetailView = false
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -26,7 +25,6 @@ struct ObjectDetectionResultsView: View {
                 ForEach(resultsManager.objectDetectionResults) { result in
                     ObjectDetectionResultRow(result: result) {
                         selectedResult = result
-                        showingDetailView = true
                     }
                 }
                 .onDelete(perform: deleteResults)
@@ -38,16 +36,7 @@ struct ObjectDetectionResultsView: View {
         }
         .navigationTitle("Object Detection Results")
         .navigationBarTitleDisplayMode(.large)
-        .navigationBarBackButtonHidden(false)
         .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button(action: { dismiss() }) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "chevron.left")
-                        Text("Back")
-                    }
-                }
-            }
             ToolbarItem(placement: .navigationBarTrailing) {
                 if !resultsManager.objectDetectionResults.isEmpty {
                     Button("Clear All") {
@@ -57,10 +46,8 @@ struct ObjectDetectionResultsView: View {
                 }
             }
         }
-        .sheet(isPresented: $showingDetailView) {
-            if let result = selectedResult {
-                ObjectDetectionResultDetailView(result: result)
-            }
+        .sheet(item: $selectedResult) { result in
+            ObjectDetectionResultDetailView(result: result)
         }
     }
 

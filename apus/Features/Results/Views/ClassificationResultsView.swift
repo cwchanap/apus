@@ -10,7 +10,6 @@ import SwiftUI
 struct ClassificationResultsView: View {
     @ObservedObject var resultsManager: DetectionResultsManager
     @State private var selectedResult: StoredClassificationResult?
-    @State private var showingDetailView = false
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -26,7 +25,6 @@ struct ClassificationResultsView: View {
                 ForEach(resultsManager.classificationResults) { result in
                     ClassificationResultRow(result: result) {
                         selectedResult = result
-                        showingDetailView = true
                     }
                 }
                 .onDelete(perform: deleteResults)
@@ -38,16 +36,7 @@ struct ClassificationResultsView: View {
         }
         .navigationTitle("Classification Results")
         .navigationBarTitleDisplayMode(.large)
-        .navigationBarBackButtonHidden(false)
         .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button(action: { dismiss() }) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "chevron.left")
-                        Text("Back")
-                    }
-                }
-            }
             ToolbarItem(placement: .navigationBarTrailing) {
                 if !resultsManager.classificationResults.isEmpty {
                     Button("Clear All") {
@@ -57,10 +46,8 @@ struct ClassificationResultsView: View {
                 }
             }
         }
-        .sheet(isPresented: $showingDetailView) {
-            if let result = selectedResult {
-                ClassificationResultDetailView(result: result)
-            }
+        .sheet(item: $selectedResult) { result in
+            ClassificationResultDetailView(result: result)
         }
     }
 
