@@ -1,5 +1,3 @@
-# CLAUDE.md
-
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
@@ -172,3 +170,4 @@ The app features multiple computer vision systems with unified interface:
 - **iOS Version**: Minimum iOS 18.5+ deployment target
 - **Testing**: Comprehensive test suite with 100% coverage using dependency injection
 - **Code Quality**: SwiftLint configured with pragmatic thresholds for SwiftUI development
+
