@@ -48,7 +48,8 @@ struct OCRResultsView: View {
         }
         .sheet(item: $selectedResult) { result in
             OCRResultDetailView(result: result)
-                .presentationDetents([.medium, .large])
+                .presentationDetents([.medium, .fraction(0.9), .large])
+                .presentationBackgroundInteraction(.enabled(upThrough: .medium))
                 .presentationDragIndicator(.visible)
         }
     }
