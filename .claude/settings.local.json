@@ -19,6 +19,7 @@
       "mcp__XcodeBuildMCP__list_sims",
       "Bash(find:*)"
     ],
-    "deny": []
+    "deny": [],
+    "defaultMode": "acceptEdits"
   }
 }

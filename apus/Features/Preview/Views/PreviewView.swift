@@ -37,6 +37,7 @@ struct PreviewView: View {
     @State var isDetectingTexts = false
     @State var cachedTexts: [DetectedText] = []
     @State var hasDetectedTexts = false
+    @State var historyPath: [DetectionCategory] = []
 
     // Injected dependencies
     @Injected var imageClassificationManager: ImageClassificationProtocol
@@ -98,7 +99,12 @@ struct PreviewView: View {
             Text(alertMessage)
         }
         .sheet(isPresented: $showingHistory) {
-            ResultsDashboardView()
+            NavigationStack(path: $historyPath) {
+                ResultsDashboardView(path: $historyPath)
+                    .navigationDestination(for: DetectionCategory.self) { category in
+                        CategoryResultsView(category: category, resultsManager: detectionResultsManager)
+                    }
+            }
         }
     }
 }

@@ -11,48 +11,55 @@ struct OCRResultsView: View {
     @ObservedObject var resultsManager: DetectionResultsManager
     @State private var selectedResult: StoredOCRResult?
     @State private var showingDetailView = false
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         Group {
-            Group {
-                if resultsManager.ocrResults.isEmpty {
-                    EmptyResultsView(
-                        category: .ocr,
-                        message: "No OCR results yet",
-                        description: "Perform text recognition on images to see results here"
-                    )
-                } else {
-                    List {
-                        ForEach(resultsManager.ocrResults) { result in
-                            OCRResultRow(result: result) {
-                                selectedResult = result
-                                showingDetailView = true
-                            }
+            if resultsManager.ocrResults.isEmpty {
+                EmptyResultsView(
+                    category: .ocr,
+                    message: "No OCR results yet",
+                    description: "Perform text recognition on images to see results here"
+                )
+            } else {
+                List {
+                    ForEach(resultsManager.ocrResults) { result in
+                        OCRResultRow(result: result) {
+                            selectedResult = result
+                            showingDetailView = true
                         }
-                        .onDelete(perform: deleteResults)
                     }
-                    .refreshable {
-                        // Refresh functionality if needed
+                    .onDelete(perform: deleteResults)
+                }
+                .refreshable {
+                    // Refresh functionality if needed
+                }
+            }
+        }
+        .navigationTitle("OCR Results")
+        .navigationBarTitleDisplayMode(.large)
+        .navigationBarBackButtonHidden(false)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button(action: { dismiss() }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "chevron.left")
+                        Text("Back")
                     }
                 }
             }
-            .navigationTitle("OCR Results")
-            .navigationBarTitleDisplayMode(.large)
-            .toolbar {
-                
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    if !resultsManager.ocrResults.isEmpty {
-                        Button("Clear All") {
-                            resultsManager.clearOCRResults()
-                        }
-                        .foregroundColor(.red)
+            ToolbarItem(placement: .navigationBarTrailing) {
+                if !resultsManager.ocrResults.isEmpty {
+                    Button("Clear All") {
+                        resultsManager.clearOCRResults()
                     }
+                    .foregroundColor(.red)
                 }
             }
-            .sheet(isPresented: $showingDetailView) {
-                if let result = selectedResult {
-                    OCRResultDetailView(result: result)
-                }
+        }
+        .sheet(isPresented: $showingDetailView) {
+            if let result = selectedResult {
+                OCRResultDetailView(result: result)
             }
         }
     }

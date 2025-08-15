@@ -16,6 +16,7 @@ enum NavigationPage {
 
 struct ContentView: View {
     @State private var currentPage: NavigationPage = .home
+    @State private var resultsPath: [DetectionCategory] = []
     @Injected private var hapticService: HapticServiceProtocol
 
     var body: some View {
@@ -38,14 +39,20 @@ struct ContentView: View {
                         }
                 }
             case .results:
-                NavigationStack {
-                    ResultsDashboardView()
+                NavigationStack(path: $resultsPath) {
+                    ResultsDashboardView(path: $resultsPath)
                         .toolbar {
-                            ToolbarItem(placement: .navigationBarLeading) {
-                                Button("Back to Camera") {
-                                    currentPage = .home
+                            // Only show "Back to Camera" when on root results view (path is empty)
+                            if resultsPath.isEmpty {
+                                ToolbarItem(placement: .navigationBarLeading) {
+                                    Button("Back to Camera") {
+                                        currentPage = .home
+                                    }
                                 }
                             }
+                        }
+                        .navigationDestination(for: DetectionCategory.self) { category in
+                            CategoryResultsView(category: category, resultsManager: DIContainer.shared.resolve(DetectionResultsManager.self))
                         }
                 }
             }

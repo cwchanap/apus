@@ -11,48 +11,55 @@ struct ClassificationResultsView: View {
     @ObservedObject var resultsManager: DetectionResultsManager
     @State private var selectedResult: StoredClassificationResult?
     @State private var showingDetailView = false
+    @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         Group {
-            Group {
-                if resultsManager.classificationResults.isEmpty {
-                    EmptyResultsView(
-                        category: .classification,
-                        message: "No classification results yet",
-                        description: "Classify images to see results here"
-                    )
-                } else {
-                    List {
-                        ForEach(resultsManager.classificationResults) { result in
-                            ClassificationResultRow(result: result) {
-                                selectedResult = result
-                                showingDetailView = true
-                            }
-                        }
-                        .onDelete(perform: deleteResults)
+            if resultsManager.classificationResults.isEmpty {
+            EmptyResultsView(
+                category: .classification,
+                message: "No classification results yet",
+                description: "Classify images to see results here"
+            )
+        } else {
+            List {
+                ForEach(resultsManager.classificationResults) { result in
+                    ClassificationResultRow(result: result) {
+                        selectedResult = result
+                        showingDetailView = true
                     }
-                    .refreshable {
-                        // Refresh functionality if needed
+                }
+                .onDelete(perform: deleteResults)
+            }
+            .refreshable {
+                // Refresh functionality if needed
+            }
+        }
+        }
+        .navigationTitle("Classification Results")
+        .navigationBarTitleDisplayMode(.large)
+        .navigationBarBackButtonHidden(false)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button(action: { dismiss() }) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "chevron.left")
+                        Text("Back")
                     }
                 }
             }
-            .navigationTitle("Classification Results")
-            .navigationBarTitleDisplayMode(.large)
-            .toolbar {
-                
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    if !resultsManager.classificationResults.isEmpty {
-                        Button("Clear All") {
-                            resultsManager.clearClassificationResults()
-                        }
-                        .foregroundColor(.red)
+            ToolbarItem(placement: .navigationBarTrailing) {
+                if !resultsManager.classificationResults.isEmpty {
+                    Button("Clear All") {
+                        resultsManager.clearClassificationResults()
                     }
+                    .foregroundColor(.red)
                 }
             }
-            .sheet(isPresented: $showingDetailView) {
-                if let result = selectedResult {
-                    ClassificationResultDetailView(result: result)
-                }
+        }
+        .sheet(isPresented: $showingDetailView) {
+            if let result = selectedResult {
+                ClassificationResultDetailView(result: result)
             }
         }
     }

@@ -64,6 +64,18 @@ xcodebuild -workspace apus.xcworkspace -scheme apus test -only-testing:apusTests
 xcodebuild -workspace apus.xcworkspace -scheme apus test -only-testing:apusTests/CameraViewModelTests/testCapturePhoto_UpdatesCapturedImage
 ```
 
+### Code Quality Commands
+```bash
+# Run SwiftLint for code style checking
+swiftlint
+
+# SwiftLint with autocorrect (fixes some violations automatically)
+swiftlint --autocorrect
+
+# SwiftLint for specific files
+swiftlint lint --path apus/Features/Camera/Views/CameraView.swift
+```
+
 ### Testing via Xcode
 - **All tests**: Xcode Test Navigator (⌘+6) or Product → Test (⌘+U)
 - **Test structure**: Comprehensive unit tests with dependency injection and mocking
@@ -122,12 +134,19 @@ The app features multiple computer vision systems with unified interface:
 
 ### Additional Vision Features
 - **Image Classification**: ML-powered classification with history tracking
-- **Contour Detection**: Computer vision-based shape analysis
+- **Contour Detection**: Computer vision-based shape analysis  
+- **OCR/Text Recognition**: Vision framework text detection and recognition with results storage
 - **Image Processing**: Normalization, resizing, optimization pipelines
+
+### Results System Architecture
+- **DetectionResultsManager**: Centralized results storage using AppStorage with JSON serialization
+- **Result Types**: StoredOCRResult, StoredObjectDetectionResult, StoredClassificationResult
+- **Results Dashboard**: NavigationStack-based UI for browsing historical results by category
+- **Data Persistence**: Local storage with automatic cleanup (max 10 results per category)
 
 ### Computer Vision Files
 - **Models**: `efficientdet_lite0.tflite`, `coco_labels.txt`
-- **Managers**: Detection, classification, and contour analysis managers
+- **Managers**: Detection, classification, contour analysis, and text recognition managers
 - **Extensions**: `UIImage+Processing.swift` for image optimization
 
 ## Project Structure and Development Notes
@@ -152,3 +171,4 @@ The app features multiple computer vision systems with unified interface:
 - **Permission Requirements**: Camera and photo library permissions must be granted
 - **iOS Version**: Minimum iOS 18.5+ deployment target
 - **Testing**: Comprehensive test suite with 100% coverage using dependency injection
+- **Code Quality**: SwiftLint configured with pragmatic thresholds for SwiftUI development

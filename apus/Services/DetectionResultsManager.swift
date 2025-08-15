@@ -325,7 +325,7 @@ class DetectionResultsManager: ObservableObject {
 
 // MARK: - Detection Category Enum
 
-enum DetectionCategory: String, CaseIterable {
+enum DetectionCategory: String, CaseIterable, Hashable {
     case ocr = "OCR"
     case objectDetection = "Object Detection"
     case classification = "Classification"
