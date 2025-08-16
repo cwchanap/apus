@@ -8,11 +8,12 @@
 import SwiftUI
 
 struct ClassificationResultsView: View {
-    @ObservedObject var resultsManager: DetectionResultsManager
+    @EnvironmentObject var resultsManager: DetectionResultsManager
     @State private var selectedResult: StoredClassificationResult?
     @State private var selectedDetent: PresentationDetent = .medium
     @AppStorage("results_detent_classification") private var storedDetentClassification: String = "medium"
     @Environment(\.dismiss) private var dismiss
+    @State private var showClearConfirm = false
 
     var body: some View {
         Group {
@@ -31,6 +32,13 @@ struct ClassificationResultsView: View {
                             selectedResult = result
                         }
                     }
+                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                        Button(role: .destructive) {
+                            resultsManager.deleteClassificationResult(id: result.id)
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
+                    }
                 }
                 .onDelete(perform: deleteResults)
             }
@@ -44,12 +52,18 @@ struct ClassificationResultsView: View {
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 if !resultsManager.classificationResults.isEmpty {
-                    Button("Clear All") {
-                        resultsManager.clearClassificationResults()
-                    }
+                    Button("Clear All") { showClearConfirm = true }
                     .foregroundColor(.red)
                 }
             }
+        }
+        .alert("Clear All Classification Results?", isPresented: $showClearConfirm) {
+            Button("Cancel", role: .cancel) { }
+            Button("Delete", role: .destructive) {
+                resultsManager.clearClassificationResults()
+            }
+        } message: {
+            Text("This will remove all Classification results. This action cannot be undone.")
         }
         .sheet(item: $selectedResult) { result in
             ClassificationResultDetailView(
@@ -72,7 +86,7 @@ struct ClassificationResultsView: View {
     }
 
     private func deleteResults(at offsets: IndexSet) {
-        resultsManager.classificationResults.remove(atOffsets: offsets)
+        resultsManager.deleteClassificationResults(at: offsets)
     }
 }
 
@@ -427,7 +441,8 @@ struct ClassificationResultsView_Previews: PreviewProvider {
 
         manager.saveClassificationResult(classificationResults: sampleResults, image: sampleImage)
 
-        return ClassificationResultsView(resultsManager: manager)
+        return ClassificationResultsView()
+            .environmentObject(manager)
     }
 }
 #endif

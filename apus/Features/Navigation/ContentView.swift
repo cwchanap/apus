@@ -52,7 +52,7 @@ struct ContentView: View {
                             }
                         }
                         .navigationDestination(for: DetectionCategory.self) { category in
-                            CategoryResultsView(category: category, resultsManager: DIContainer.shared.resolve(DetectionResultsManager.self))
+                            CategoryResultsView(category: category)
                         }
                 }
             }

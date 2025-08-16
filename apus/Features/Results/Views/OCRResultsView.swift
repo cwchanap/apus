@@ -8,11 +8,12 @@
 import SwiftUI
 
 struct OCRResultsView: View {
-    @ObservedObject var resultsManager: DetectionResultsManager
+    @EnvironmentObject var resultsManager: DetectionResultsManager
     @State private var selectedResult: StoredOCRResult?
     @State private var selectedDetent: PresentationDetent = .medium
     @AppStorage("results_detent_ocr") private var storedDetentOCR: String = "medium"
     @Environment(\.dismiss) private var dismiss
+    @State private var showClearConfirm = false
 
     var body: some View {
         Group {
@@ -31,6 +32,13 @@ struct OCRResultsView: View {
                                 selectedResult = result
                             }
                         }
+                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                            Button(role: .destructive) {
+                                resultsManager.deleteOCRResult(id: result.id)
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
+                        }
                     }
                     .onDelete(perform: deleteResults)
                 }
@@ -44,12 +52,18 @@ struct OCRResultsView: View {
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 if !resultsManager.ocrResults.isEmpty {
-                    Button("Clear All") {
-                        resultsManager.clearOCRResults()
-                    }
+                    Button("Clear All") { showClearConfirm = true }
                     .foregroundColor(.red)
                 }
             }
+        }
+        .alert("Clear All OCR Results?", isPresented: $showClearConfirm) {
+            Button("Cancel", role: .cancel) { }
+            Button("Delete", role: .destructive) {
+                resultsManager.clearOCRResults()
+            }
+        } message: {
+            Text("This will remove all OCR results. This action cannot be undone.")
         }
         .sheet(item: $selectedResult) { result in
             OCRResultDetailView(
@@ -72,7 +86,7 @@ struct OCRResultsView: View {
     }
 
     private func deleteResults(at offsets: IndexSet) {
-        resultsManager.ocrResults.remove(atOffsets: offsets)
+        resultsManager.deleteOCRResults(at: offsets)
     }
 }
 
@@ -307,7 +321,8 @@ struct OCRResultsView_Previews: PreviewProvider {
 
         manager.saveOCRResult(detectedTexts: sampleTexts, image: sampleImage)
 
-        return OCRResultsView(resultsManager: manager)
+        return OCRResultsView()
+            .environmentObject(manager)
     }
 }
 #endif

@@ -8,11 +8,12 @@
 import SwiftUI
 
 struct ObjectDetectionResultsView: View {
-    @ObservedObject var resultsManager: DetectionResultsManager
+    @EnvironmentObject var resultsManager: DetectionResultsManager
     @State private var selectedResult: StoredObjectDetectionResult?
     @State private var selectedDetent: PresentationDetent = .fraction(0.9)
     @AppStorage("results_detent_object") private var storedDetentObject: String = "fraction-0.9"
     @Environment(\.dismiss) private var dismiss
+    @State private var showClearConfirm = false
 
     var body: some View {
         Group {
@@ -31,6 +32,13 @@ struct ObjectDetectionResultsView: View {
                             selectedResult = result
                         }
                     }
+                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                        Button(role: .destructive) {
+                            resultsManager.deleteObjectDetectionResult(id: result.id)
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
+                    }
                 }
                 .onDelete(perform: deleteResults)
             }
@@ -44,12 +52,18 @@ struct ObjectDetectionResultsView: View {
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 if !resultsManager.objectDetectionResults.isEmpty {
-                    Button("Clear All") {
-                        resultsManager.clearObjectDetectionResults()
-                    }
+                    Button("Clear All") { showClearConfirm = true }
                     .foregroundColor(.red)
                 }
             }
+        }
+        .alert("Clear All Object Detection Results?", isPresented: $showClearConfirm) {
+            Button("Cancel", role: .cancel) { }
+            Button("Delete", role: .destructive) {
+                resultsManager.clearObjectDetectionResults()
+            }
+        } message: {
+            Text("This will remove all Object Detection results. This action cannot be undone.")
         }
         .sheet(item: $selectedResult) { result in
             ObjectDetectionResultDetailView(
@@ -72,7 +86,7 @@ struct ObjectDetectionResultsView: View {
     }
 
     private func deleteResults(at offsets: IndexSet) {
-        resultsManager.objectDetectionResults.remove(atOffsets: offsets)
+        resultsManager.deleteObjectDetectionResults(at: offsets)
     }
 }
 
@@ -371,7 +385,8 @@ struct ObjectDetectionResultsView_Previews: PreviewProvider {
 
         manager.saveObjectDetectionResult(detectedObjects: sampleObjects, image: sampleImage)
 
-        return ObjectDetectionResultsView(resultsManager: manager)
+        return ObjectDetectionResultsView()
+            .environmentObject(manager)
     }
 }
 #endif

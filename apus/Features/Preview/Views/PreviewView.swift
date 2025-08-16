@@ -131,7 +131,7 @@ struct PreviewView: View {
             NavigationStack(path: $historyPath) {
                 ResultsDashboardView(path: $historyPath)
                     .navigationDestination(for: DetectionCategory.self) { category in
-                        CategoryResultsView(category: category, resultsManager: detectionResultsManager)
+                        CategoryResultsView(category: category)
                     }
             }
         }

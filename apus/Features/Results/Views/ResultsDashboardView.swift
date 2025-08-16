@@ -8,8 +8,9 @@
 import SwiftUI
 
 struct ResultsDashboardView: View {
-    @Injected private var resultsManager: DetectionResultsManager
+    @EnvironmentObject var resultsManager: DetectionResultsManager
     @Binding var path: [DetectionCategory]
+    @State private var showClearAllConfirm = false
 
     var body: some View {
             Group {
@@ -122,7 +123,7 @@ struct ResultsDashboardView: View {
                                         .foregroundColor(.secondary)
 
                                     Button(action: {
-                                        resultsManager.clearAllResults()
+                                        showClearAllConfirm = true
                                     }) {
                                         HStack {
                                             Image(systemName: "trash")
@@ -133,6 +134,14 @@ struct ResultsDashboardView: View {
                                         .frame(maxWidth: .infinity)
                                         .background(Color.red)
                                         .clipShape(RoundedRectangle(cornerRadius: 8))
+                                    }
+                                    .alert("Clear All Results?", isPresented: $showClearAllConfirm) {
+                                        Button("Cancel", role: .cancel) { }
+                                        Button("Delete", role: .destructive) {
+                                            resultsManager.clearAllResults()
+                                        }
+                                    } message: {
+                                        Text("This will remove all OCR, Object Detection, and Classification results. This action cannot be undone.")
                                     }
                                 }
                                 .padding()
@@ -224,17 +233,17 @@ struct StorageInfoRow: View {
 struct CategoryResultsView: View {
     @Environment(\.dismiss) private var dismiss
     let category: DetectionCategory
-    @ObservedObject var resultsManager: DetectionResultsManager
+    @EnvironmentObject var resultsManager: DetectionResultsManager
 
     var body: some View {
         Group {
             switch category {
             case .ocr:
-                OCRResultsView(resultsManager: resultsManager)
+                OCRResultsView()
             case .objectDetection:
-                ObjectDetectionResultsView(resultsManager: resultsManager)
+                ObjectDetectionResultsView()
             case .classification:
-                ClassificationResultsView(resultsManager: resultsManager)
+                ClassificationResultsView()
             }
         }
     }

@@ -69,6 +69,21 @@ class DetectionResultsManager: ObservableObject {
         updateCachedValues()
     }
 
+    // Delete specific OCR results
+    func deleteOCRResults(at offsets: IndexSet) {
+        ocrResults.remove(atOffsets: offsets)
+        saveOCRResults()
+        updateCachedValues()
+    }
+
+    func deleteOCRResult(id: UUID) {
+        if let index = ocrResults.firstIndex(where: { $0.id == id }) {
+            ocrResults.remove(at: index)
+            saveOCRResults()
+            updateCachedValues()
+        }
+    }
+
     private func saveOCRResults() {
         let resultsToSave = ocrResults // Capture current state
         Task.detached(priority: .utility) {
@@ -115,6 +130,21 @@ class DetectionResultsManager: ObservableObject {
         updateCachedValues()
     }
 
+    // Delete specific Object Detection results
+    func deleteObjectDetectionResults(at offsets: IndexSet) {
+        objectDetectionResults.remove(atOffsets: offsets)
+        saveObjectDetectionResults()
+        updateCachedValues()
+    }
+
+    func deleteObjectDetectionResult(id: UUID) {
+        if let index = objectDetectionResults.firstIndex(where: { $0.id == id }) {
+            objectDetectionResults.remove(at: index)
+            saveObjectDetectionResults()
+            updateCachedValues()
+        }
+    }
+
     private func saveObjectDetectionResults() {
         let resultsToSave = objectDetectionResults // Capture current state
         Task.detached(priority: .utility) {
@@ -159,6 +189,21 @@ class DetectionResultsManager: ObservableObject {
         classificationResults.removeAll()
         saveClassificationResults()
         updateCachedValues()
+    }
+
+    // Delete specific Classification results
+    func deleteClassificationResults(at offsets: IndexSet) {
+        classificationResults.remove(atOffsets: offsets)
+        saveClassificationResults()
+        updateCachedValues()
+    }
+
+    func deleteClassificationResult(id: UUID) {
+        if let index = classificationResults.firstIndex(where: { $0.id == id }) {
+            classificationResults.remove(at: index)
+            saveClassificationResults()
+            updateCachedValues()
+        }
     }
 
     private func saveClassificationResults() {

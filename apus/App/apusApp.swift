@@ -11,12 +11,16 @@ import SwiftData
 @main
 struct ApusApp: App {
     @StateObject private var appDependencies = AppDependencies.shared
+    @StateObject private var resultsManager: DetectionResultsManager
 
     init() {
         // Ensure dependencies are configured at app startup
         // Initialize DI and kick off background preloading
         _ = AppDependencies.shared.diContainer
         print("✅ App dependencies initialized at startup")
+
+        // Resolve singleton DetectionResultsManager for EnvironmentObject
+        _resultsManager = StateObject(wrappedValue: DIContainer.shared.resolve(DetectionResultsManager.self))
     }
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
@@ -36,6 +40,7 @@ struct ApusApp: App {
             ContentView()
                 .preferredColorScheme(.dark) // Force dark mode for camera app
                 .statusBarHidden(true) // Hide status bar
+                .environmentObject(resultsManager)
         }
         .modelContainer(sharedModelContainer)
     }
