@@ -11,6 +11,7 @@ struct OCRResultsView: View {
     @ObservedObject var resultsManager: DetectionResultsManager
     @State private var selectedResult: StoredOCRResult?
     @State private var selectedDetent: PresentationDetent = .medium
+    @AppStorage("results_detent_ocr") private var storedDetentOCR: String = "medium"
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -25,8 +26,10 @@ struct OCRResultsView: View {
                 List {
                     ForEach(resultsManager.ocrResults) { result in
                         OCRResultRow(result: result) {
-                            selectedDetent = .medium
-                            selectedResult = result
+                            withAnimation(.spring()) {
+                                selectedDetent = detent(from: storedDetentOCR) ?? .medium
+                                selectedResult = result
+                            }
                         }
                     }
                     .onDelete(perform: deleteResults)
@@ -53,11 +56,37 @@ struct OCRResultsView: View {
                 .presentationDetents([.medium, .fraction(0.9), .large], selection: $selectedDetent)
                 .presentationBackgroundInteraction(.enabled(upThrough: .medium))
                 .presentationDragIndicator(.visible)
+                .onChange(of: selectedDetent) { newValue in
+                    storedDetentOCR = detentString(newValue)
+                }
         }
     }
 
     private func deleteResults(at offsets: IndexSet) {
         resultsManager.ocrResults.remove(atOffsets: offsets)
+    }
+}
+
+// MARK: - Detent Persistence Helpers
+extension OCRResultsView {
+    private func detent(from string: String) -> PresentationDetent? {
+        switch string {
+        case "medium": return .medium
+        case "large": return .large
+        case let s where s.hasPrefix("fraction-"):
+            if let value = Double(s.replacingOccurrences(of: "fraction-", with: "")) {
+                return .fraction(value)
+            }
+            return nil
+        default:
+            return nil
+        }
+    }
+
+    private func detentString(_ detent: PresentationDetent) -> String {
+        if detent == .medium { return "medium" }
+        if detent == .large { return "large" }
+        return "fraction-0.9"
     }
 }
 

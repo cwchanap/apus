@@ -11,6 +11,7 @@ struct ObjectDetectionResultsView: View {
     @ObservedObject var resultsManager: DetectionResultsManager
     @State private var selectedResult: StoredObjectDetectionResult?
     @State private var selectedDetent: PresentationDetent = .fraction(0.9)
+    @AppStorage("results_detent_object") private var storedDetentObject: String = "fraction-0.9"
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -25,8 +26,10 @@ struct ObjectDetectionResultsView: View {
             List {
                 ForEach(resultsManager.objectDetectionResults) { result in
                     ObjectDetectionResultRow(result: result) {
-                        selectedDetent = .fraction(0.9)
-                        selectedResult = result
+                        withAnimation(.spring()) {
+                            selectedDetent = detent(from: storedDetentObject) ?? .fraction(0.9)
+                            selectedResult = result
+                        }
                     }
                 }
                 .onDelete(perform: deleteResults)
@@ -53,11 +56,37 @@ struct ObjectDetectionResultsView: View {
                 .presentationDetents([.medium, .fraction(0.9), .large], selection: $selectedDetent)
                 .presentationBackgroundInteraction(.enabled(upThrough: .medium))
                 .presentationDragIndicator(.visible)
+                .onChange(of: selectedDetent) { newValue in
+                    storedDetentObject = detentString(newValue)
+                }
         }
     }
 
     private func deleteResults(at offsets: IndexSet) {
         resultsManager.objectDetectionResults.remove(atOffsets: offsets)
+    }
+}
+
+// MARK: - Detent Persistence Helpers
+extension ObjectDetectionResultsView {
+    private func detent(from string: String) -> PresentationDetent? {
+        switch string {
+        case "medium": return .medium
+        case "large": return .large
+        case let s where s.hasPrefix("fraction-"):
+            if let value = Double(s.replacingOccurrences(of: "fraction-", with: "")) {
+                return .fraction(value)
+            }
+            return nil
+        default:
+            return nil
+        }
+    }
+
+    private func detentString(_ detent: PresentationDetent) -> String {
+        if detent == .medium { return "medium" }
+        if detent == .large { return "large" }
+        return "fraction-0.9"
     }
 }
 
