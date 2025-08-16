@@ -10,6 +10,7 @@ import SwiftUI
 struct OCRResultsView: View {
     @ObservedObject var resultsManager: DetectionResultsManager
     @State private var selectedResult: StoredOCRResult?
+    @State private var selectedDetent: PresentationDetent = .medium
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -24,6 +25,7 @@ struct OCRResultsView: View {
                 List {
                     ForEach(resultsManager.ocrResults) { result in
                         OCRResultRow(result: result) {
+                            selectedDetent = .medium
                             selectedResult = result
                         }
                     }
@@ -48,7 +50,7 @@ struct OCRResultsView: View {
         }
         .sheet(item: $selectedResult) { result in
             OCRResultDetailView(result: result)
-                .presentationDetents([.medium, .fraction(0.9), .large])
+                .presentationDetents([.medium, .fraction(0.9), .large], selection: $selectedDetent)
                 .presentationBackgroundInteraction(.enabled(upThrough: .medium))
                 .presentationDragIndicator(.visible)
         }

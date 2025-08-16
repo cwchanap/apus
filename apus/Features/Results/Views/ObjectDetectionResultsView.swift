@@ -10,6 +10,7 @@ import SwiftUI
 struct ObjectDetectionResultsView: View {
     @ObservedObject var resultsManager: DetectionResultsManager
     @State private var selectedResult: StoredObjectDetectionResult?
+    @State private var selectedDetent: PresentationDetent = .fraction(0.9)
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -24,6 +25,7 @@ struct ObjectDetectionResultsView: View {
             List {
                 ForEach(resultsManager.objectDetectionResults) { result in
                     ObjectDetectionResultRow(result: result) {
+                        selectedDetent = .fraction(0.9)
                         selectedResult = result
                     }
                 }
@@ -48,7 +50,7 @@ struct ObjectDetectionResultsView: View {
         }
         .sheet(item: $selectedResult) { result in
             ObjectDetectionResultDetailView(result: result)
-                .presentationDetents([.medium, .fraction(0.9), .large])
+                .presentationDetents([.medium, .fraction(0.9), .large], selection: $selectedDetent)
                 .presentationBackgroundInteraction(.enabled(upThrough: .medium))
                 .presentationDragIndicator(.visible)
         }

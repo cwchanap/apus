@@ -10,6 +10,7 @@ import SwiftUI
 struct ClassificationResultsView: View {
     @ObservedObject var resultsManager: DetectionResultsManager
     @State private var selectedResult: StoredClassificationResult?
+    @State private var selectedDetent: PresentationDetent = .medium
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -24,6 +25,7 @@ struct ClassificationResultsView: View {
             List {
                 ForEach(resultsManager.classificationResults) { result in
                     ClassificationResultRow(result: result) {
+                        selectedDetent = .medium
                         selectedResult = result
                     }
                 }
@@ -48,7 +50,7 @@ struct ClassificationResultsView: View {
         }
         .sheet(item: $selectedResult) { result in
             ClassificationResultDetailView(result: result)
-                .presentationDetents([.medium, .fraction(0.9), .large])
+                .presentationDetents([.medium, .fraction(0.9), .large], selection: $selectedDetent)
                 .presentationBackgroundInteraction(.enabled(upThrough: .medium))
                 .presentationDragIndicator(.visible)
         }
