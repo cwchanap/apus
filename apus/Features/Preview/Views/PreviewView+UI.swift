@@ -132,6 +132,213 @@ extension PreviewView {
         }
     }
 
+    // MARK: - Classification Results Overlay
+    @ViewBuilder
+    func classificationResultsOverlayView() -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text("Classification")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                Spacer()
+                Button(action: {
+                    withAnimation { showingClassificationResults = false }
+                }) {
+                    Label("Hide", systemImage: "xmark.circle.fill")
+                        .labelStyle(.iconOnly)
+                        .foregroundColor(.secondary)
+                }
+                .buttonStyle(.plain)
+            }
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 10) {
+                    ForEach(Array(classificationResults.enumerated()), id: \.offset) { _, result in
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(result.identifier)
+                                .font(.footnote)
+                                .fontWeight(.semibold)
+                                .foregroundColor(.primary)
+                                .lineLimit(2)
+                            Text("\(Int(result.confidence * 100))%")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(Color.gray.opacity(0.15))
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                    }
+                }
+            }
+        }
+        .padding(12)
+        .background(.ultraThinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 16))
+        .padding(.horizontal, 12)
+        .padding(.bottom, 68) // keep above the Actions bar
+        .shadow(radius: 2)
+    }
+
+    // MARK: - Actions Sheet View (Popup)
+    @ViewBuilder
+    func actionsSheetView(showSheet: Binding<Bool>) -> some View {
+        NavigationStack {
+            List {
+                Section(header: Text("Analysis")) {
+                    // Classification
+                    Button {
+                        hapticService.actionFeedback()
+                        toggleClassification()
+                        showSheet.wrappedValue = false
+                    } label: {
+                        HStack {
+                            Image(systemName: "brain.head.profile")
+                                .foregroundColor(.accentColor)
+                            if isClassifying {
+                                Text("Classifying…")
+                            } else {
+                                Text(getClassificationButtonText())
+                            }
+                            Spacer()
+                        }
+                    }
+                    .disabled(isClassifying)
+
+                    // Object Detection
+                    Button {
+                        hapticService.actionFeedback()
+                        toggleObjects()
+                        showSheet.wrappedValue = false
+                    } label: {
+                        HStack {
+                            Image(systemName: "viewfinder.circle")
+                                .foregroundColor(.accentColor)
+                            if isDetectingObjects {
+                                Text("Detecting…")
+                            } else {
+                                Text(getObjectButtonText())
+                            }
+                            Spacer()
+                        }
+                    }
+                    .disabled(isDetectingObjects)
+
+                    // Contour Detection
+                    Button {
+                        hapticService.actionFeedback()
+                        toggleContours()
+                        showSheet.wrappedValue = false
+                    } label: {
+                        HStack {
+                            Image(systemName: "eye")
+                                .foregroundColor(.accentColor)
+                            if isDetectingContours {
+                                Text("Detecting…")
+                            } else {
+                                Text(getContourButtonText())
+                            }
+                            Spacer()
+                        }
+                    }
+                    .disabled(isDetectingContours)
+
+                    // Text Recognition (OCR)
+                    Button {
+                        hapticService.actionFeedback()
+                        toggleTextRecognition()
+                        showSheet.wrappedValue = false
+                    } label: {
+                        HStack {
+                            Image(systemName: "textformat")
+                                .foregroundColor(.accentColor)
+                            if isDetectingTexts {
+                                Text("Reading Text…")
+                            } else {
+                                Text(getTextRecognitionButtonText())
+                            }
+                            Spacer()
+                        }
+                    }
+                    .disabled(isDetectingTexts)
+                }
+
+                Section(header: Text("Photo")) {
+                    // Save Photo
+                    Button {
+                        hapticService.actionFeedback()
+                        saveImageToPhotoLibrary()
+                        if isSaved {
+                            hapticService.success()
+                            alertMessage = "Image saved to Photos"
+                            showingAlert = true
+                        } else {
+                            hapticService.error()
+                            alertMessage = "Permission denied to save to Photos"
+                            showingAlert = true
+                        }
+                        showSheet.wrappedValue = false
+                    } label: {
+                        HStack {
+                            Image(systemName: isSaved ? "checkmark.circle.fill" : "square.and.arrow.down")
+                                .foregroundColor(isSaved ? .green : .accentColor)
+                            Text(isSaved ? "Saved" : "Save Photo")
+                            Spacer()
+                        }
+                    }
+                    .disabled(isSaved)
+
+                    // Discard Photo
+                    Button(role: .destructive) {
+                        hapticService.buttonTap()
+                        capturedImage = nil
+                        showSheet.wrappedValue = false
+                    } label: {
+                        HStack {
+                            Image(systemName: "trash")
+                                .foregroundColor(.red)
+                            Text("Discard Photo")
+                            Spacer()
+                        }
+                    }
+                }
+
+                Section(header: Text("Results")) {
+                    // View All Results
+                    Button {
+                        showSheet.wrappedValue = false
+                        // Present results after dismiss to avoid sheet conflicts
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                            showingHistory = true
+                        }
+                    } label: {
+                        HStack {
+                            Image(systemName: "clock.arrow.circlepath")
+                                .foregroundColor(.accentColor)
+                            Text("View All Results")
+                            Spacer()
+                        }
+                    }
+
+                    // Reset Overlays
+                    Button {
+                        resetAllDetections()
+                        showSheet.wrappedValue = false
+                    } label: {
+                        HStack {
+                            Image(systemName: "arrow.counterclockwise")
+                                .foregroundColor(.accentColor)
+                            Text("Reset Overlays")
+                            Spacer()
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Actions")
+            .navigationBarTitleDisplayMode(.inline)
+        }
+    }
+
     // MARK: - Bottom Controls View
     @ViewBuilder
     func bottomControlsView() -> some View {

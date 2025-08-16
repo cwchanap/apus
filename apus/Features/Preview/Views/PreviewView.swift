@@ -38,6 +38,7 @@ struct PreviewView: View {
     @State var cachedTexts: [DetectedText] = []
     @State var hasDetectedTexts = false
     @State var historyPath: [DetectionCategory] = []
+    @State private var showingActionsSheet = false
 
     // Injected dependencies
     @Injected var imageClassificationManager: ImageClassificationProtocol
@@ -48,9 +49,9 @@ struct PreviewView: View {
     @Injected var detectionResultsManager: DetectionResultsManager
 
     var body: some View {
-        GeometryReader { geometry in
+        GeometryReader { _ in
             VStack(spacing: 0) {
-                // Image display area with zoom/pan functionality
+                // Image display area with zoom/pan functionality takes most of the screen
                 ZStack {
                     if let image = displayImage {
                         ZoomableImageView(image: image)
@@ -65,31 +66,55 @@ struct PreviewView: View {
                         Color.black
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
+                    // Classification results overlay over the image
+                    if showingClassificationResults && !classificationResults.isEmpty {
+                        // Dim gradient behind overlay for contrast
+                        VStack(spacing: 0) {
+                            Spacer()
+                            LinearGradient(
+                                gradient: Gradient(colors: [
+                                    Color.black.opacity(0.25),
+                                    Color.black.opacity(0.12),
+                                    Color.clear
+                                ]),
+                                startPoint: .bottom,
+                                endPoint: .top
+                            )
+                            .frame(height: 200)
+                            .frame(maxWidth: .infinity)
+                            .allowsHitTesting(false)
+                        }
+
+                        // Results overlay content
+                        VStack {
+                            Spacer()
+                            classificationResultsOverlayView()
+                        }
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                    }
                 }
-                .frame(height: geometry.size.height * 0.6)
                 .clipped()
 
-                // Controls and results area
-                VStack(spacing: 16) {
-                    // Action buttons
-                    actionButtonsView()
-                        .padding(.horizontal)
-
-                    // Results panel
-                    if showingClassificationResults || showingHistory {
-                        resultsPanelView()
-                            .padding(.horizontal)
-                    }
-
+                // Single actions button below the photo
+                HStack {
                     Spacer()
-
-                    // Bottom controls
-                    bottomControlsView()
-                        .padding(.horizontal)
-                        .padding(.bottom, 20)
+                    Button(action: { showingActionsSheet = true }) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "ellipsis.circle")
+                                .font(.title2)
+                            Text("Actions")
+                                .font(.headline)
+                        }
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 12)
+                        .background(Color.accentColor)
+                        .clipShape(Capsule())
+                    }
+                    Spacer()
                 }
-                .frame(height: geometry.size.height * 0.4)
-                .background(Color(.systemBackground))
+                .padding(.vertical, 12)
+                .background(Color(.systemBackground).opacity(0.95))
             }
         }
         .navigationBarHidden(true)
@@ -97,6 +122,10 @@ struct PreviewView: View {
             Button("OK") { }
         } message: {
             Text(alertMessage)
+        }
+        // Actions popup sheet
+        .sheet(isPresented: $showingActionsSheet) {
+            actionsSheetView(showSheet: $showingActionsSheet)
         }
         .sheet(isPresented: $showingHistory) {
             NavigationStack(path: $historyPath) {
