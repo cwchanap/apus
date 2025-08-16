@@ -26,7 +26,7 @@ struct OCRResultsView: View {
                 List {
                     ForEach(resultsManager.ocrResults) { result in
                         OCRResultRow(result: result) {
-                            withAnimation(.spring()) {
+                            withAnimation(.spring(response: 0.35, dampingFraction: 0.85, blendDuration: 0.1)) {
                                 selectedDetent = detent(from: storedDetentOCR) ?? .medium
                                 selectedResult = result
                             }
@@ -52,7 +52,16 @@ struct OCRResultsView: View {
             }
         }
         .sheet(item: $selectedResult) { result in
-            OCRResultDetailView(result: result)
+            OCRResultDetailView(
+                result: result,
+                selectedDetent: $selectedDetent,
+                onReset: {
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.85, blendDuration: 0.1)) {
+                        selectedDetent = .medium
+                        storedDetentOCR = "medium"
+                    }
+                }
+            )
                 .presentationDetents([.medium, .fraction(0.9), .large], selection: $selectedDetent)
                 .presentationBackgroundInteraction(.enabled(upThrough: .medium))
                 .presentationDragIndicator(.visible)
@@ -152,6 +161,8 @@ struct OCRResultRow: View {
 
 struct OCRResultDetailView: View {
     let result: StoredOCRResult
+    @Binding var selectedDetent: PresentationDetent
+    let onReset: () -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var showingImage = false
 
@@ -222,7 +233,10 @@ struct OCRResultDetailView: View {
             .navigationTitle("OCR Result")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItemGroup(placement: .navigationBarTrailing) {
+                    Button("Reset Size") {
+                        onReset()
+                    }
                     Button("Done") {
                         dismiss()
                     }

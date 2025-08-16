@@ -26,7 +26,7 @@ struct ObjectDetectionResultsView: View {
             List {
                 ForEach(resultsManager.objectDetectionResults) { result in
                     ObjectDetectionResultRow(result: result) {
-                        withAnimation(.spring()) {
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.85, blendDuration: 0.1)) {
                             selectedDetent = detent(from: storedDetentObject) ?? .fraction(0.9)
                             selectedResult = result
                         }
@@ -52,7 +52,16 @@ struct ObjectDetectionResultsView: View {
             }
         }
         .sheet(item: $selectedResult) { result in
-            ObjectDetectionResultDetailView(result: result)
+            ObjectDetectionResultDetailView(
+                result: result,
+                selectedDetent: $selectedDetent,
+                onReset: {
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.85, blendDuration: 0.1)) {
+                        selectedDetent = .fraction(0.9)
+                        storedDetentObject = "fraction-0.9"
+                    }
+                }
+            )
                 .presentationDetents([.medium, .fraction(0.9), .large], selection: $selectedDetent)
                 .presentationBackgroundInteraction(.enabled(upThrough: .medium))
                 .presentationDragIndicator(.visible)
@@ -156,6 +165,8 @@ struct ObjectDetectionResultRow: View {
 
 struct ObjectDetectionResultDetailView: View {
     let result: StoredObjectDetectionResult
+    @Binding var selectedDetent: PresentationDetent
+    let onReset: () -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var showingImage = false
     @State private var showingOverlay = true
@@ -259,7 +270,10 @@ struct ObjectDetectionResultDetailView: View {
             .navigationTitle("Object Detection")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItemGroup(placement: .navigationBarTrailing) {
+                    Button("Reset Size") {
+                        onReset()
+                    }
                     Button("Done") {
                         dismiss()
                     }

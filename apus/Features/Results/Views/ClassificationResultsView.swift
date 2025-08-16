@@ -26,7 +26,7 @@ struct ClassificationResultsView: View {
             List {
                 ForEach(resultsManager.classificationResults) { result in
                     ClassificationResultRow(result: result) {
-                        withAnimation(.spring()) {
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.85, blendDuration: 0.1)) {
                             selectedDetent = detent(from: storedDetentClassification) ?? .medium
                             selectedResult = result
                         }
@@ -52,7 +52,16 @@ struct ClassificationResultsView: View {
             }
         }
         .sheet(item: $selectedResult) { result in
-            ClassificationResultDetailView(result: result)
+            ClassificationResultDetailView(
+                result: result,
+                selectedDetent: $selectedDetent,
+                onReset: {
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.85, blendDuration: 0.1)) {
+                        selectedDetent = .medium
+                        storedDetentClassification = "medium"
+                    }
+                }
+            )
                 .presentationDetents([.medium, .fraction(0.9), .large], selection: $selectedDetent)
                 .presentationBackgroundInteraction(.enabled(upThrough: .medium))
                 .presentationDragIndicator(.visible)
@@ -184,6 +193,8 @@ struct ClassificationResultRow: View {
 
 struct ClassificationResultDetailView: View {
     let result: StoredClassificationResult
+    @Binding var selectedDetent: PresentationDetent
+    let onReset: () -> Void
     @Environment(\.dismiss) private var dismiss
     @State private var showingImage = false
 
@@ -276,7 +287,10 @@ struct ClassificationResultDetailView: View {
             .navigationTitle("Classification")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItemGroup(placement: .navigationBarTrailing) {
+                    Button("Reset Size") {
+                        onReset()
+                    }
                     Button("Done") {
                         dismiss()
                     }
