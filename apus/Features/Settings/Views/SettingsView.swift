@@ -36,6 +36,27 @@ struct SettingsView: View {
                     }
                     .padding(.vertical, 4)
 
+                    // Barcode Detection Toggle
+                    HStack {
+                        Image(systemName: "barcode.viewfinder")
+                            .foregroundColor(.red)
+                            .frame(width: 24, height: 24)
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Real-Time Barcode Detection")
+                                .font(.body)
+                            Text("Enable live barcode and QR code detection")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+
+                        Spacer()
+
+                        Toggle("", isOn: $viewModel.isRealTimeBarcodeDetectionEnabled)
+                            .labelsHidden()
+                    }
+                    .padding(.vertical, 4)
+
                     // Framework Selection (always visible)
                     VStack(alignment: .leading, spacing: 12) {
                         HStack {

@@ -18,6 +18,7 @@ class DetectionResultsManager: ObservableObject {
     @AppStorage("stored_object_detection_results") private var objectDetectionResultsData: Data = Data()
     @AppStorage("stored_classification_results") private var classificationResultsData: Data = Data()
     @AppStorage("stored_contour_detection_results") private var contourDetectionResultsData: Data = Data()
+    @AppStorage("stored_barcode_detection_results") private var barcodeDetectionResultsData: Data = Data()
 
     // MARK: - Published Properties
 
@@ -31,6 +32,9 @@ class DetectionResultsManager: ObservableObject {
         didSet { updateCachedValues() }
     }
     @Published var contourResults: [StoredContourDetectionResult] = [] {
+        didSet { updateCachedValues() }
+    }
+    @Published var barcodeResults: [StoredBarcodeDetectionResult] = [] {
         didSet { updateCachedValues() }
     }
     @Published var isLoading: Bool = true
@@ -246,7 +250,7 @@ class DetectionResultsManager: ObservableObject {
     @MainActor
     private func loadAllResults() async {
         // Load all results on background queue to avoid blocking main thread
-        let (ocrData, objectData, classificationData, contourData) = (ocrResultsData, objectDetectionResultsData, classificationResultsData, contourDetectionResultsData)
+        let (ocrData, objectData, classificationData, contourData, barcodeData) = (ocrResultsData, objectDetectionResultsData, classificationResultsData, contourDetectionResultsData, barcodeDetectionResultsData)
 
         let results = await withTaskGroup(of: (String, Any).self) { group in
             var loadedResults: [String: Any] = [:]
@@ -271,6 +275,11 @@ class DetectionResultsManager: ObservableObject {
                 return ("contours", contours)
             }
 
+            group.addTask {
+                let barcodes = await self.loadBarcodeDetectionResultsAsync(from: barcodeData)
+                return ("barcodes", barcodes)
+            }
+
             for await (key, value) in group {
                 loadedResults[key] = value
             }
@@ -290,6 +299,9 @@ class DetectionResultsManager: ObservableObject {
         }
         if let contourResults = results["contours"] as? [StoredContourDetectionResult] {
             self.contourResults = contourResults
+        }
+        if let barcodeResults = results["barcodes"] as? [StoredBarcodeDetectionResult] {
+            self.barcodeResults = barcodeResults
         }
 
         // Update cached values and mark loading as complete
@@ -345,6 +357,22 @@ class DetectionResultsManager: ObservableObject {
         }
     }
 
+    private func loadBarcodeDetectionResultsAsync(from data: Data) async -> [StoredBarcodeDetectionResult] {
+        guard !data.isEmpty else { return [] }
+
+        return await withCheckedContinuation { continuation in
+            DispatchQueue.global(qos: .userInitiated).async {
+                do {
+                    let results = try self.decoder.decode([StoredBarcodeDetectionResult].self, from: data)
+                    continuation.resume(returning: results)
+                } catch {
+                    print("Failed to load barcode detection results: \(error)")
+                    continuation.resume(returning: [])
+                }
+            }
+        }
+    }
+
     
 
     // MARK: - Statistics
@@ -358,7 +386,7 @@ class DetectionResultsManager: ObservableObject {
     }
 
     private func updateCachedValues() {
-        let newTotalCount = ocrResults.count + objectDetectionResults.count + classificationResults.count + contourResults.count
+        let newTotalCount = ocrResults.count + objectDetectionResults.count + classificationResults.count + contourResults.count + barcodeResults.count
         cachedTotalCount = newTotalCount
         cachedHasResults = newTotalCount > 0
     }
@@ -373,6 +401,68 @@ class DetectionResultsManager: ObservableObject {
             return classificationResults.count
         case .contourDetection:
             return contourResults.count
+        case .barcode:
+            return barcodeResults.count
+        }
+    }
+}
+
+// MARK: - Barcode Detection Results Management
+
+extension DetectionResultsManager {
+    func saveBarcodeResult(detectedBarcodes: [VNBarcodeObservation], image: UIImage) {
+        let newResult = StoredBarcodeDetectionResult(detectedBarcodes: detectedBarcodes, image: image)
+
+        barcodeResults.insert(newResult, at: 0)
+        if barcodeResults.count > maxResultsPerCategory {
+            barcodeResults = Array(barcodeResults.prefix(maxResultsPerCategory))
+        }
+
+        updateCachedValues()
+        saveBarcodeDetectionResults()
+    }
+
+    func clearBarcodeDetectionResults() {
+        barcodeResults.removeAll()
+        saveBarcodeDetectionResults()
+        updateCachedValues()
+    }
+
+    func deleteBarcodeDetectionResults(at offsets: IndexSet) {
+        barcodeResults.remove(atOffsets: offsets)
+        saveBarcodeDetectionResults()
+        updateCachedValues()
+    }
+
+    func deleteBarcodeDetectionResult(id: UUID) {
+        if let index = barcodeResults.firstIndex(where: { $0.id == id }) {
+            barcodeResults.remove(at: index)
+            saveBarcodeDetectionResults()
+            updateCachedValues()
+        }
+    }
+
+    private func saveBarcodeDetectionResults() {
+        let resultsToSave = barcodeResults
+        Task.detached(priority: .utility) {
+            do {
+                let data = try self.encoder.encode(resultsToSave)
+                await MainActor.run {
+                    self.barcodeDetectionResultsData = data
+                }
+            } catch {
+                print("Failed to save barcode detection results: \(error)")
+            }
+        }
+    }
+
+    private func loadBarcodeDetectionResults() {
+        guard !barcodeDetectionResultsData.isEmpty else { return }
+        do {
+            barcodeResults = try decoder.decode([StoredBarcodeDetectionResult].self, from: barcodeDetectionResultsData)
+        } catch {
+            print("Failed to load barcode detection results: \(error)")
+            barcodeResults = []
         }
     }
 }
@@ -384,6 +474,7 @@ enum DetectionCategory: String, CaseIterable, Hashable {
     case objectDetection = "Object Detection"
     case classification = "Classification"
     case contourDetection = "Contour Detection"
+    case barcode = "Barcode"
 
     var icon: String {
         switch self {
@@ -395,6 +486,8 @@ enum DetectionCategory: String, CaseIterable, Hashable {
             return "brain.head.profile"
         case .contourDetection:
             return "square.dashed"
+        case .barcode:
+            return "barcode.viewfinder"
         }
     }
 
@@ -408,6 +501,8 @@ enum DetectionCategory: String, CaseIterable, Hashable {
             return .green
         case .contourDetection:
             return .orange
+        case .barcode:
+            return .red
         }
     }
 }
@@ -492,6 +587,7 @@ extension DetectionResultsManager {
         clearObjectDetectionResults()
         clearClassificationResults()
         clearContourDetectionResults()
+        clearBarcodeDetectionResults()
         updateCachedValues()
     }
 }

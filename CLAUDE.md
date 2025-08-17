@@ -74,6 +74,14 @@ swiftlint --autocorrect
 swiftlint lint --path apus/Features/Camera/Views/CameraView.swift
 ```
 
+### SwiftLint Configuration
+- **Configuration**: `.swiftlint.yml` with pragmatic thresholds optimized for SwiftUI development
+- **Line length**: 180 warning, 220 error (ignores comments, URLs, interpolated strings)
+- **Function body**: 120 warning, 170 error lines
+- **Type body**: 400 warning, 600 error lines
+- **File length**: 500 warning, 800 error lines
+- **Disabled rules**: `multiple_closures_with_trailing_closure`, `orphaned_doc_comment`, `no_fallthrough_only` for SwiftUI ergonomics
+
 ### Testing via Xcode
 - **All tests**: Xcode Test Navigator (⌘+6) or Product → Test (⌘+U)
 - **Test structure**: Comprehensive unit tests with dependency injection and mocking

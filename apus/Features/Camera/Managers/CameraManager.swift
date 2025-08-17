@@ -14,6 +14,7 @@ class CameraManager: NSObject, ObservableObject, CameraManagerProtocol {
     @Published var isSessionRunning = false
     @Published var isFlashOn = false
     @Published var currentZoomFactor: CGFloat = 1.0
+    @Published var imageSize: CGSize = .zero
 
     let session = AVCaptureSession()
     private var videoOutput = AVCaptureVideoDataOutput()
@@ -108,6 +109,12 @@ class CameraManager: NSObject, ObservableObject, CameraManagerProtocol {
             if connection.isVideoOrientationSupported {
                 connection.videoOrientation = .portrait
             }
+        }
+
+        // Set the image size
+        if let formatDescription = videoDevice?.activeFormat.formatDescription {
+            let dimensions = CMVideoFormatDescriptionGetDimensions(formatDescription)
+            imageSize = CGSize(width: CGFloat(dimensions.width), height: CGFloat(dimensions.height))
         }
     }
 

@@ -187,6 +187,44 @@ extension PreviewView {
         }
     }
 
+    // MARK: - Barcode Detection Actions
+    func toggleBarcodes() {
+        guard let image = processingImage else { return }
+
+        if showingBarcodes {
+            showingBarcodes = false
+            detectedBarcodes = []
+        } else {
+            if hasDetectedBarcodes {
+                detectedBarcodes = cachedBarcodes
+                showingBarcodes = true
+            } else {
+                performBarcodeDetection(on: image)
+            }
+        }
+    }
+
+    func performBarcodeDetection(on image: UIImage) {
+        isDetectingBarcodes = true
+
+        barcodeDetectionManager.detectBarcodes(on: image) { [self] barcodes in
+            DispatchQueue.main.async {
+                self.isDetectingBarcodes = false
+
+                self.detectedBarcodes = barcodes
+                self.cachedBarcodes = barcodes
+                self.hasDetectedBarcodes = true
+                self.showingBarcodes = true
+
+                // Save to results manager
+                self.detectionResultsManager.saveBarcodeResult(
+                    detectedBarcodes: barcodes,
+                    image: image
+                )
+            }
+        }
+    }
+
     // Combined OCR + Classification pipeline removed.
     // OCR is text detection + text recognition handled by VisionTextRecognitionManager.
     // Image classification is a separate workflow via ImageClassificationManager.

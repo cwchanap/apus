@@ -39,6 +39,11 @@ struct PreviewView: View {
     @State var hasDetectedTexts = false
     @State var historyPath: [DetectionCategory] = []
     @State private var showingActionsSheet = false
+    @State var detectedBarcodes: [VNBarcodeObservation] = []
+    @State var showingBarcodes = false
+    @State var isDetectingBarcodes = false
+    @State var cachedBarcodes: [VNBarcodeObservation] = []
+    @State var hasDetectedBarcodes = false
 
     // Injected dependencies
     @Injected var imageClassificationManager: ImageClassificationProtocol
@@ -47,6 +52,7 @@ struct PreviewView: View {
     @Injected var unifiedObjectDetectionManager: UnifiedObjectDetectionProtocol
     @Injected var textRecognitionManager: VisionTextRecognitionProtocol
     @Injected var detectionResultsManager: DetectionResultsManager
+    @Injected var barcodeDetectionManager: BarcodeDetectionProtocol
 
     var body: some View {
         GeometryReader { _ in

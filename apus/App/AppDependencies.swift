@@ -97,6 +97,10 @@ class AppDependencies: ObservableObject {
         // Register detection results manager as singleton instance
         let detectionResultsManager = DetectionResultsManager()
         container.register(DetectionResultsManager.self, instance: detectionResultsManager)
+
+        // Register barcode detection manager as singleton instance
+        let barcodeDetectionManager = BarcodeDetectionManager()
+        container.register(BarcodeDetectionProtocol.self, instance: barcodeDetectionManager)
     }
 
     // MARK: - Service Dependencies
@@ -151,6 +155,10 @@ class AppDependencies: ObservableObject {
             VisionTextRecognitionProvider() as any VisionTextRecognitionProtocol
         }
 
+        container.register(BarcodeDetectionProtocol.self) {
+            MockBarcodeDetectionManager() as any BarcodeDetectionProtocol
+        }
+
         // Register mock services
         container.register(PermissionServiceProtocol.self) {
             MockPermissionService() as any PermissionServiceProtocol
@@ -177,6 +185,7 @@ class MockCameraManager: ObservableObject, CameraManagerProtocol {
     @Published var isSessionRunning = false
     @Published var isFlashOn = false
     @Published var currentZoomFactor: CGFloat = 1.0
+    @Published var imageSize: CGSize = .zero
 
     let session = AVCaptureSession()
 

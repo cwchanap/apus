@@ -50,6 +50,12 @@ class AppSettings: ObservableObject {
         }
     }
 
+    @Published var isRealTimeBarcodeDetectionEnabled: Bool {
+        didSet {
+            UserDefaults.standard.set(isRealTimeBarcodeDetectionEnabled, forKey: UserDefaults.Keys.isRealTimeBarcodeDetectionEnabled)
+        }
+    }
+
     @Published var objectDetectionFramework: ObjectDetectionFramework {
         didSet {
             UserDefaults.standard.set(objectDetectionFramework.rawValue, forKey: UserDefaults.Keys.objectDetectionFramework)
@@ -59,6 +65,7 @@ class AppSettings: ObservableObject {
     private init() {
         // Load saved settings or defaults
         self.isRealTimeObjectDetectionEnabled = UserDefaults.standard.object(forKey: UserDefaults.Keys.isRealTimeObjectDetectionEnabled) as? Bool ?? true
+        self.isRealTimeBarcodeDetectionEnabled = UserDefaults.standard.object(forKey: UserDefaults.Keys.isRealTimeBarcodeDetectionEnabled) as? Bool ?? true
 
         let frameworkRawValue = UserDefaults.standard.string(forKey: UserDefaults.Keys.objectDetectionFramework) ?? ObjectDetectionFramework.vision.rawValue
         self.objectDetectionFramework = ObjectDetectionFramework(rawValue: frameworkRawValue) ?? .vision
@@ -66,6 +73,7 @@ class AppSettings: ObservableObject {
 
     func resetToDefaults() {
         isRealTimeObjectDetectionEnabled = true
+        isRealTimeBarcodeDetectionEnabled = true
         objectDetectionFramework = .vision
     }
 }
@@ -74,6 +82,7 @@ class AppSettings: ObservableObject {
 extension UserDefaults {
     enum Keys {
         static let isRealTimeObjectDetectionEnabled = "isRealTimeObjectDetectionEnabled"
+        static let isRealTimeBarcodeDetectionEnabled = "isRealTimeBarcodeDetectionEnabled"
         static let objectDetectionFramework = "objectDetectionFramework"
     }
 }

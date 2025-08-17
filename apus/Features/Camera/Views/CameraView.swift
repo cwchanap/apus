@@ -29,6 +29,11 @@ struct CameraView: View {
                 // Object detection overlay - fill entire screen
                 ObjectDetectionOverlay(detections: viewModel.detections)
 
+                // Barcode detection overlay
+                if viewModel.isRealTimeBarcodeDetectionEnabled {
+                    BarcodeOverlayView(barcodes: viewModel.detectedBarcodes, imageSize: viewModel.imageSize, displaySize: geometry.size)
+                }
+
                 // Camera controls - respect safe areas for interaction
                 CameraControlsView(viewModel: viewModel)
             }

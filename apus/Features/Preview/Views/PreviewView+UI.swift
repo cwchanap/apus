@@ -10,128 +10,6 @@ import SwiftUI
 // MARK: - PreviewView UI Components Extension
 extension PreviewView {
 
-    // MARK: - Action Buttons View
-    @ViewBuilder
-    func actionButtonsView() -> some View {
-        VStack(spacing: 12) {
-            // First row: OCR + Classification and Object Detection
-            HStack(spacing: 12) {
-                // Classification button
-                Button(action: {
-                    hapticService.actionFeedback()
-                    toggleClassification()
-                }) {
-                    HStack(spacing: 4) {
-                        if isClassifying {
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                .scaleEffect(0.7)
-                            Text("Classifying...")
-                                .font(.caption)
-                        } else {
-                            Image(systemName: showingClassificationResults ? "brain.head.profile.fill" : "brain.head.profile")
-                                .font(.caption)
-                            Text(getClassificationButtonText())
-                                .font(.caption)
-                        }
-                    }
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .background(getClassificationButtonColor())
-                    .clipShape(Capsule())
-                }
-                .disabled(isClassifying)
-
-                // Object detection button
-                Button(action: {
-                    hapticService.actionFeedback()
-                    toggleObjects()
-                }) {
-                    HStack(spacing: 4) {
-                        if isDetectingObjects {
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                .scaleEffect(0.7)
-                            Text("Detecting...")
-                                .font(.caption)
-                        } else {
-                            Image(systemName: showingObjects ? "viewfinder.circle.fill" : "viewfinder.circle")
-                                .font(.caption)
-                            Text(getObjectButtonText())
-                                .font(.caption)
-                        }
-                    }
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .background(getObjectButtonColor())
-                    .clipShape(Capsule())
-                }
-                .disabled(isDetectingObjects)
-            }
-
-            // Second row: Contour Detection
-            HStack(spacing: 12) {
-                // Contour detection button
-                Button(action: {
-                    hapticService.actionFeedback()
-                    toggleContours()
-                }) {
-                    HStack(spacing: 4) {
-                        if isDetectingContours {
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                .scaleEffect(0.7)
-                            Text("Detecting...")
-                                .font(.caption)
-                        } else {
-                            Image(systemName: showingContours ? "eye.slash" : "eye")
-                                .font(.caption)
-                            Text(getContourButtonText())
-                                .font(.caption)
-                        }
-                    }
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .background(getContourButtonColor())
-                    .clipShape(Capsule())
-                }
-                .disabled(isDetectingContours)
-
-                // Text recognition (OCR) button
-                Button(action: {
-                    hapticService.actionFeedback()
-                    toggleTextRecognition()
-                }) {
-                    HStack(spacing: 4) {
-                        if isDetectingTexts {
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: .white))
-                                .scaleEffect(0.7)
-                            Text("Reading Text...")
-                                .font(.caption)
-                        } else {
-                            Image(systemName: showingTexts ? "textformat.abc" : "textformat")
-                                .font(.caption)
-                            Text(getTextRecognitionButtonText())
-                                .font(.caption)
-                        }
-                    }
-                    .foregroundColor(.white)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-                    .background(getTextRecognitionButtonColor())
-                    .clipShape(Capsule())
-                }
-                .disabled(isDetectingTexts)
-
-                Spacer() // Fill remaining space
-            }
-        }
-    }
-
     // MARK: - Classification Results Overlay
     @ViewBuilder
     func classificationResultsOverlayView() -> some View {
@@ -261,6 +139,25 @@ extension PreviewView {
                         }
                     }
                     .disabled(isDetectingTexts)
+
+                    // Barcode Detection
+                    Button {
+                        hapticService.actionFeedback()
+                        toggleBarcodes()
+                        showSheet.wrappedValue = false
+                    } label: {
+                        HStack {
+                            Image(systemName: "barcode.viewfinder")
+                                .foregroundColor(.accentColor)
+                            if isDetectingBarcodes {
+                                Text("Detecting…")
+                            } else {
+                                Text(getBarcodeButtonText())
+                            }
+                            Spacer()
+                        }
+                    }
+                    .disabled(isDetectingBarcodes)
                 }
 
                 Section(header: Text("Photo")) {
@@ -419,6 +316,15 @@ extension PreviewView {
             if showingTexts && !detectedTexts.isEmpty {
                 VisionTextRecognitionOverlay(
                     detectedTexts: detectedTexts,
+                    imageSize: image.size,
+                    displaySize: geometry.size
+                )
+            }
+
+            // Barcode detection overlay
+            if showingBarcodes && !detectedBarcodes.isEmpty {
+                BarcodeOverlayView(
+                    barcodes: detectedBarcodes,
                     imageSize: image.size,
                     displaySize: geometry.size
                 )

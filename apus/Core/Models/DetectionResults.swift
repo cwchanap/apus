@@ -293,3 +293,57 @@ struct StoredDetectedContour: Codable, Identifiable {
         self.type = contour.contourType.rawValue
     }
 }
+
+// MARK: - Stored Barcode Detection Results
+
+/// Stored barcode detection result
+struct StoredBarcodeDetectionResult: Codable, Identifiable {
+    let id = UUID()
+    let timestamp: Date
+    let detectedBarcodes: [StoredDetectedBarcode]
+    let imageData: Data
+    let imageSize: CGSize
+    let thumbnailData: Data?
+
+    init(detectedBarcodes: [VNBarcodeObservation], image: UIImage) {
+        self.timestamp = Date()
+        self.detectedBarcodes = detectedBarcodes.map { StoredDetectedBarcode(from: $0) }
+        self.imageData = image.jpegData(compressionQuality: 0.7) ?? Data()
+        self.imageSize = image.size
+        let maxThumb: CGFloat = 160
+        let thumb = image.resizedMaintainingAspectRatio(to: CGSize(width: maxThumb, height: maxThumb))
+        self.thumbnailData = thumb.jpegData(compressionQuality: 0.6)
+    }
+
+    var image: UIImage? {
+        return UIImage(data: imageData)
+    }
+
+    var thumbnailImage: UIImage? {
+        if let data = thumbnailData { return UIImage(data: data) }
+        guard let full = UIImage(data: imageData) else { return nil }
+        let maxThumb: CGFloat = 160
+        let thumb = full.resizedMaintainingAspectRatio(to: CGSize(width: maxThumb, height: maxThumb))
+        return thumb
+    }
+
+    var totalBarcodeCount: Int {
+        return detectedBarcodes.count
+    }
+}
+
+/// Stored detected barcode (simplified for storage)
+struct StoredDetectedBarcode: Codable, Identifiable {
+    let id = UUID()
+    let payload: String
+    let symbology: String
+    let boundingBox: CGRect
+    let confidence: Float
+
+    init(from barcode: VNBarcodeObservation) {
+        self.payload = barcode.payloadStringValue ?? ""
+        self.symbology = barcode.symbology.rawValue.rawValue
+        self.boundingBox = barcode.boundingBox
+        self.confidence = barcode.confidence
+    }
+}

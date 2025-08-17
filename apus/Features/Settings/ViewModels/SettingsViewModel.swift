@@ -16,12 +16,14 @@ class SettingsViewModel: ObservableObject {
 
     // MARK: - Published Properties (for direct binding)
     @Published var isRealTimeObjectDetectionEnabled: Bool = true
+    @Published var isRealTimeBarcodeDetectionEnabled: Bool = true
     @Published var objectDetectionFramework: ObjectDetectionFramework = .vision
 
     // MARK: - Initialization
     init() {
         // Initialize with current settings
         self.isRealTimeObjectDetectionEnabled = appSettings.isRealTimeObjectDetectionEnabled
+        self.isRealTimeBarcodeDetectionEnabled = appSettings.isRealTimeBarcodeDetectionEnabled
         self.objectDetectionFramework = appSettings.objectDetectionFramework
 
         // Set up two-way binding
@@ -35,6 +37,15 @@ class SettingsViewModel: ObservableObject {
             .sink { [weak self] newValue in
                 if self?.isRealTimeObjectDetectionEnabled != newValue {
                     self?.isRealTimeObjectDetectionEnabled = newValue
+                }
+            }
+            .store(in: &cancellables)
+
+        appSettings.$isRealTimeBarcodeDetectionEnabled
+            .removeDuplicates()
+            .sink { [weak self] newValue in
+                if self?.isRealTimeBarcodeDetectionEnabled != newValue {
+                    self?.isRealTimeBarcodeDetectionEnabled = newValue
                 }
             }
             .store(in: &cancellables)
@@ -62,6 +73,16 @@ class SettingsViewModel: ObservableObject {
                         let manager: ObjectDetectionProtocol = DIContainer.shared.resolve(ObjectDetectionProtocol.self)
                         manager.preload()
                     }
+                }
+            }
+            .store(in: &cancellables)
+
+        $isRealTimeBarcodeDetectionEnabled
+            .dropFirst() // Skip initial value
+            .removeDuplicates()
+            .sink { [weak self] newValue in
+                if self?.appSettings.isRealTimeBarcodeDetectionEnabled != newValue {
+                    self?.appSettings.isRealTimeBarcodeDetectionEnabled = newValue
                 }
             }
             .store(in: &cancellables)

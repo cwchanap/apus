@@ -11,10 +11,10 @@ import UIKit
 import CoreVideo
 
 protocol CameraManagerProtocol: ObservableObject {
-    var session: AVCaptureSession { get }
     var isSessionRunning: Bool { get }
     var isFlashOn: Bool { get }
     var currentZoomFactor: CGFloat { get }
+    var imageSize: CGSize { get }
 
     func startSession()
     func stopSession()
@@ -22,5 +22,4 @@ protocol CameraManagerProtocol: ObservableObject {
     func toggleFlash()
     func zoom(factor: CGFloat)
     func setObjectDetectionHandler(_ handler: @escaping (CVPixelBuffer) -> Void)
-    func processFrame(_ pixelBuffer: CVPixelBuffer)
 }

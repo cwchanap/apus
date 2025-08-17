@@ -14,6 +14,7 @@ final class CameraViewModelTests: XCTestCase {
     var sut: CameraViewModel!
     var mockCameraManager: MockCameraManager!
     var mockObjectDetectionManager: MockObjectDetectionManager!
+    var mockBarcodeDetectionManager: MockBarcodeDetectionManager!
     var testContainer: TestDIContainer!
     var cancellables: Set<AnyCancellable>!
 
@@ -24,13 +25,15 @@ final class CameraViewModelTests: XCTestCase {
         testContainer = TestDIContainer()
         mockCameraManager = MockCameraManager()
         mockObjectDetectionManager = MockObjectDetectionManager()
+        mockBarcodeDetectionManager = MockBarcodeDetectionManager()
 
         // Register test dependencies
         testContainer.register(CameraManagerProtocol.self, instance: mockCameraManager)
         testContainer.register(ObjectDetectionProtocol.self, instance: mockObjectDetectionManager)
+        testContainer.register(BarcodeDetectionProtocol.self, instance: mockBarcodeDetectionManager)
 
         // Create view model with test dependencies
-        sut = CameraViewModel(cameraManager: mockCameraManager, objectDetectionManager: mockObjectDetectionManager)
+        sut = CameraViewModel(cameraManager: mockCameraManager, objectDetectionManager: mockObjectDetectionManager, barcodeDetectionManager: mockBarcodeDetectionManager)
         cancellables = Set<AnyCancellable>()
     }
 
@@ -38,6 +41,7 @@ final class CameraViewModelTests: XCTestCase {
         sut = nil
         mockCameraManager = nil
         mockObjectDetectionManager = nil
+        mockBarcodeDetectionManager = nil
         testContainer = nil
         cancellables = nil
         try await super.tearDown()

@@ -17,10 +17,12 @@ class CameraViewModel: ObservableObject {
     @Published var showingImagePicker = false
     @Published var isFlashOn = false
     @Published var currentZoomFactor: CGFloat = 1.0
+    @Published var detectedBarcodes: [VNBarcodeObservation] = []
 
     // MARK: - Dependencies (Injected)
     @Injected private var cameraManager: CameraManagerProtocol
     @Injected private var objectDetectionManager: ObjectDetectionProtocol
+    @Injected private var barcodeDetectionManager: BarcodeDetectionProtocol
 
     // MARK: - Settings
     @ObservedObject private var appSettings = AppSettings.shared
@@ -42,9 +44,17 @@ class CameraViewModel: ObservableObject {
         return appSettings.isRealTimeObjectDetectionEnabled
     }
 
+    var isRealTimeBarcodeDetectionEnabled: Bool {
+        return appSettings.isRealTimeBarcodeDetectionEnabled
+    }
+
     // Expose concrete camera manager for UI components that need it
     var concreteCameraManager: CameraManager? {
         return cameraManager as? CameraManager
+    }
+
+    var imageSize: CGSize {
+        return cameraManager.imageSize
     }
 
     // MARK: - Initialization
@@ -53,10 +63,11 @@ class CameraViewModel: ObservableObject {
     }
 
     // MARK: - Alternative initializer for testing
-    init(cameraManager: CameraManagerProtocol, objectDetectionManager: ObjectDetectionProtocol) {
+    init(cameraManager: CameraManagerProtocol, objectDetectionManager: ObjectDetectionProtocol, barcodeDetectionManager: BarcodeDetectionProtocol) {
         // Register test dependencies
         DIContainer.shared.register(CameraManagerProtocol.self, instance: cameraManager)
         DIContainer.shared.register(ObjectDetectionProtocol.self, instance: objectDetectionManager)
+        DIContainer.shared.register(BarcodeDetectionProtocol.self, instance: barcodeDetectionManager)
         setupBindings()
     }
 
@@ -64,8 +75,23 @@ class CameraViewModel: ObservableObject {
     private func setupBindings() {
         // Set up object detection processing with settings check
         cameraManager.setObjectDetectionHandler { [weak self] pixelBuffer in
-            guard let self = self, self.appSettings.isRealTimeObjectDetectionEnabled else { return }
-            self.objectDetectionManager.processFrame(pixelBuffer)
+            guard let self = self else { return }
+            if self.appSettings.isRealTimeObjectDetectionEnabled {
+                self.objectDetectionManager.processFrame(pixelBuffer)
+            }
+            if self.appSettings.isRealTimeBarcodeDetectionEnabled {
+                // Convert CVPixelBuffer to UIImage
+                let ciImage = CIImage(cvPixelBuffer: pixelBuffer)
+                let context = CIContext()
+                guard let cgImage = context.createCGImage(ciImage, from: ciImage.extent) else { return }
+                let image = UIImage(cgImage: cgImage)
+                
+                self.barcodeDetectionManager.detectBarcodes(on: image) { barcodes in
+                    DispatchQueue.main.async {
+                        self.detectedBarcodes = barcodes
+                    }
+                }
+            }
         }
     }
 
