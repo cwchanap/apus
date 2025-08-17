@@ -219,6 +219,10 @@ struct RecentResultsPreview: View {
                         ForEach(Array(resultsManager.classificationResults.prefix(maxItems))) { result in
                             RecentClassificationRow(result: result)
                         }
+                    case .contourDetection:
+                        ForEach(Array(resultsManager.contourResults.prefix(maxItems))) { result in
+                            RecentContourRow(result: result)
+                        }
                     }
                 }
             }
@@ -320,6 +324,39 @@ struct RecentClassificationRow: View {
                         .font(.caption2)
                         .foregroundColor(.secondary)
                 }
+            }
+
+            Spacer()
+
+            Text(result.timestamp, style: .relative)
+                .font(.caption2)
+                .foregroundColor(Color.secondary)
+        }
+    }
+}
+
+struct RecentContourRow: View {
+    let result: StoredContourDetectionResult
+
+    var body: some View {
+        HStack(spacing: 8) {
+            if let image = result.thumbnailImage ?? result.image {
+                Image(uiImage: image)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: 40, height: 40)
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
+            }
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(result.totalContourCount == 0 ? "No contours" : "\(result.totalContourCount) contours")
+                    .font(.caption)
+                    .lineLimit(1)
+                    .foregroundColor(.primary)
+
+                Text("Avg conf \(Int(result.averageConfidence * 100))%")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
             }
 
             Spacer()

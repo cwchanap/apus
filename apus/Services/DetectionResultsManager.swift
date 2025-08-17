@@ -17,6 +17,7 @@ class DetectionResultsManager: ObservableObject {
     @AppStorage("stored_ocr_results") private var ocrResultsData: Data = Data()
     @AppStorage("stored_object_detection_results") private var objectDetectionResultsData: Data = Data()
     @AppStorage("stored_classification_results") private var classificationResultsData: Data = Data()
+    @AppStorage("stored_contour_detection_results") private var contourDetectionResultsData: Data = Data()
 
     // MARK: - Published Properties
 
@@ -27,6 +28,9 @@ class DetectionResultsManager: ObservableObject {
         didSet { updateCachedValues() }
     }
     @Published var classificationResults: [StoredClassificationResult] = [] {
+        didSet { updateCachedValues() }
+    }
+    @Published var contourResults: [StoredContourDetectionResult] = [] {
         didSet { updateCachedValues() }
     }
     @Published var isLoading: Bool = true
@@ -242,7 +246,7 @@ class DetectionResultsManager: ObservableObject {
     @MainActor
     private func loadAllResults() async {
         // Load all results on background queue to avoid blocking main thread
-        let (ocrData, objectData, classificationData) = (ocrResultsData, objectDetectionResultsData, classificationResultsData)
+        let (ocrData, objectData, classificationData, contourData) = (ocrResultsData, objectDetectionResultsData, classificationResultsData, contourDetectionResultsData)
 
         let results = await withTaskGroup(of: (String, Any).self) { group in
             var loadedResults: [String: Any] = [:]
@@ -262,6 +266,11 @@ class DetectionResultsManager: ObservableObject {
                 return ("classifications", classifications)
             }
 
+            group.addTask {
+                let contours = await self.loadContourDetectionResultsAsync(from: contourData)
+                return ("contours", contours)
+            }
+
             for await (key, value) in group {
                 loadedResults[key] = value
             }
@@ -278,6 +287,9 @@ class DetectionResultsManager: ObservableObject {
         }
         if let classificationResults = results["classifications"] as? [StoredClassificationResult] {
             self.classificationResults = classificationResults
+        }
+        if let contourResults = results["contours"] as? [StoredContourDetectionResult] {
+            self.contourResults = contourResults
         }
 
         // Update cached values and mark loading as complete
@@ -333,12 +345,7 @@ class DetectionResultsManager: ObservableObject {
         }
     }
 
-    func clearAllResults() {
-        clearOCRResults()
-        clearObjectDetectionResults()
-        clearClassificationResults()
-        updateCachedValues()
-    }
+    
 
     // MARK: - Statistics
 
@@ -351,7 +358,7 @@ class DetectionResultsManager: ObservableObject {
     }
 
     private func updateCachedValues() {
-        let newTotalCount = ocrResults.count + objectDetectionResults.count + classificationResults.count
+        let newTotalCount = ocrResults.count + objectDetectionResults.count + classificationResults.count + contourResults.count
         cachedTotalCount = newTotalCount
         cachedHasResults = newTotalCount > 0
     }
@@ -364,6 +371,8 @@ class DetectionResultsManager: ObservableObject {
             return objectDetectionResults.count
         case .classification:
             return classificationResults.count
+        case .contourDetection:
+            return contourResults.count
         }
     }
 }
@@ -374,6 +383,7 @@ enum DetectionCategory: String, CaseIterable, Hashable {
     case ocr = "OCR"
     case objectDetection = "Object Detection"
     case classification = "Classification"
+    case contourDetection = "Contour Detection"
 
     var icon: String {
         switch self {
@@ -383,6 +393,8 @@ enum DetectionCategory: String, CaseIterable, Hashable {
             return "viewfinder"
         case .classification:
             return "brain.head.profile"
+        case .contourDetection:
+            return "square.dashed"
         }
     }
 
@@ -394,6 +406,92 @@ enum DetectionCategory: String, CaseIterable, Hashable {
             return .blue
         case .classification:
             return .green
+        case .contourDetection:
+            return .orange
         }
+    }
+}
+
+// MARK: - Contour Detection Results Management
+
+extension DetectionResultsManager {
+    func saveContourDetectionResult(detectedContours: [DetectedContour], image: UIImage) {
+        let newResult = StoredContourDetectionResult(detectedContours: detectedContours, image: image)
+
+        contourResults.insert(newResult, at: 0)
+        if contourResults.count > maxResultsPerCategory {
+            contourResults = Array(contourResults.prefix(maxResultsPerCategory))
+        }
+
+        updateCachedValues()
+        saveContourDetectionResults()
+    }
+
+    func clearContourDetectionResults() {
+        contourResults.removeAll()
+        saveContourDetectionResults()
+        updateCachedValues()
+    }
+
+    func deleteContourDetectionResults(at offsets: IndexSet) {
+        contourResults.remove(atOffsets: offsets)
+        saveContourDetectionResults()
+        updateCachedValues()
+    }
+
+    func deleteContourDetectionResult(id: UUID) {
+        if let index = contourResults.firstIndex(where: { $0.id == id }) {
+            contourResults.remove(at: index)
+            saveContourDetectionResults()
+            updateCachedValues()
+        }
+    }
+
+    private func saveContourDetectionResults() {
+        let resultsToSave = contourResults
+        Task.detached(priority: .utility) {
+            do {
+                let data = try self.encoder.encode(resultsToSave)
+                await MainActor.run {
+                    self.contourDetectionResultsData = data
+                }
+            } catch {
+                print("Failed to save contour detection results: \(error)")
+            }
+        }
+    }
+
+    private func loadContourDetectionResults() {
+        guard !contourDetectionResultsData.isEmpty else { return }
+        do {
+            contourResults = try decoder.decode([StoredContourDetectionResult].self, from: contourDetectionResultsData)
+        } catch {
+            print("Failed to load contour detection results: \(error)")
+            contourResults = []
+        }
+    }
+
+    private func loadContourDetectionResultsAsync(from data: Data) async -> [StoredContourDetectionResult] {
+        guard !data.isEmpty else { return [] }
+
+        return await withCheckedContinuation { continuation in
+            DispatchQueue.global(qos: .userInitiated).async {
+                do {
+                    let results = try self.decoder.decode([StoredContourDetectionResult].self, from: data)
+                    continuation.resume(returning: results)
+                } catch {
+                    print("Failed to load contour detection results: \(error)")
+                    continuation.resume(returning: [])
+                }
+            }
+        }
+    }
+
+    func clearAllResults() {
+        clearOCRResults()
+        clearObjectDetectionResults()
+        clearClassificationResults()
+        clearContourDetectionResults()
+        updateCachedValues()
     }
 }

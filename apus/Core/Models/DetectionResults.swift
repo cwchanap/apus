@@ -7,6 +7,7 @@
 
 import Foundation
 import UIKit
+import CoreGraphics
 
 // MARK: - Stored Detection Results
 
@@ -218,5 +219,77 @@ struct StoredClassification: Codable, Identifiable {
 extension ObjectDetectionFramework {
     static var allCases: [ObjectDetectionFramework] {
         return [.vision, .tensorflowLite]
+    }
+}
+
+// MARK: - Stored Contour Detection Results
+
+/// Stored contour detection result
+struct StoredContourDetectionResult: Codable, Identifiable {
+    let id = UUID()
+    let timestamp: Date
+    let detectedContours: [StoredDetectedContour]
+    let imageData: Data
+    let imageSize: CGSize
+    let thumbnailData: Data?
+
+    init(detectedContours: [DetectedContour], image: UIImage) {
+        self.timestamp = Date()
+        self.detectedContours = detectedContours.map { StoredDetectedContour(from: $0) }
+        self.imageData = image.jpegData(compressionQuality: 0.7) ?? Data()
+        self.imageSize = image.size
+        let maxThumb: CGFloat = 160
+        let thumb = image.resizedMaintainingAspectRatio(to: CGSize(width: maxThumb, height: maxThumb))
+        self.thumbnailData = thumb.jpegData(compressionQuality: 0.6)
+    }
+
+    var image: UIImage? {
+        return UIImage(data: imageData)
+    }
+
+    var thumbnailImage: UIImage? {
+        if let data = thumbnailData { return UIImage(data: data) }
+        guard let full = UIImage(data: imageData) else { return nil }
+        let maxThumb: CGFloat = 160
+        let thumb = full.resizedMaintainingAspectRatio(to: CGSize(width: maxThumb, height: maxThumb))
+        return thumb
+    }
+
+    var totalContourCount: Int {
+        return detectedContours.count
+    }
+
+    var averageConfidence: Float {
+        guard !detectedContours.isEmpty else { return 0.0 }
+        let total = detectedContours.reduce(0.0) { $0 + $1.confidence }
+        return total / Float(detectedContours.count)
+    }
+
+    var typeBreakdown: [String: Int] {
+        var counts: [String: Int] = [:]
+        for contour in detectedContours {
+            counts[contour.type] = (counts[contour.type] ?? 0) + 1
+        }
+        return counts
+    }
+}
+
+/// Stored detected contour (simplified for storage)
+struct StoredDetectedContour: Codable, Identifiable {
+    let id = UUID()
+    let points: [CGPoint]
+    let boundingBox: CGRect
+    let confidence: Float
+    let aspectRatio: Float
+    let area: Float
+    let type: String
+
+    init(from contour: DetectedContour) {
+        self.points = contour.points
+        self.boundingBox = contour.boundingBox
+        self.confidence = contour.confidence
+        self.aspectRatio = contour.aspectRatio
+        self.area = contour.area
+        self.type = contour.contourType.rawValue
     }
 }

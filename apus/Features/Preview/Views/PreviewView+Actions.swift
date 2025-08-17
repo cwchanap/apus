@@ -86,6 +86,12 @@ extension PreviewView {
                     self.hasDetectedContours = true
                     self.showingContours = true
 
+                    // Save to results manager
+                    self.detectionResultsManager.saveContourDetectionResult(
+                        detectedContours: contours,
+                        image: image
+                    )
+
                 case .failure(let error):
                     self.showAlert(message: "Contour detection failed: \(error.localizedDescription)")
                 }

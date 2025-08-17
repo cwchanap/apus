@@ -101,6 +101,13 @@ struct ResultsDashboardView: View {
                                             maxCount: 10,
                                             color: .green
                                         )
+
+                                        StorageInfoRow(
+                                            label: "Contour Detection",
+                                            count: resultsManager.contourResults.count,
+                                            maxCount: 10,
+                                            color: .orange
+                                        )
                                     }
 
                                     Text("Only the most recent 10 results are kept for each category")
@@ -141,7 +148,7 @@ struct ResultsDashboardView: View {
                                             resultsManager.clearAllResults()
                                         }
                                     } message: {
-                                        Text("This will remove all OCR, Object Detection, and Classification results. This action cannot be undone.")
+                                        Text("This will remove all OCR, Object Detection, Classification, and Contour results. This action cannot be undone.")
                                     }
                                 }
                                 .padding()
@@ -244,6 +251,8 @@ struct CategoryResultsView: View {
                 ObjectDetectionResultsView()
             case .classification:
                 ClassificationResultsView()
+            case .contourDetection:
+                ContourDetectionResultsView()
             }
         }
     }
