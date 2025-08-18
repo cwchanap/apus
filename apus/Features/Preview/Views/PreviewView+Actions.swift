@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Photos
+import Vision
 
 // MARK: - PreviewView Action Methods Extension
 extension PreviewView {
@@ -207,7 +208,7 @@ extension PreviewView {
     func performBarcodeDetection(on image: UIImage) {
         isDetectingBarcodes = true
 
-        barcodeDetectionManager.detectBarcodes(on: image) { [self] barcodes in
+        barcodeDetectionManager.detectBarcodes(on: image) { [self] (barcodes: [VNBarcodeObservation]) in
             DispatchQueue.main.async {
                 self.isDetectingBarcodes = false
 

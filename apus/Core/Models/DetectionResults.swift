@@ -8,6 +8,7 @@
 import Foundation
 import UIKit
 import CoreGraphics
+import Vision
 
 // MARK: - Stored Detection Results
 
@@ -342,7 +343,7 @@ struct StoredDetectedBarcode: Codable, Identifiable {
 
     init(from barcode: VNBarcodeObservation) {
         self.payload = barcode.payloadStringValue ?? ""
-        self.symbology = barcode.symbology.rawValue.rawValue
+        self.symbology = barcode.symbology.rawValue
         self.boundingBox = barcode.boundingBox
         self.confidence = barcode.confidence
     }

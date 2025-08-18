@@ -8,6 +8,7 @@
 
 import SwiftUI
 import Photos
+import Vision
 
 struct PreviewView: View {
     @Binding var capturedImage: UIImage?

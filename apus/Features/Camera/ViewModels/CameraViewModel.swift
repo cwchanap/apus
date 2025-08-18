@@ -9,6 +9,7 @@ import SwiftUI
 import AVFoundation
 import Photos
 import Combine
+import Vision
 
 @MainActor
 class CameraViewModel: ObservableObject {

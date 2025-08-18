@@ -8,6 +8,7 @@
 import Foundation
 import UIKit
 import SwiftUI
+import Vision
 
 /// Manager for storing and retrieving detection results with AppStorage
 class DetectionResultsManager: ObservableObject {

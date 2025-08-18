@@ -223,6 +223,10 @@ struct RecentResultsPreview: View {
                         ForEach(Array(resultsManager.contourResults.prefix(maxItems))) { result in
                             RecentContourRow(result: result)
                         }
+                    case .barcode:
+                        ForEach(Array(resultsManager.barcodeResults.prefix(maxItems))) { result in
+                            RecentBarcodeRow(result: result)
+                        }
                     }
                 }
             }
@@ -357,6 +361,41 @@ struct RecentContourRow: View {
                 Text("Avg conf \(Int(result.averageConfidence * 100))%")
                     .font(.caption2)
                     .foregroundColor(.secondary)
+            }
+
+            Spacer()
+
+            Text(result.timestamp, style: .relative)
+                .font(.caption2)
+                .foregroundColor(Color.secondary)
+        }
+    }
+}
+
+struct RecentBarcodeRow: View {
+    let result: StoredBarcodeDetectionResult
+
+    var body: some View {
+        HStack(spacing: 8) {
+            if let image = result.thumbnailImage ?? result.image {
+                Image(uiImage: image)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: 40, height: 40)
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
+            }
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(result.detectedBarcodes.isEmpty ? "No barcodes" : "\(result.detectedBarcodes.count) barcodes")
+                    .font(.caption)
+                    .lineLimit(1)
+                    .foregroundColor(.primary)
+
+                if let firstBarcode = result.detectedBarcodes.first {
+                    Text(firstBarcode.symbology)
+                        .font(.caption2)
+                        .foregroundColor(.secondary)
+                }
             }
 
             Spacer()

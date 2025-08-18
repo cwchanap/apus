@@ -7,6 +7,7 @@
 //
 import AVFoundation
 import UIKit
+import Vision
 
 class MockBarcodeDetectionManager: BarcodeDetectionProtocol {
     func detectBarcodes(on image: UIImage, completion: @escaping ([VNBarcodeObservation]) -> Void) {
