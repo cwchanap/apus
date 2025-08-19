@@ -264,5 +264,6 @@ struct CategoryResultsView: View {
                 BarcodeDetectionResultsView()
             }
         }
+        .environmentObject(resultsManager)
     }
 }
