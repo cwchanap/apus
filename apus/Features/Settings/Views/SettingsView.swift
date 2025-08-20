@@ -9,10 +9,43 @@ import SwiftUI
 
 struct SettingsView: View {
     @StateObject private var viewModel = SettingsViewModel()
+    @State private var isViewLoaded = false
 
     var body: some View {
         NavigationView {
-            List {
+            Group {
+                if isViewLoaded {
+                    settingsContent
+                } else {
+                    loadingView
+                }
+            }
+            .navigationTitle("Settings")
+            .navigationBarTitleDisplayMode(.large)
+            .onAppear {
+                if !isViewLoaded {
+                    // Small delay to show loading state, then show content
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                        isViewLoaded = true
+                    }
+                }
+            }
+        }
+    }
+    
+    private var loadingView: some View {
+        VStack(spacing: 16) {
+            ProgressView()
+                .scaleEffect(1.2)
+            Text("Loading Settings...")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+    
+    private var settingsContent: some View {
+        List {
                 // Object Detection Settings Section
                 Section("Object Detection") {
                     // Enable/Disable Toggle
@@ -154,11 +187,8 @@ struct SettingsView: View {
                     .padding(.vertical, 4)
                 }
             }
-            .navigationTitle("Settings")
-            .navigationBarTitleDisplayMode(.large)
         }
     }
-}
 
 #Preview {
     SettingsView()

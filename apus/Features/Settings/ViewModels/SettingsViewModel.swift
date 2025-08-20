@@ -21,13 +21,15 @@ class SettingsViewModel: ObservableObject {
 
     // MARK: - Initialization
     init() {
-        // Initialize with current settings
+        // Initialize with current settings (fast, no heavy operations)
         self.isRealTimeObjectDetectionEnabled = appSettings.isRealTimeObjectDetectionEnabled
         self.isRealTimeBarcodeDetectionEnabled = appSettings.isRealTimeBarcodeDetectionEnabled
         self.objectDetectionFramework = appSettings.objectDetectionFramework
 
-        // Set up two-way binding
-        setupBindings()
+        // Defer binding setup to avoid blocking main thread during init
+        Task { @MainActor in
+            setupBindings()
+        }
     }
 
     private func setupBindings() {
@@ -67,12 +69,9 @@ class SettingsViewModel: ObservableObject {
                 if self?.appSettings.isRealTimeObjectDetectionEnabled != newValue {
                     self?.appSettings.isRealTimeObjectDetectionEnabled = newValue
                 }
-                // When enabling real-time detection, proactively preload heavy models off-main
+                // When enabling real-time detection, preload models asynchronously
                 if newValue {
-                    DispatchQueue.global(qos: .utility).async {
-                        let manager: ObjectDetectionProtocol = DIContainer.shared.resolve(ObjectDetectionProtocol.self)
-                        manager.preload()
-                    }
+                    self?.preloadModelsInBackground()
                 }
             }
             .store(in: &cancellables)
@@ -99,6 +98,20 @@ class SettingsViewModel: ObservableObject {
     }
 
     private var cancellables = Set<AnyCancellable>()
+
+    // MARK: - Private Methods
+    private func preloadModelsInBackground() {
+        // Use Task to avoid blocking main thread with DI resolution
+        Task.detached(priority: .utility) {
+            do {
+                // Resolve DI on background thread to avoid main thread blocking
+                let manager: ObjectDetectionProtocol = DIContainer.shared.resolve(ObjectDetectionProtocol.self)
+                manager.preload()
+            } catch {
+                print("Failed to preload models: \(error)")
+            }
+        }
+    }
 
     // MARK: - Public Methods
     func resetToDefaults() {

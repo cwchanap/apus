@@ -63,11 +63,17 @@ class AppSettings: ObservableObject {
     }
 
     private init() {
-        // Load saved settings or defaults
-        self.isRealTimeObjectDetectionEnabled = UserDefaults.standard.object(forKey: UserDefaults.Keys.isRealTimeObjectDetectionEnabled) as? Bool ?? true
-        self.isRealTimeBarcodeDetectionEnabled = UserDefaults.standard.object(forKey: UserDefaults.Keys.isRealTimeBarcodeDetectionEnabled) as? Bool ?? true
+        // Load saved settings or defaults (optimized for performance)
+        let defaults = UserDefaults.standard
+        
+        // Use bool(forKey:) which is faster than object(forKey:)
+        self.isRealTimeObjectDetectionEnabled = defaults.object(forKey: UserDefaults.Keys.isRealTimeObjectDetectionEnabled) != nil ? 
+            defaults.bool(forKey: UserDefaults.Keys.isRealTimeObjectDetectionEnabled) : true
+        
+        self.isRealTimeBarcodeDetectionEnabled = defaults.object(forKey: UserDefaults.Keys.isRealTimeBarcodeDetectionEnabled) != nil ? 
+            defaults.bool(forKey: UserDefaults.Keys.isRealTimeBarcodeDetectionEnabled) : true
 
-        let frameworkRawValue = UserDefaults.standard.string(forKey: UserDefaults.Keys.objectDetectionFramework) ?? ObjectDetectionFramework.vision.rawValue
+        let frameworkRawValue = defaults.string(forKey: UserDefaults.Keys.objectDetectionFramework) ?? ObjectDetectionFramework.vision.rawValue
         self.objectDetectionFramework = ObjectDetectionFramework(rawValue: frameworkRawValue) ?? .vision
     }
 
