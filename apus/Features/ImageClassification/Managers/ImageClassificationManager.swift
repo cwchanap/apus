@@ -5,7 +5,7 @@
 //  Created by Rovo Dev on 28/7/2025.
 //
 
-#if !DEBUG && !targetEnvironment(simulator)
+// Real Vision framework implementation (available in all build configurations)
 import Foundation
 import Vision
 import UIKit
@@ -57,7 +57,7 @@ class ImageClassificationManager: ObservableObject, ImageClassificationProtocol 
         }
 
         // Handle image orientation properly for better classification
-        let orientation = CGImagePropertyOrientation(image.imageOrientation)
+        let orientation = CGImagePropertyOrientation(from: image.imageOrientation)
         let handler = VNImageRequestHandler(cgImage: cgImage, orientation: orientation, options: [:])
 
         DispatchQueue.global(qos: .userInitiated).async {
@@ -91,21 +91,5 @@ enum ClassificationError: Error, LocalizedError {
     }
 }
 
-// MARK: - CGImagePropertyOrientation Extension
-extension CGImagePropertyOrientation {
-    init(_ uiOrientation: UIImage.Orientation) {
-        switch uiOrientation {
-        case .up: self = .up
-        case .upMirrored: self = .upMirrored
-        case .down: self = .down
-        case .downMirrored: self = .downMirrored
-        case .left: self = .left
-        case .leftMirrored: self = .leftMirrored
-        case .right: self = .right
-        case .rightMirrored: self = .rightMirrored
-        @unknown default: self = .up
-        }
-    }
-}
+// CGImagePropertyOrientation extension is defined in VisionObjectDetectionManager.swift
 
-#endif

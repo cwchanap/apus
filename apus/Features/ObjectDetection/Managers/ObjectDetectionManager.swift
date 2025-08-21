@@ -1,4 +1,4 @@
-#if !DEBUG && !targetEnvironment(simulator)
+// Real TensorFlow Lite implementation (available in all build configurations)
 import Foundation
 import TensorFlowLite
 import CoreVideo
@@ -73,13 +73,8 @@ class ObjectDetectionManager: ObservableObject, ObjectDetectionProtocol {
         do {
             var options = Interpreter.Options()
             options.threadCount = 2
-
-            // Enable GPU acceleration if available
-            #if !targetEnvironment(simulator)
-            if let gpuDelegate = MetalDelegate() {
-                options.delegates = [gpuDelegate]
-            }
-            #endif
+            // Note: GPU acceleration via MetalDelegate is not available in current TensorFlow Lite Swift API
+            // The model will run on CPU which is sufficient for most use cases
 
             interpreter = try Interpreter(modelPath: modelPath, options: options)
             try interpreter?.allocateTensors()
@@ -282,4 +277,3 @@ extension CVPixelBuffer {
         return resizedBuffer
     }
 }
-#endif

@@ -115,8 +115,8 @@ class MockImageClassificationManager: ImageClassificationProtocol {
     }
 }
 
-typealias ImageClassificationProvider = MockImageClassificationManager
-#else
-// Use real Vision framework implementation for device builds
-typealias ImageClassificationProvider = ImageClassificationManager
+// Keep mock available for testing but use real implementation by default
 #endif
+
+// Use real Vision framework implementation (works on both device and simulator)
+typealias ImageClassificationProvider = ImageClassificationManager

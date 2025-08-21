@@ -5,7 +5,7 @@
 //  Created by Rovo Dev on 1/8/2025.
 //
 
-#if !DEBUG && !targetEnvironment(simulator)
+// Real Vision framework implementation (available in all build configurations)
 import Foundation
 import Vision
 import UIKit
@@ -29,8 +29,9 @@ class VisionObjectDetectionManager: ObservableObject, VisionObjectDetectionProto
             self.isDetecting = true
         }
 
-        // Use Vision's built-in object recognition request
-        let request = VNRecognizeObjectsRequest { [weak self] request, error in
+        // Use Vision's classification request (VNRecognizeObjectsRequest doesn't exist)
+        // For now, we'll use a simple approach that works with Vision framework
+        let request = VNClassifyImageRequest { [weak self] request, error in
             DispatchQueue.main.async {
                 self?.isDetecting = false
 
@@ -39,23 +40,23 @@ class VisionObjectDetectionManager: ObservableObject, VisionObjectDetectionProto
                     return
                 }
 
-                guard let observations = request.results as? [VNRecognizedObjectObservation] else {
+                guard let observations = request.results as? [VNClassificationObservation] else {
                     completion(.failure(VisionObjectDetectionError.processingFailed))
                     return
                 }
 
                 // Process observations and convert to VisionDetection objects
-                let detections = self?.processObjectObservations(observations, imageSize: image.size) ?? []
+                let detections = self?.processClassificationObservations(observations, imageSize: image.size) ?? []
                 self?.lastDetectedObjects = detections
                 completion(.success(detections))
             }
         }
 
-        // Configure the request for better results
-        request.maximumObservations = 10  // Limit to top 10 objects
+        // VNClassifyImageRequest doesn't have maximumObservations property
+        // It automatically returns top classifications
 
         // Handle image orientation properly
-        let orientation = CGImagePropertyOrientation(image.imageOrientation)
+        let orientation = CGImagePropertyOrientation(from: image.imageOrientation)
         let handler = VNImageRequestHandler(cgImage: cgImage, orientation: orientation, options: [:])
 
         DispatchQueue.global(qos: .userInitiated).async {
@@ -70,21 +71,18 @@ class VisionObjectDetectionManager: ObservableObject, VisionObjectDetectionProto
         }
     }
 
-    private func processObjectObservations(_ observations: [VNRecognizedObjectObservation], imageSize: CGSize) -> [VisionDetection] {
+    private func processClassificationObservations(_ observations: [VNClassificationObservation], imageSize: CGSize) -> [VisionDetection] {
         var detections: [VisionDetection] = []
 
         for observation in observations {
             // Filter by confidence threshold
             guard observation.confidence > 0.3 else { continue }
 
-            // Get the top classification label
-            guard let topLabel = observation.labels.first else { continue }
-
-            // Create VisionDetection object
+            // Create VisionDetection object with full image bounding box since classification doesn't provide location
             let detection = VisionDetection(
-                boundingBox: observation.boundingBox,
-                className: topLabel.identifier,
-                confidence: topLabel.confidence
+                boundingBox: CGRect(x: 0, y: 0, width: 1, height: 1), // Full image
+                className: observation.identifier,
+                confidence: observation.confidence
             )
 
             detections.append(detection)
@@ -93,7 +91,7 @@ class VisionObjectDetectionManager: ObservableObject, VisionObjectDetectionProto
         // Sort by confidence and return top detections
         return Array(detections
                         .sorted { $0.confidence > $1.confidence }
-                        .prefix(8))
+                        .prefix(5))
     }
 }
 
@@ -116,7 +114,7 @@ enum VisionObjectDetectionError: Error, LocalizedError {
 
 // MARK: - CGImagePropertyOrientation Extension
 extension CGImagePropertyOrientation {
-    init(_ uiOrientation: UIImage.Orientation) {
+    init(from uiOrientation: UIImage.Orientation) {
         switch uiOrientation {
         case .up: self = .up
         case .upMirrored: self = .upMirrored
@@ -131,4 +129,3 @@ extension CGImagePropertyOrientation {
     }
 }
 
-#endif

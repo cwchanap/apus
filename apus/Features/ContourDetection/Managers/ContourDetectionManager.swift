@@ -5,7 +5,7 @@
 //  Created by Rovo Dev on 30/7/2025.
 //
 
-#if !DEBUG && !targetEnvironment(simulator)
+// Real Vision framework implementation (available in all build configurations)
 import Foundation
 import Vision
 import UIKit
@@ -51,7 +51,7 @@ class ContourDetectionManager: ObservableObject, ContourDetectionProtocol {
         request.maximumImageDimension = 1024  // Higher resolution for better accuracy
 
         // Handle image orientation properly
-        let orientation = CGImagePropertyOrientation(image.imageOrientation)
+        let orientation = CGImagePropertyOrientation(from: image.imageOrientation)
         let handler = VNImageRequestHandler(cgImage: cgImage, orientation: orientation, options: [:])
 
         DispatchQueue.global(qos: .userInitiated).async {
@@ -75,7 +75,9 @@ class ContourDetectionManager: ObservableObject, ContourDetectionProtocol {
 
             for contour in allContours {
                 // Convert contour points to normalized coordinates
-                let normalizedPoints = contour.normalizedPoints
+                let normalizedPoints = contour.normalizedPoints.map { simdPoint in
+                    CGPoint(x: CGFloat(simdPoint.x), y: CGFloat(simdPoint.y))
+                }
 
                 // Filter out contours with too few points
                 guard normalizedPoints.count >= 3 else { continue }
@@ -91,7 +93,7 @@ class ContourDetectionManager: ObservableObject, ContourDetectionProtocol {
                 guard observation.confidence > 0.3 else { continue }
 
                 // Calculate aspect ratio
-                let aspectRatio = boundingBox.width / boundingBox.height
+                let aspectRatio = Float(boundingBox.width / boundingBox.height)
 
                 // Create detected contour
                 let detectedContour = DetectedContour(
@@ -99,7 +101,7 @@ class ContourDetectionManager: ObservableObject, ContourDetectionProtocol {
                     boundingBox: boundingBox,
                     confidence: observation.confidence,
                     aspectRatio: aspectRatio,
-                    area: area
+                    area: Float(area)
                 )
 
                 detectedContours.append(detectedContour)
@@ -171,21 +173,5 @@ enum ContourDetectionError: Error, LocalizedError {
     }
 }
 
-// MARK: - CGImagePropertyOrientation Extension
-extension CGImagePropertyOrientation {
-    init(_ uiOrientation: UIImage.Orientation) {
-        switch uiOrientation {
-        case .up: self = .up
-        case .upMirrored: self = .upMirrored
-        case .down: self = .down
-        case .downMirrored: self = .downMirrored
-        case .left: self = .left
-        case .leftMirrored: self = .leftMirrored
-        case .right: self = .right
-        case .rightMirrored: self = .rightMirrored
-        @unknown default: self = .up
-        }
-    }
-}
+// CGImagePropertyOrientation extension is defined in VisionObjectDetectionManager.swift
 
-#endif

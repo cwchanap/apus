@@ -69,10 +69,5 @@ protocol ContourDetectionProtocol: ObservableObject {
     func detectContours(in image: UIImage, completion: @escaping (Result<[DetectedContour], Error>) -> Void)
 }
 
-#if DEBUG || targetEnvironment(simulator)
-// Use mock implementation for simulator and debug builds
-typealias ContourDetectionProvider = MockContourDetectionManager
-#else
-// Use real Vision framework implementation for device builds
+// Use real Vision framework implementation (works on both device and simulator)
 typealias ContourDetectionProvider = ContourDetectionManager
-#endif

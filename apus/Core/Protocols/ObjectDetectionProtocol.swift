@@ -20,7 +20,7 @@ extension ObjectDetectionProtocol {
 }
 
 #if DEBUG || targetEnvironment(simulator)
-// Use mock implementation for simulator and previews/debug builds
+// Mock implementation available for testing
 class MockObjectDetectionManager: ObjectDetectionProtocol {
     @Published var detections: [Detection] = []
 
@@ -28,8 +28,7 @@ class MockObjectDetectionManager: ObjectDetectionProtocol {
         // Mock implementation - no actual detection
     }
 }
-typealias ObjectDetectionProvider = MockObjectDetectionManager
-#else
-// Use real TensorFlow Lite implementation for device builds
-typealias ObjectDetectionProvider = ObjectDetectionManager
 #endif
+
+// Use real implementation by default (works on both device and simulator)
+typealias ObjectDetectionProvider = ObjectDetectionManager

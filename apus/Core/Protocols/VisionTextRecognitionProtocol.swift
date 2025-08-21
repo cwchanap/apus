@@ -202,8 +202,5 @@ class MockVisionTextRecognitionManager: VisionTextRecognitionProtocol {
 
 // MARK: - Type Aliases for Conditional Compilation
 
-#if DEBUG
-typealias VisionTextRecognitionProvider = MockVisionTextRecognitionManager
-#else
+// Use real Vision framework implementation (works on both device and simulator)
 typealias VisionTextRecognitionProvider = VisionTextRecognitionManager
-#endif

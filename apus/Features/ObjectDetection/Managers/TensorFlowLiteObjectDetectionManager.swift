@@ -5,7 +5,7 @@
 //  Created by Rovo Dev on 1/8/2025.
 //
 
-#if !DEBUG && !targetEnvironment(simulator)
+// Real TensorFlow Lite implementation (available in all build configurations)
 import Foundation
 import UIKit
 import TensorFlowLite
@@ -276,4 +276,3 @@ extension UIImage {
     }
 }
 
-#endif
