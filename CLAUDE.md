@@ -1,3 +1,5 @@
+# CLAUDE.md
+
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## Project Overview
@@ -20,7 +22,7 @@ This is a SwiftUI iOS camera application named "apus" that provides full camera 
 - **Settings Module**: `SettingsView.swift` with app configuration and preferences
 
 ### Data Layer
-- **Models**: `Item.swift` (SwiftData), `AppSettings.swift`, `ClassificationHistory.swift`
+- **Models**: `Item.swift` (SwiftData), `AppSettings.swift`, `DetectionResults.swift`
 - **Extensions**: `UIImage+Processing.swift` for image normalization and optimization
 
 ## Key Technologies
@@ -109,8 +111,9 @@ The camera implementation uses protocol-based architecture with dependency injec
 
 The app uses state-based navigation with `NavigationPage` enum:
 - **Home**: Displays the camera interface (`CameraView`)
-- **Settings**: Placeholder for future settings functionality
-- **Menu**: Hamburger menu in toolbar for navigation between sections
+- **Settings**: App configuration and preferences
+- **Results**: Detection results dashboard with category-based navigation
+- **Menu**: Floating overlay buttons for navigation between sections
 
 ## SwiftData Integration
 
@@ -142,17 +145,18 @@ The app features multiple computer vision systems with unified interface:
 - **Image Classification**: ML-powered classification with history tracking
 - **Contour Detection**: Computer vision-based shape analysis  
 - **OCR/Text Recognition**: Vision framework text detection and recognition with results storage
+- **Barcode Detection**: QR code and barcode scanning with smart content parsing
 - **Image Processing**: Normalization, resizing, optimization pipelines
 
 ### Results System Architecture
 - **DetectionResultsManager**: Centralized results storage using AppStorage with JSON serialization
-- **Result Types**: StoredOCRResult, StoredObjectDetectionResult, StoredClassificationResult
+- **Result Types**: StoredOCRResult, StoredObjectDetectionResult, StoredClassificationResult, StoredBarcodeResult
 - **Results Dashboard**: NavigationStack-based UI for browsing historical results by category
 - **Data Persistence**: Local storage with automatic cleanup (max 10 results per category)
 
 ### Computer Vision Files
 - **Models**: `efficientdet_lite0.tflite`, `coco_labels.txt`
-- **Managers**: Detection, classification, contour analysis, and text recognition managers
+- **Managers**: Detection, classification, contour analysis, text recognition, and barcode detection managers
 - **Extensions**: `UIImage+Processing.swift` for image optimization
 
 ## Project Structure and Development Notes
@@ -179,3 +183,34 @@ The app features multiple computer vision systems with unified interface:
 - **Testing**: Comprehensive test suite with 100% coverage using dependency injection
 - **Code Quality**: SwiftLint configured with pragmatic thresholds for SwiftUI development
 
+## Testing Strategy
+
+### Unit Testing
+- **Test Structure**: Located in `apusTests/` with organized subdirectories
+- **Dependency Injection**: Uses `TestDIContainer.swift` for mock dependencies
+- **Coverage Areas**: Services, ViewModels, managers, extensions, and data models
+- **Test Helpers**: Mock implementations for all protocols
+
+### UI Testing
+- **Location**: `apusUITests/` for end-to-end testing
+- **Launch Tests**: Basic app launch and navigation validation
+
+### Running Tests
+- **Xcode**: Use Test Navigator (⌘+6) or Product → Test (⌘+U)
+- **Command Line**: `xcodebuild -workspace apus.xcworkspace -scheme apus test`
+- **Specific Tests**: Use `-only-testing` flag for targeted test execution
+
+## Development Workflow
+
+### Code Organization
+- **Features**: Organized by feature modules in `apus/Features/`
+- **Core**: Shared utilities and protocols in `apus/Core/`
+- **Services**: Business logic and external integrations in `apus/Services/`
+- **Resources**: Assets, models, and configuration files in `apus/Resources/`
+
+### Best Practices
+- **Protocol-First**: All managers implement protocols for testability
+- **Dependency Injection**: Use `@Injected` for required dependencies
+- **Error Handling**: Centralized via `ErrorService` with user feedback
+- **Performance**: Background threading for heavy operations
+- **SwiftUI**: Declarative UI with state management patterns

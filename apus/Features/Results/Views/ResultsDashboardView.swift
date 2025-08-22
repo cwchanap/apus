@@ -11,6 +11,8 @@ struct ResultsDashboardView: View {
     @EnvironmentObject var resultsManager: DetectionResultsManager
     @Binding var path: [DetectionCategory]
     @State private var showClearAllConfirm = false
+    @State private var showStorageLimitsSettings = false
+    private let appSettings = AppSettings.shared
 
     var body: some View {
             Group {
@@ -84,47 +86,82 @@ struct ResultsDashboardView: View {
                                         StorageInfoRow(
                                             label: "OCR Results",
                                             count: resultsManager.ocrResults.count,
-                                            maxCount: 10,
+                                            maxCount: appSettings.ocrResultsLimit,
                                             color: .purple
                                         )
 
                                         StorageInfoRow(
                                             label: "Object Detection",
                                             count: resultsManager.objectDetectionResults.count,
-                                            maxCount: 10,
+                                            maxCount: appSettings.objectDetectionResultsLimit,
                                             color: .blue
                                         )
 
                                         StorageInfoRow(
                                             label: "Image Classification",
                                             count: resultsManager.classificationResults.count,
-                                            maxCount: 10,
+                                            maxCount: appSettings.classificationResultsLimit,
                                             color: .green
                                         )
 
                                         StorageInfoRow(
                                             label: "Contour Detection",
                                             count: resultsManager.contourResults.count,
-                                            maxCount: 10,
+                                            maxCount: appSettings.contourDetectionResultsLimit,
                                             color: .orange
                                         )
 
                                         StorageInfoRow(
                                             label: "Barcode Detection",
                                             count: resultsManager.barcodeResults.count,
-                                            maxCount: 10,
+                                            maxCount: appSettings.barcodeDetectionResultsLimit,
                                             color: .red
                                         )
                                     }
 
-                                    Text("Only the most recent 10 results are kept for each category")
-                                        .font(.caption)
-                                        .foregroundColor(.secondary)
-                                        .padding(.top, 4)
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text("Storage limits can be configured per category")
+                                            .font(.caption)
+                                            .foregroundColor(.secondary)
+                                        
+                                        Text("Oldest results are automatically removed when limits are exceeded")
+                                            .font(.caption2)
+                                            .foregroundColor(.secondary.opacity(0.8))
+                                    }
+                                    .padding(.top, 8)
                                 }
                                 .padding()
                                 .background(Color.gray.opacity(0.1))
                                 .clipShape(RoundedRectangle(cornerRadius: 12))
+
+                                // Separate button section outside the storage management card
+                                VStack {
+                                    HStack {
+                                        Spacer()
+                                        
+                                        Text("⚙️ Adjust Storage Limits")
+                                            .font(.subheadline)
+                                            .fontWeight(.medium)
+                                            .foregroundColor(.white)
+                                            .padding(.horizontal, 20)
+                                            .padding(.vertical, 12)
+                                            .background(
+                                                LinearGradient(
+                                                    gradient: Gradient(colors: [Color.blue, Color.blue.opacity(0.8)]),
+                                                    startPoint: .leading,
+                                                    endPoint: .trailing
+                                                )
+                                            )
+                                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                                            .shadow(color: .blue.opacity(0.3), radius: 4, x: 0, y: 2)
+                                        
+                                        Spacer()
+                                    }
+                                }
+                                .padding(.top, 12)
+                                .onTapGesture {
+                                    showStorageLimitsSettings = true
+                                }
 
                                 // Clear all data section
                                 VStack(alignment: .leading, spacing: 12) {
@@ -190,6 +227,9 @@ struct ResultsDashboardView: View {
             .navigationBarTitleDisplayMode(.large)
             .refreshable {
                 // Refresh results if needed
+            }
+            .sheet(isPresented: $showStorageLimitsSettings) {
+                StorageLimitsSettingsView()
             }
     }
 }

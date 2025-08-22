@@ -12,6 +12,9 @@ import Vision
 
 /// Manager for storing and retrieving detection results with AppStorage
 class DetectionResultsManager: ObservableObject {
+    
+    // Reference to app settings for storage limits
+    private let appSettings = AppSettings.shared
 
     // MARK: - AppStorage Properties
 
@@ -46,7 +49,6 @@ class DetectionResultsManager: ObservableObject {
 
     // MARK: - Constants
 
-    private let maxResultsPerCategory = 10
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
 
@@ -63,8 +65,9 @@ class DetectionResultsManager: ObservableObject {
 
         // Add to beginning of array and limit to max count
         ocrResults.insert(newResult, at: 0)
-        if ocrResults.count > maxResultsPerCategory {
-            ocrResults = Array(ocrResults.prefix(maxResultsPerCategory))
+        let limit = appSettings.getStorageLimit(for: .ocr)
+        if ocrResults.count > limit {
+            ocrResults = Array(ocrResults.prefix(limit))
         }
 
         updateCachedValues()
@@ -125,8 +128,9 @@ class DetectionResultsManager: ObservableObject {
 
         // Add to beginning of array and limit to max count
         objectDetectionResults.insert(newResult, at: 0)
-        if objectDetectionResults.count > maxResultsPerCategory {
-            objectDetectionResults = Array(objectDetectionResults.prefix(maxResultsPerCategory))
+        let limit = appSettings.getStorageLimit(for: .objectDetection)
+        if objectDetectionResults.count > limit {
+            objectDetectionResults = Array(objectDetectionResults.prefix(limit))
         }
 
         updateCachedValues()
@@ -186,8 +190,9 @@ class DetectionResultsManager: ObservableObject {
 
         // Add to beginning of array and limit to max count
         self.classificationResults.insert(newResult, at: 0)
-        if self.classificationResults.count > maxResultsPerCategory {
-            self.classificationResults = Array(self.classificationResults.prefix(maxResultsPerCategory))
+        let limit = appSettings.getStorageLimit(for: .classification)
+        if self.classificationResults.count > limit {
+            self.classificationResults = Array(self.classificationResults.prefix(limit))
         }
 
         updateCachedValues()
@@ -415,8 +420,9 @@ extension DetectionResultsManager {
         let newResult = StoredBarcodeDetectionResult(detectedBarcodes: detectedBarcodes, image: image)
 
         barcodeResults.insert(newResult, at: 0)
-        if barcodeResults.count > maxResultsPerCategory {
-            barcodeResults = Array(barcodeResults.prefix(maxResultsPerCategory))
+        let limit = appSettings.getStorageLimit(for: .barcode)
+        if barcodeResults.count > limit {
+            barcodeResults = Array(barcodeResults.prefix(limit))
         }
 
         updateCachedValues()
@@ -468,45 +474,6 @@ extension DetectionResultsManager {
     }
 }
 
-// MARK: - Detection Category Enum
-
-enum DetectionCategory: String, CaseIterable, Hashable {
-    case ocr = "OCR"
-    case objectDetection = "Object Detection"
-    case classification = "Classification"
-    case contourDetection = "Contour Detection"
-    case barcode = "Barcode"
-
-    var icon: String {
-        switch self {
-        case .ocr:
-            return "textformat"
-        case .objectDetection:
-            return "viewfinder"
-        case .classification:
-            return "brain.head.profile"
-        case .contourDetection:
-            return "square.dashed"
-        case .barcode:
-            return "barcode.viewfinder"
-        }
-    }
-
-    var color: Color {
-        switch self {
-        case .ocr:
-            return .purple
-        case .objectDetection:
-            return .blue
-        case .classification:
-            return .green
-        case .contourDetection:
-            return .orange
-        case .barcode:
-            return .red
-        }
-    }
-}
 
 // MARK: - Contour Detection Results Management
 
@@ -515,8 +482,9 @@ extension DetectionResultsManager {
         let newResult = StoredContourDetectionResult(detectedContours: detectedContours, image: image)
 
         contourResults.insert(newResult, at: 0)
-        if contourResults.count > maxResultsPerCategory {
-            contourResults = Array(contourResults.prefix(maxResultsPerCategory))
+        let limit = appSettings.getStorageLimit(for: .contourDetection)
+        if contourResults.count > limit {
+            contourResults = Array(contourResults.prefix(limit))
         }
 
         updateCachedValues()

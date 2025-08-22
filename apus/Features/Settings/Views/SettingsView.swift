@@ -157,6 +157,32 @@ struct SettingsView: View {
                     .padding(.vertical, 4)
                 }
 
+                // Storage Limits Section
+                Section("Result Storage") {
+                    NavigationLink(destination: StorageLimitsSettingsView()) {
+                        HStack {
+                            Image(systemName: "externaldrive")
+                                .foregroundColor(.purple)
+                                .frame(width: 24, height: 24)
+                            
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Storage Limits")
+                                    .font(.body)
+                                Text("Configure result storage limits per category")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            
+                            Spacer()
+                            
+                            Image(systemName: "chevron.right")
+                                .foregroundColor(.secondary)
+                                .font(.caption)
+                        }
+                        .padding(.vertical, 4)
+                    }
+                }
+
                 // App Information Section
                 Section("About") {
                     HStack {
@@ -189,6 +215,7 @@ struct SettingsView: View {
             }
         }
     }
+
 
 #Preview {
     SettingsView()
