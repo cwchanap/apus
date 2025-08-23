@@ -17,7 +17,11 @@
       "mcp__XcodeBuildMCP__build_run_sim_name_ws",
       "mcp__XcodeBuildMCP__clean_ws",
       "mcp__XcodeBuildMCP__list_sims",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(swiftlint:*)",
+      "mcp__XcodeBuildMCP__list_schemes",
+      "mcp__XcodeBuildMCP__build_sim",
+      "mcp__XcodeBuildMCP__test_sim"
     ],
     "deny": [],
     "defaultMode": "acceptEdits"
