@@ -86,7 +86,7 @@ class CameraViewModel: ObservableObject {
                 let context = CIContext()
                 guard let cgImage = context.createCGImage(ciImage, from: ciImage.extent) else { return }
                 let image = UIImage(cgImage: cgImage)
-                
+
                 self.barcodeDetectionManager.detectBarcodes(on: image) { barcodes in
                     DispatchQueue.main.async {
                         self.detectedBarcodes = barcodes

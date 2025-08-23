@@ -92,4 +92,3 @@ enum ClassificationError: Error, LocalizedError {
 }
 
 // CGImagePropertyOrientation extension is defined in VisionObjectDetectionManager.swift
-

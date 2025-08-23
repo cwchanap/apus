@@ -18,7 +18,7 @@ class SettingsViewModel: ObservableObject {
     @Published var isRealTimeObjectDetectionEnabled: Bool = true
     @Published var isRealTimeBarcodeDetectionEnabled: Bool = true
     @Published var objectDetectionFramework: ObjectDetectionFramework = .vision
-    
+
     // Storage limits - published for UI updates
     @Published var ocrResultsLimit: Int = 10
     @Published var objectDetectionResultsLimit: Int = 10
@@ -32,7 +32,7 @@ class SettingsViewModel: ObservableObject {
         self.isRealTimeObjectDetectionEnabled = appSettings.isRealTimeObjectDetectionEnabled
         self.isRealTimeBarcodeDetectionEnabled = appSettings.isRealTimeBarcodeDetectionEnabled
         self.objectDetectionFramework = appSettings.objectDetectionFramework
-        
+
         // Initialize storage limits
         self.ocrResultsLimit = appSettings.ocrResultsLimit
         self.objectDetectionResultsLimit = appSettings.objectDetectionResultsLimit
@@ -47,7 +47,12 @@ class SettingsViewModel: ObservableObject {
     }
 
     private func setupBindings() {
-        // Update ViewModel when AppSettings changes (but avoid loops)
+        setupDetectionBindings()
+        setupStorageLimitBindings()
+    }
+
+    private func setupDetectionBindings() {
+        // Update ViewModel when AppSettings changes
         appSettings.$isRealTimeObjectDetectionEnabled
             .removeDuplicates()
             .sink { [weak self] newValue in
@@ -75,15 +80,14 @@ class SettingsViewModel: ObservableObject {
             }
             .store(in: &cancellables)
 
-        // Update AppSettings when ViewModel changes (but avoid loops)
+        // Update AppSettings when ViewModel changes
         $isRealTimeObjectDetectionEnabled
-            .dropFirst() // Skip initial value
+            .dropFirst()
             .removeDuplicates()
             .sink { [weak self] newValue in
                 if self?.appSettings.isRealTimeObjectDetectionEnabled != newValue {
                     self?.appSettings.isRealTimeObjectDetectionEnabled = newValue
                 }
-                // When enabling real-time detection, preload models asynchronously
                 if newValue {
                     self?.preloadModelsInBackground()
                 }
@@ -91,7 +95,7 @@ class SettingsViewModel: ObservableObject {
             .store(in: &cancellables)
 
         $isRealTimeBarcodeDetectionEnabled
-            .dropFirst() // Skip initial value
+            .dropFirst()
             .removeDuplicates()
             .sink { [weak self] newValue in
                 if self?.appSettings.isRealTimeBarcodeDetectionEnabled != newValue {
@@ -101,7 +105,7 @@ class SettingsViewModel: ObservableObject {
             .store(in: &cancellables)
 
         $objectDetectionFramework
-            .dropFirst() // Skip initial value
+            .dropFirst()
             .removeDuplicates()
             .sink { [weak self] newValue in
                 if self?.appSettings.objectDetectionFramework != newValue {
@@ -109,100 +113,42 @@ class SettingsViewModel: ObservableObject {
                 }
             }
             .store(in: &cancellables)
+    }
 
-        // Bindings for storage limits - AppSettings to ViewModel
-        appSettings.$ocrResultsLimit
+    private func setupStorageLimitBindings() {
+        // AppSettings to ViewModel bindings
+        bindAppSettingsToViewModel(keyPath: \.ocrResultsLimit, to: \.ocrResultsLimit)
+        bindAppSettingsToViewModel(keyPath: \.objectDetectionResultsLimit, to: \.objectDetectionResultsLimit)
+        bindAppSettingsToViewModel(keyPath: \.classificationResultsLimit, to: \.classificationResultsLimit)
+        bindAppSettingsToViewModel(keyPath: \.contourDetectionResultsLimit, to: \.contourDetectionResultsLimit)
+        bindAppSettingsToViewModel(keyPath: \.barcodeDetectionResultsLimit, to: \.barcodeDetectionResultsLimit)
+
+        // ViewModel to AppSettings bindings
+        bindViewModelToAppSettings(keyPath: \.ocrResultsLimit, to: \.ocrResultsLimit)
+        bindViewModelToAppSettings(keyPath: \.objectDetectionResultsLimit, to: \.objectDetectionResultsLimit)
+        bindViewModelToAppSettings(keyPath: \.classificationResultsLimit, to: \.classificationResultsLimit)
+        bindViewModelToAppSettings(keyPath: \.contourDetectionResultsLimit, to: \.contourDetectionResultsLimit)
+        bindViewModelToAppSettings(keyPath: \.barcodeDetectionResultsLimit, to: \.barcodeDetectionResultsLimit)
+    }
+
+    private func bindAppSettingsToViewModel<T: Equatable>(keyPath appKeyPath: KeyPath<AppSettings, T>, to viewModelKeyPath: ReferenceWritableKeyPath<SettingsViewModel, T>) {
+        appSettings[keyPath: appKeyPath.appending(path: \.$wrappedValue)]
             .removeDuplicates()
             .sink { [weak self] newValue in
-                if self?.ocrResultsLimit != newValue {
-                    self?.ocrResultsLimit = newValue
+                if self?[keyPath: viewModelKeyPath] != newValue {
+                    self?[keyPath: viewModelKeyPath] = newValue
                 }
             }
             .store(in: &cancellables)
+    }
 
-        appSettings.$objectDetectionResultsLimit
-            .removeDuplicates()
-            .sink { [weak self] newValue in
-                if self?.objectDetectionResultsLimit != newValue {
-                    self?.objectDetectionResultsLimit = newValue
-                }
-            }
-            .store(in: &cancellables)
-
-        appSettings.$classificationResultsLimit
-            .removeDuplicates()
-            .sink { [weak self] newValue in
-                if self?.classificationResultsLimit != newValue {
-                    self?.classificationResultsLimit = newValue
-                }
-            }
-            .store(in: &cancellables)
-
-        appSettings.$contourDetectionResultsLimit
-            .removeDuplicates()
-            .sink { [weak self] newValue in
-                if self?.contourDetectionResultsLimit != newValue {
-                    self?.contourDetectionResultsLimit = newValue
-                }
-            }
-            .store(in: &cancellables)
-
-        appSettings.$barcodeDetectionResultsLimit
-            .removeDuplicates()
-            .sink { [weak self] newValue in
-                if self?.barcodeDetectionResultsLimit != newValue {
-                    self?.barcodeDetectionResultsLimit = newValue
-                }
-            }
-            .store(in: &cancellables)
-
-        // Bindings for storage limits - ViewModel to AppSettings
-        $ocrResultsLimit
+    private func bindViewModelToAppSettings<T: Equatable>(keyPath viewModelKeyPath: KeyPath<SettingsViewModel, T>, to appKeyPath: ReferenceWritableKeyPath<AppSettings, T>) {
+        self[keyPath: viewModelKeyPath.appending(path: \.$wrappedValue)]
             .dropFirst()
             .removeDuplicates()
             .sink { [weak self] newValue in
-                if self?.appSettings.ocrResultsLimit != newValue {
-                    self?.appSettings.ocrResultsLimit = newValue
-                }
-            }
-            .store(in: &cancellables)
-
-        $objectDetectionResultsLimit
-            .dropFirst()
-            .removeDuplicates()
-            .sink { [weak self] newValue in
-                if self?.appSettings.objectDetectionResultsLimit != newValue {
-                    self?.appSettings.objectDetectionResultsLimit = newValue
-                }
-            }
-            .store(in: &cancellables)
-
-        $classificationResultsLimit
-            .dropFirst()
-            .removeDuplicates()
-            .sink { [weak self] newValue in
-                if self?.appSettings.classificationResultsLimit != newValue {
-                    self?.appSettings.classificationResultsLimit = newValue
-                }
-            }
-            .store(in: &cancellables)
-
-        $contourDetectionResultsLimit
-            .dropFirst()
-            .removeDuplicates()
-            .sink { [weak self] newValue in
-                if self?.appSettings.contourDetectionResultsLimit != newValue {
-                    self?.appSettings.contourDetectionResultsLimit = newValue
-                }
-            }
-            .store(in: &cancellables)
-
-        $barcodeDetectionResultsLimit
-            .dropFirst()
-            .removeDuplicates()
-            .sink { [weak self] newValue in
-                if self?.appSettings.barcodeDetectionResultsLimit != newValue {
-                    self?.appSettings.barcodeDetectionResultsLimit = newValue
+                if self?.appSettings[keyPath: appKeyPath] != newValue {
+                    self?.appSettings[keyPath: appKeyPath] = newValue
                 }
             }
             .store(in: &cancellables)
@@ -234,7 +180,7 @@ class SettingsViewModel: ObservableObject {
         let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "1"
         return "\(version) (\(build))"
     }
-    
+
     // MARK: - Storage Limit Methods
     func getStorageLimit(for category: DetectionCategory) -> Int {
         switch category {
@@ -250,7 +196,7 @@ class SettingsViewModel: ObservableObject {
             return barcodeDetectionResultsLimit
         }
     }
-    
+
     func setStorageLimit(for category: DetectionCategory, limit: Int) {
         let clampedLimit = max(1, min(100, limit))
         switch category {

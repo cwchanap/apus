@@ -1,4 +1,3 @@
-
 //
 //  BarcodeDetectionManagerTests.swift
 //  apusTests
@@ -26,14 +25,14 @@ class BarcodeDetectionManagerTests: XCTestCase {
         // Given
         let expectation = self.expectation(description: "Barcode detection completes")
         let image = UIImage(systemName: "qrcode")!
-        
+
         // When
         sut.detectBarcodes(on: image) { barcodes in
             // Then
             XCTAssertFalse(barcodes.isEmpty)
             expectation.fulfill()
         }
-        
+
         waitForExpectations(timeout: 5, handler: nil)
     }
 
@@ -41,14 +40,14 @@ class BarcodeDetectionManagerTests: XCTestCase {
         // Given
         let expectation = self.expectation(description: "Barcode detection completes")
         let image = UIImage()
-        
+
         // When
         sut.detectBarcodes(on: image) { barcodes in
             // Then
             XCTAssertTrue(barcodes.isEmpty)
             expectation.fulfill()
         }
-        
+
         waitForExpectations(timeout: 5, handler: nil)
     }
 }

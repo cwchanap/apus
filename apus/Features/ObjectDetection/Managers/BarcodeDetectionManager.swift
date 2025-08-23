@@ -1,4 +1,3 @@
-
 //
 //  BarcodeDetectionManager.swift
 //  apus
@@ -19,7 +18,7 @@ enum QRCodeContentType {
     case contact(vCard: String)
     case sms(number: String, message: String?)
     case unknown(String)
-    
+
     var actionTitle: String {
         switch self {
         case .url: return "Open URL"
@@ -32,7 +31,7 @@ enum QRCodeContentType {
         case .unknown: return "Copy Content"
         }
     }
-    
+
     var icon: String {
         switch self {
         case .url: return "link"
@@ -49,7 +48,7 @@ enum QRCodeContentType {
 
 // MARK: - Enhanced Barcode Detection Manager
 class BarcodeDetectionManager: BarcodeDetectionProtocol {
-    
+
     func detectBarcodes(on image: UIImage, completion: @escaping ([VNBarcodeObservation]) -> Void) {
         guard let cgImage = image.cgImage else {
             completion([])
@@ -62,28 +61,28 @@ class BarcodeDetectionManager: BarcodeDetectionProtocol {
                 completion([])
                 return
             }
-            
+
             guard let results = request.results as? [VNBarcodeObservation] else {
                 completion([])
                 return
             }
-            
+
             // Filter and prioritize QR codes
             let sortedResults = results.sorted { lhs, rhs in
                 // Prioritize QR codes over other barcode types
                 let lhsIsQR = lhs.symbology == .qr
                 let rhsIsQR = rhs.symbology == .qr
-                
+
                 if lhsIsQR && !rhsIsQR { return true }
                 if !lhsIsQR && rhsIsQR { return false }
-                
+
                 // Then sort by confidence
                 return lhs.confidence > rhs.confidence
             }
-            
+
             completion(sortedResults)
         }
-        
+
         // Configure to detect multiple barcode types including QR codes
         request.symbologies = [
             .qr,
@@ -97,9 +96,9 @@ class BarcodeDetectionManager: BarcodeDetectionProtocol {
             .dataMatrix,
             .aztec
         ]
-        
+
         let handler = VNImageRequestHandler(cgImage: cgImage, options: [:])
-        
+
         do {
             try handler.perform([request])
         } catch {
@@ -107,29 +106,29 @@ class BarcodeDetectionManager: BarcodeDetectionProtocol {
             completion([])
         }
     }
-    
+
     // MARK: - QR Code Content Analysis
     func parseQRCodeContent(_ payload: String) -> QRCodeContentType {
         let trimmedPayload = payload.trimmingCharacters(in: .whitespacesAndNewlines)
-        
+
         // URL detection
         if let url = URL(string: trimmedPayload),
            url.scheme != nil {
             return .url(url)
         }
-        
+
         // Email detection
         if trimmedPayload.lowercased().hasPrefix("mailto:") {
             let email = String(trimmedPayload.dropFirst(7))
             return .email(email)
         }
-        
+
         // Phone detection
         if trimmedPayload.lowercased().hasPrefix("tel:") {
             let phone = String(trimmedPayload.dropFirst(4))
             return .phone(phone)
         }
-        
+
         // SMS detection
         if trimmedPayload.lowercased().hasPrefix("sms:") {
             let smsContent = String(trimmedPayload.dropFirst(4))
@@ -138,38 +137,38 @@ class BarcodeDetectionManager: BarcodeDetectionProtocol {
             let message = components.count > 1 ? components[1] : nil
             return .sms(number: number, message: message)
         }
-        
+
         // WiFi detection
         if trimmedPayload.lowercased().hasPrefix("wifi:") {
             return parseWiFiQRCode(trimmedPayload)
         }
-        
+
         // vCard detection
         if trimmedPayload.lowercased().hasPrefix("begin:vcard") {
             return .contact(vCard: trimmedPayload)
         }
-        
+
         // Simple email pattern detection
         if isValidEmail(trimmedPayload) {
             return .email(trimmedPayload)
         }
-        
+
         // Simple phone pattern detection
         if isValidPhoneNumber(trimmedPayload) {
             return .phone(trimmedPayload)
         }
-        
+
         // URL without scheme
         if trimmedPayload.contains(".") && !trimmedPayload.contains(" ") {
             if let url = URL(string: "https://\(trimmedPayload)") {
                 return .url(url)
             }
         }
-        
+
         // Default to text
         return .text(trimmedPayload)
     }
-    
+
     // MARK: - Private Helper Methods
     private func parseWiFiQRCode(_ payload: String) -> QRCodeContentType {
         // WiFi format: WIFI:T:WPA;S:NetworkName;P:Password;H:false;;
@@ -177,7 +176,7 @@ class BarcodeDetectionManager: BarcodeDetectionProtocol {
         var ssid: String?
         var password: String?
         var security: String?
-        
+
         for component in components {
             if component.hasPrefix("S:") {
                 ssid = String(component.dropFirst(2))
@@ -187,15 +186,15 @@ class BarcodeDetectionManager: BarcodeDetectionProtocol {
                 security = String(component.dropFirst(2))
             }
         }
-        
+
         return .wifi(ssid: ssid ?? "Unknown Network", password: password, security: security)
     }
-    
+
     private func isValidEmail(_ string: String) -> Bool {
         let emailRegex = #"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"#
         return string.range(of: emailRegex, options: .regularExpression) != nil
     }
-    
+
     private func isValidPhoneNumber(_ string: String) -> Bool {
         let phoneRegex = #"^[\+]?[1-9][\d]{0,15}$"#
         let cleanedString = string.replacingOccurrences(of: "[^0-9+]", with: "", options: .regularExpression)

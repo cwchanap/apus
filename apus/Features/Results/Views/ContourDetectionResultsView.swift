@@ -162,4 +162,3 @@ private struct ContourResultDetailView: View {
         }
     }
 }
-

@@ -63,173 +63,9 @@ extension PreviewView {
     func actionsSheetView(showSheet: Binding<Bool>) -> some View {
         NavigationStack {
             List {
-                Section(header: Text("Analysis")) {
-                    // Classification
-                    Button {
-                        hapticService.actionFeedback()
-                        toggleClassification()
-                        showSheet.wrappedValue = false
-                    } label: {
-                        HStack {
-                            Image(systemName: "brain.head.profile")
-                                .foregroundColor(.accentColor)
-                            if isClassifying {
-                                Text("Classifying…")
-                            } else {
-                                Text(getClassificationButtonText())
-                            }
-                            Spacer()
-                        }
-                    }
-                    .disabled(isClassifying)
-
-                    // Object Detection
-                    Button {
-                        hapticService.actionFeedback()
-                        toggleObjects()
-                        showSheet.wrappedValue = false
-                    } label: {
-                        HStack {
-                            Image(systemName: "viewfinder.circle")
-                                .foregroundColor(.accentColor)
-                            if isDetectingObjects {
-                                Text("Detecting…")
-                            } else {
-                                Text(getObjectButtonText())
-                            }
-                            Spacer()
-                        }
-                    }
-                    .disabled(isDetectingObjects)
-
-                    // Contour Detection
-                    Button {
-                        hapticService.actionFeedback()
-                        toggleContours()
-                        showSheet.wrappedValue = false
-                    } label: {
-                        HStack {
-                            Image(systemName: "eye")
-                                .foregroundColor(.accentColor)
-                            if isDetectingContours {
-                                Text("Detecting…")
-                            } else {
-                                Text(getContourButtonText())
-                            }
-                            Spacer()
-                        }
-                    }
-                    .disabled(isDetectingContours)
-
-                    // Text Recognition (OCR)
-                    Button {
-                        hapticService.actionFeedback()
-                        toggleTextRecognition()
-                        showSheet.wrappedValue = false
-                    } label: {
-                        HStack {
-                            Image(systemName: "textformat")
-                                .foregroundColor(.accentColor)
-                            if isDetectingTexts {
-                                Text("Reading Text…")
-                            } else {
-                                Text(getTextRecognitionButtonText())
-                            }
-                            Spacer()
-                        }
-                    }
-                    .disabled(isDetectingTexts)
-
-                    // Barcode Detection
-                    Button {
-                        hapticService.actionFeedback()
-                        toggleBarcodes()
-                        showSheet.wrappedValue = false
-                    } label: {
-                        HStack {
-                            Image(systemName: "barcode.viewfinder")
-                                .foregroundColor(.accentColor)
-                            if isDetectingBarcodes {
-                                Text("Detecting…")
-                            } else {
-                                Text(getBarcodeButtonText())
-                            }
-                            Spacer()
-                        }
-                    }
-                    .disabled(isDetectingBarcodes)
-                }
-
-                Section(header: Text("Photo")) {
-                    // Save Photo
-                    Button {
-                        hapticService.actionFeedback()
-                        saveImageToPhotoLibrary()
-                        if isSaved {
-                            hapticService.success()
-                            alertMessage = "Image saved to Photos"
-                            showingAlert = true
-                        } else {
-                            hapticService.error()
-                            alertMessage = "Permission denied to save to Photos"
-                            showingAlert = true
-                        }
-                        showSheet.wrappedValue = false
-                    } label: {
-                        HStack {
-                            Image(systemName: isSaved ? "checkmark.circle.fill" : "square.and.arrow.down")
-                                .foregroundColor(isSaved ? .green : .accentColor)
-                            Text(isSaved ? "Saved" : "Save Photo")
-                            Spacer()
-                        }
-                    }
-                    .disabled(isSaved)
-
-                    // Discard Photo
-                    Button(role: .destructive) {
-                        hapticService.buttonTap()
-                        capturedImage = nil
-                        showSheet.wrappedValue = false
-                    } label: {
-                        HStack {
-                            Image(systemName: "trash")
-                                .foregroundColor(.red)
-                            Text("Discard Photo")
-                            Spacer()
-                        }
-                    }
-                }
-
-                Section(header: Text("Results")) {
-                    // View All Results
-                    Button {
-                        showSheet.wrappedValue = false
-                        // Present results after dismiss to avoid sheet conflicts
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                            showingHistory = true
-                        }
-                    } label: {
-                        HStack {
-                            Image(systemName: "clock.arrow.circlepath")
-                                .foregroundColor(.accentColor)
-                            Text("View All Results")
-                            Spacer()
-                        }
-                    }
-
-                    // Reset Overlays
-                    Button {
-                        resetAllDetections()
-                        showSheet.wrappedValue = false
-                    } label: {
-                        HStack {
-                            Image(systemName: "arrow.counterclockwise")
-                                .foregroundColor(.accentColor)
-                            Text("Reset Overlays")
-                            Spacer()
-                        }
-                    }
-                }
+                analysisSection(showSheet: showSheet)
+                photoSection(showSheet: showSheet)
+                resultsSection(showSheet: showSheet)
             }
             .navigationTitle("Actions")
             .navigationBarTitleDisplayMode(.inline)
@@ -381,6 +217,151 @@ extension PreviewView {
                 .background(Color.blue.opacity(0.1))
                 .clipShape(Capsule())
             }
+        }
+    }
+
+    // MARK: - Action Sheet Sections
+    @ViewBuilder
+    private func analysisSection(showSheet: Binding<Bool>) -> some View {
+        Section(header: Text("Analysis")) {
+            analysisButton(
+                icon: "brain.head.profile",
+                title: isClassifying ? "Classifying…" : getClassificationButtonText(),
+                disabled: isClassifying,
+                action: { toggleClassification() },
+                showSheet: showSheet
+            )
+
+            analysisButton(
+                icon: "viewfinder.circle",
+                title: isDetectingObjects ? "Detecting…" : getObjectButtonText(),
+                disabled: isDetectingObjects,
+                action: { toggleObjects() },
+                showSheet: showSheet
+            )
+
+            analysisButton(
+                icon: "eye",
+                title: isDetectingContours ? "Detecting…" : getContourButtonText(),
+                disabled: isDetectingContours,
+                action: { toggleContours() },
+                showSheet: showSheet
+            )
+
+            analysisButton(
+                icon: "textformat",
+                title: isDetectingTexts ? "Reading Text…" : getTextRecognitionButtonText(),
+                disabled: isDetectingTexts,
+                action: { toggleTextRecognition() },
+                showSheet: showSheet
+            )
+
+            analysisButton(
+                icon: "barcode.viewfinder",
+                title: isDetectingBarcodes ? "Detecting…" : getBarcodeButtonText(),
+                disabled: isDetectingBarcodes,
+                action: { toggleBarcodes() },
+                showSheet: showSheet
+            )
+        }
+    }
+
+    @ViewBuilder
+    private func photoSection(showSheet: Binding<Bool>) -> some View {
+        Section(header: Text("Photo")) {
+            Button {
+                hapticService.actionFeedback()
+                saveImageToPhotoLibrary()
+                handleSaveResult()
+                showSheet.wrappedValue = false
+            } label: {
+                HStack {
+                    Image(systemName: isSaved ? "checkmark.circle.fill" : "square.and.arrow.down")
+                        .foregroundColor(isSaved ? .green : .accentColor)
+                    Text(isSaved ? "Saved" : "Save Photo")
+                    Spacer()
+                }
+            }
+            .disabled(isSaved)
+
+            Button(role: .destructive) {
+                hapticService.buttonTap()
+                capturedImage = nil
+                showSheet.wrappedValue = false
+            } label: {
+                HStack {
+                    Image(systemName: "trash")
+                        .foregroundColor(.red)
+                    Text("Discard Photo")
+                    Spacer()
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func resultsSection(showSheet: Binding<Bool>) -> some View {
+        Section(header: Text("Results")) {
+            Button {
+                showSheet.wrappedValue = false
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    showingHistory = true
+                }
+            } label: {
+                HStack {
+                    Image(systemName: "clock.arrow.circlepath")
+                        .foregroundColor(.accentColor)
+                    Text("View All Results")
+                    Spacer()
+                }
+            }
+
+            Button {
+                resetAllDetections()
+                showSheet.wrappedValue = false
+            } label: {
+                HStack {
+                    Image(systemName: "arrow.counterclockwise")
+                        .foregroundColor(.accentColor)
+                    Text("Reset Overlays")
+                    Spacer()
+                }
+            }
+        }
+    }
+
+    @ViewBuilder
+    private func analysisButton(
+        icon: String,
+        title: String,
+        disabled: Bool,
+        action: @escaping () -> Void,
+        showSheet: Binding<Bool>
+    ) -> some View {
+        Button {
+            hapticService.actionFeedback()
+            action()
+            showSheet.wrappedValue = false
+        } label: {
+            HStack {
+                Image(systemName: icon)
+                    .foregroundColor(.accentColor)
+                Text(title)
+                Spacer()
+            }
+        }
+        .disabled(disabled)
+    }
+
+    private func handleSaveResult() {
+        if isSaved {
+            hapticService.success()
+            alertMessage = "Image saved to Photos"
+            showingAlert = true
+        } else {
+            hapticService.error()
+            alertMessage = "Permission denied to save to Photos"
+            showingAlert = true
         }
     }
 }

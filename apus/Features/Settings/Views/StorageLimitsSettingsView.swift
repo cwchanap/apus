@@ -10,7 +10,7 @@ import SwiftUI
 struct StorageLimitsSettingsView: View {
     @StateObject private var viewModel = SettingsViewModel()
     @Environment(\.dismiss) private var dismiss
-    
+
     var body: some View {
         NavigationView {
             List {
@@ -20,20 +20,20 @@ struct StorageLimitsSettingsView: View {
                         .foregroundColor(.secondary)
                         .padding(.vertical, 4)
                 }
-                
+
                 Section("Detection Categories") {
                     ForEach(DetectionCategory.allCases, id: \.self) { category in
                         StorageLimitRowView(category: category, viewModel: viewModel)
                     }
                 }
-                
+
                 Section("Actions") {
                     Button("Reset All to Default (10)") {
                         resetAllToDefault()
                     }
                     .foregroundColor(.orange)
                 }
-                
+
             }
             .navigationTitle("Storage Limits")
             .navigationBarTitleDisplayMode(.large)
@@ -46,7 +46,7 @@ struct StorageLimitsSettingsView: View {
             }
         }
     }
-    
+
     private func resetAllToDefault() {
         for category in DetectionCategory.allCases {
             viewModel.setStorageLimit(for: category, limit: 10)
@@ -60,7 +60,7 @@ struct StorageLimitRowView: View {
     @ObservedObject var viewModel: SettingsViewModel
     @State private var inputValue: String = ""
     @FocusState private var isTextFieldFocused: Bool
-    
+
     var body: some View {
         HStack(spacing: 12) {
             // Category Icon and Info
@@ -72,7 +72,7 @@ struct StorageLimitRowView: View {
                         Circle()
                             .fill(category.color.opacity(0.1))
                     )
-                
+
                 VStack(alignment: .leading, spacing: 2) {
                     Text(category.rawValue)
                         .font(.body)
@@ -82,9 +82,9 @@ struct StorageLimitRowView: View {
                         .foregroundColor(.secondary)
                 }
             }
-            
+
             Spacer()
-            
+
             // Controls
             HStack(spacing: 8) {
                 // Decrease button
@@ -99,7 +99,7 @@ struct StorageLimitRowView: View {
                 }
                 .disabled(viewModel.getStorageLimit(for: category) <= 1)
                 .buttonStyle(PlainButtonStyle())
-                
+
                 // Value display/input
                 TextField("", text: $inputValue)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
@@ -119,7 +119,7 @@ struct StorageLimitRowView: View {
                             updateInputValue()
                         }
                     }
-                
+
                 // Increase button
                 Button(action: {
                     let currentValue = viewModel.getStorageLimit(for: category)
@@ -145,7 +145,7 @@ struct StorageLimitRowView: View {
             }
         }
     }
-    
+
     private func updateInputValue() {
         inputValue = String(viewModel.getStorageLimit(for: category))
     }

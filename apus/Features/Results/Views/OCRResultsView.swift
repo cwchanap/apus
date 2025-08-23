@@ -96,8 +96,8 @@ extension OCRResultsView {
         switch string {
         case "medium": return .medium
         case "large": return .large
-        case let s where s.hasPrefix("fraction-"):
-            if let value = Double(s.replacingOccurrences(of: "fraction-", with: "")) {
+        case let fractionString where fractionString.hasPrefix("fraction-"):
+            if let value = Double(fractionString.replacingOccurrences(of: "fraction-", with: "")) {
                 return .fraction(value)
             }
             return nil

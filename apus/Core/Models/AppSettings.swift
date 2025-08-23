@@ -135,31 +135,31 @@ class AppSettings: ObservableObject {
     private init() {
         // Load saved settings or defaults (optimized for performance)
         let defaults = UserDefaults.standard
-        
+
         // Use bool(forKey:) which is faster than object(forKey:)
-        self.isRealTimeObjectDetectionEnabled = defaults.object(forKey: UserDefaults.Keys.isRealTimeObjectDetectionEnabled) != nil ? 
+        self.isRealTimeObjectDetectionEnabled = defaults.object(forKey: UserDefaults.Keys.isRealTimeObjectDetectionEnabled) != nil ?
             defaults.bool(forKey: UserDefaults.Keys.isRealTimeObjectDetectionEnabled) : true
-        
-        self.isRealTimeBarcodeDetectionEnabled = defaults.object(forKey: UserDefaults.Keys.isRealTimeBarcodeDetectionEnabled) != nil ? 
+
+        self.isRealTimeBarcodeDetectionEnabled = defaults.object(forKey: UserDefaults.Keys.isRealTimeBarcodeDetectionEnabled) != nil ?
             defaults.bool(forKey: UserDefaults.Keys.isRealTimeBarcodeDetectionEnabled) : true
 
         let frameworkRawValue = defaults.string(forKey: UserDefaults.Keys.objectDetectionFramework) ?? ObjectDetectionFramework.vision.rawValue
         self.objectDetectionFramework = ObjectDetectionFramework(rawValue: frameworkRawValue) ?? .vision
 
         // Load storage limits with default of 10 for all categories
-        self.ocrResultsLimit = defaults.object(forKey: UserDefaults.Keys.ocrResultsLimit) != nil ? 
+        self.ocrResultsLimit = defaults.object(forKey: UserDefaults.Keys.ocrResultsLimit) != nil ?
             defaults.integer(forKey: UserDefaults.Keys.ocrResultsLimit) : 10
-        
-        self.objectDetectionResultsLimit = defaults.object(forKey: UserDefaults.Keys.objectDetectionResultsLimit) != nil ? 
+
+        self.objectDetectionResultsLimit = defaults.object(forKey: UserDefaults.Keys.objectDetectionResultsLimit) != nil ?
             defaults.integer(forKey: UserDefaults.Keys.objectDetectionResultsLimit) : 10
-        
-        self.classificationResultsLimit = defaults.object(forKey: UserDefaults.Keys.classificationResultsLimit) != nil ? 
+
+        self.classificationResultsLimit = defaults.object(forKey: UserDefaults.Keys.classificationResultsLimit) != nil ?
             defaults.integer(forKey: UserDefaults.Keys.classificationResultsLimit) : 10
-        
-        self.contourDetectionResultsLimit = defaults.object(forKey: UserDefaults.Keys.contourDetectionResultsLimit) != nil ? 
+
+        self.contourDetectionResultsLimit = defaults.object(forKey: UserDefaults.Keys.contourDetectionResultsLimit) != nil ?
             defaults.integer(forKey: UserDefaults.Keys.contourDetectionResultsLimit) : 10
-        
-        self.barcodeDetectionResultsLimit = defaults.object(forKey: UserDefaults.Keys.barcodeDetectionResultsLimit) != nil ? 
+
+        self.barcodeDetectionResultsLimit = defaults.object(forKey: UserDefaults.Keys.barcodeDetectionResultsLimit) != nil ?
             defaults.integer(forKey: UserDefaults.Keys.barcodeDetectionResultsLimit) : 10
     }
 
@@ -173,7 +173,7 @@ class AppSettings: ObservableObject {
         contourDetectionResultsLimit = 10
         barcodeDetectionResultsLimit = 10
     }
-    
+
     func getStorageLimit(for category: DetectionCategory) -> Int {
         switch category {
         case .ocr:
@@ -188,7 +188,7 @@ class AppSettings: ObservableObject {
             return barcodeDetectionResultsLimit
         }
     }
-    
+
     func setStorageLimit(for category: DetectionCategory, limit: Int) {
         let clampedLimit = max(1, min(100, limit)) // Limit between 1 and 100
         switch category {

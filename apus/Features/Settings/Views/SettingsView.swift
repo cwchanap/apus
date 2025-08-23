@@ -32,7 +32,7 @@ struct SettingsView: View {
             }
         }
     }
-    
+
     private var loadingView: some View {
         VStack(spacing: 16) {
             ProgressView()
@@ -43,7 +43,7 @@ struct SettingsView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
-    
+
     private var settingsContent: some View {
         List {
                 // Object Detection Settings Section
@@ -164,7 +164,7 @@ struct SettingsView: View {
                             Image(systemName: "externaldrive")
                                 .foregroundColor(.purple)
                                 .frame(width: 24, height: 24)
-                            
+
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("Storage Limits")
                                     .font(.body)
@@ -172,7 +172,7 @@ struct SettingsView: View {
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                             }
-                            
+
                             Spacer()
                         }
                         .padding(.vertical, 4)
@@ -211,7 +211,6 @@ struct SettingsView: View {
             }
         }
     }
-
 
 #Preview {
     SettingsView()

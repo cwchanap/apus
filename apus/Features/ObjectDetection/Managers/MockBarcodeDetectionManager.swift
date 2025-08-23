@@ -1,4 +1,3 @@
-
 //
 //  MockBarcodeDetectionManager.swift
 //  apus
@@ -17,10 +16,10 @@ class MockBarcodeDetectionManager: BarcodeDetectionProtocol {
             completion(mockBarcodes)
         }
     }
-    
+
     private func generateMockBarcodes(for image: UIImage) -> [VNBarcodeObservation] {
         let imageHash = simpleImageHash(image)
-        
+
         // Different mock barcode scenarios
         let scenarios: [[MockBarcodeData]] = [
             // QR Code scenarios
@@ -89,11 +88,11 @@ class MockBarcodeDetectionManager: BarcodeDetectionProtocol {
                 )
             ]
         ]
-        
+
         let selectedScenario = scenarios[imageHash % scenarios.count]
         return selectedScenario.compactMap { createMockObservation(from: $0) }
     }
-    
+
     private func createMockObservation(from data: MockBarcodeData) -> VNBarcodeObservation? {
         // Create a mock VNBarcodeObservation
         // Note: This is a simplified mock - in real usage, VNBarcodeObservation would be created by Vision framework
@@ -105,7 +104,7 @@ class MockBarcodeDetectionManager: BarcodeDetectionProtocol {
         )
         return observation
     }
-    
+
     private func simpleImageHash(_ image: UIImage) -> Int {
         let width = Int(image.size.width)
         let height = Int(image.size.height)
@@ -128,7 +127,7 @@ private class MockVNBarcodeObservation: VNBarcodeObservation {
     private let _symbology: VNBarcodeSymbology
     private let _boundingBox: CGRect
     private let _confidence: Float
-    
+
     init(payload: String?, symbology: VNBarcodeSymbology, boundingBox: CGRect, confidence: Float) {
         self._payloadStringValue = payload
         self._symbology = symbology
@@ -136,23 +135,23 @@ private class MockVNBarcodeObservation: VNBarcodeObservation {
         self._confidence = confidence
         super.init()
     }
-    
+
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
+
     override var payloadStringValue: String? {
         return _payloadStringValue
     }
-    
+
     override var symbology: VNBarcodeSymbology {
         return _symbology
     }
-    
+
     override var boundingBox: CGRect {
         return _boundingBox
     }
-    
+
     override var confidence: VNConfidence {
         return _confidence
     }

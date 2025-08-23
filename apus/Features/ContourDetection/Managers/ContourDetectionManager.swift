@@ -174,4 +174,3 @@ enum ContourDetectionError: Error, LocalizedError {
 }
 
 // CGImagePropertyOrientation extension is defined in VisionObjectDetectionManager.swift
-

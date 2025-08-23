@@ -12,7 +12,7 @@ import Vision
 
 /// Manager for storing and retrieving detection results with AppStorage
 class DetectionResultsManager: ObservableObject {
-    
+
     // Reference to app settings for storage limits
     private let appSettings = AppSettings.shared
 
@@ -66,9 +66,7 @@ class DetectionResultsManager: ObservableObject {
         // Add to beginning of array and limit to max count
         ocrResults.insert(newResult, at: 0)
         let limit = appSettings.getStorageLimit(for: .ocr)
-        if ocrResults.count > limit {
-            ocrResults = Array(ocrResults.prefix(limit))
-        }
+        enforceLimit(for: &ocrResults, limit: limit)
 
         updateCachedValues()
         saveOCRResults()
@@ -129,9 +127,7 @@ class DetectionResultsManager: ObservableObject {
         // Add to beginning of array and limit to max count
         objectDetectionResults.insert(newResult, at: 0)
         let limit = appSettings.getStorageLimit(for: .objectDetection)
-        if objectDetectionResults.count > limit {
-            objectDetectionResults = Array(objectDetectionResults.prefix(limit))
-        }
+        enforceLimit(for: &objectDetectionResults, limit: limit)
 
         updateCachedValues()
         saveObjectDetectionResults()
@@ -191,9 +187,7 @@ class DetectionResultsManager: ObservableObject {
         // Add to beginning of array and limit to max count
         self.classificationResults.insert(newResult, at: 0)
         let limit = appSettings.getStorageLimit(for: .classification)
-        if self.classificationResults.count > limit {
-            self.classificationResults = Array(self.classificationResults.prefix(limit))
-        }
+        enforceLimit(for: &classificationResults, limit: limit)
 
         updateCachedValues()
         saveClassificationResults()
@@ -256,7 +250,11 @@ class DetectionResultsManager: ObservableObject {
     @MainActor
     private func loadAllResults() async {
         // Load all results on background queue to avoid blocking main thread
-        let (ocrData, objectData, classificationData, contourData, barcodeData) = (ocrResultsData, objectDetectionResultsData, classificationResultsData, contourDetectionResultsData, barcodeDetectionResultsData)
+        let ocrData = ocrResultsData
+        let objectData = objectDetectionResultsData
+        let classificationData = classificationResultsData
+        let contourData = contourDetectionResultsData
+        let barcodeData = barcodeDetectionResultsData
 
         let results = await withTaskGroup(of: (String, Any).self) { group in
             var loadedResults: [String: Any] = [:]
@@ -379,8 +377,6 @@ class DetectionResultsManager: ObservableObject {
         }
     }
 
-    
-
     // MARK: - Statistics
 
     var totalResultsCount: Int {
@@ -421,9 +417,7 @@ extension DetectionResultsManager {
 
         barcodeResults.insert(newResult, at: 0)
         let limit = appSettings.getStorageLimit(for: .barcode)
-        if barcodeResults.count > limit {
-            barcodeResults = Array(barcodeResults.prefix(limit))
-        }
+        enforceLimit(for: &barcodeResults, limit: limit)
 
         updateCachedValues()
         saveBarcodeDetectionResults()
@@ -474,7 +468,6 @@ extension DetectionResultsManager {
     }
 }
 
-
 // MARK: - Contour Detection Results Management
 
 extension DetectionResultsManager {
@@ -483,9 +476,7 @@ extension DetectionResultsManager {
 
         contourResults.insert(newResult, at: 0)
         let limit = appSettings.getStorageLimit(for: .contourDetection)
-        if contourResults.count > limit {
-            contourResults = Array(contourResults.prefix(limit))
-        }
+        enforceLimit(for: &contourResults, limit: limit)
 
         updateCachedValues()
         saveContourDetectionResults()
@@ -558,5 +549,14 @@ extension DetectionResultsManager {
         clearContourDetectionResults()
         clearBarcodeDetectionResults()
         updateCachedValues()
+    }
+}
+
+// MARK: - Helper Extensions
+private extension DetectionResultsManager {
+    func enforceLimit<T>(for results: inout [T], limit: Int) {
+        if results.count > limit {
+            results = Array(results.prefix(limit))
+        }
     }
 }

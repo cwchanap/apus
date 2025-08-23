@@ -1,4 +1,3 @@
-
 //
 //  BarcodeDetectionResultsView.swift
 //  apus
@@ -13,9 +12,9 @@ struct BarcodeDetectionResultsView: View {
     @State private var selectedResult: StoredBarcodeDetectionResult?
     @State private var showingDetailView = false
     @Environment(\.dismiss) private var dismiss
-    
+
     private let barcodeManager = BarcodeDetectionManager()
-    
+
     var body: some View {
         Group {
             if resultsManager.barcodeResults.isEmpty {
@@ -66,7 +65,7 @@ struct BarcodeDetectionResultsView: View {
             }
         }
     }
-    
+
     private func deleteResults(at offsets: IndexSet) {
         resultsManager.barcodeResults.remove(atOffsets: offsets)
     }
@@ -77,7 +76,7 @@ struct BarcodeResultRow: View {
     let result: StoredBarcodeDetectionResult
     let barcodeManager: BarcodeDetectionManager
     let onTap: () -> Void
-    
+
     var body: some View {
         Button(action: onTap) {
             HStack(spacing: 12) {
@@ -89,7 +88,7 @@ struct BarcodeResultRow: View {
                         .frame(width: 60, height: 60)
                         .clipShape(RoundedRectangle(cornerRadius: 8))
                 }
-                
+
                 VStack(alignment: .leading, spacing: 4) {
                     // Summary
                     HStack {
@@ -100,7 +99,7 @@ struct BarcodeResultRow: View {
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                     }
-                    
+
                     // QR Code preview if available
                     if let firstQR = result.detectedBarcodes.first(where: { $0.symbology == "QR" }) {
                         let contentType = barcodeManager.parseQRCodeContent(firstQR.payload)
@@ -114,26 +113,26 @@ struct BarcodeResultRow: View {
                                 .lineLimit(1)
                         }
                     }
-                    
+
                     // Timestamp
                     Text(result.timestamp, style: .relative)
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
-                
+
                 Spacer()
-                
+
                 // Type indicators
                 VStack(alignment: .trailing, spacing: 2) {
                     let qrCount = result.detectedBarcodes.filter { $0.symbology == "QR" }.count
                     let barcodeCount = result.detectedBarcodes.count - qrCount
-                    
+
                     if qrCount > 0 {
                         Label("\(qrCount)", systemImage: "qrcode")
                             .font(.caption2)
                             .foregroundColor(.blue)
                     }
-                    
+
                     if barcodeCount > 0 {
                         Label("\(barcodeCount)", systemImage: "barcode")
                             .font(.caption2)
@@ -145,7 +144,7 @@ struct BarcodeResultRow: View {
         }
         .buttonStyle(PlainButtonStyle())
     }
-    
+
     private func getContentColor(_ contentType: QRCodeContentType) -> Color {
         switch contentType {
         case .url: return .blue
@@ -158,7 +157,7 @@ struct BarcodeResultRow: View {
         case .unknown: return .secondary
         }
     }
-    
+
     private func getContentPreview(_ contentType: QRCodeContentType) -> String {
         switch contentType {
         case .url(let url): return url.host ?? url.absoluteString
@@ -178,7 +177,7 @@ struct BarcodeResultDetailView: View {
     let result: StoredBarcodeDetectionResult
     let barcodeManager: BarcodeDetectionManager
     @Environment(\.dismiss) private var dismiss
-    
+
     var body: some View {
         NavigationView {
             ScrollView {
@@ -191,7 +190,7 @@ struct BarcodeResultDetailView: View {
                             .frame(maxHeight: 300)
                             .clipShape(RoundedRectangle(cornerRadius: 12))
                     }
-                    
+
                     // Barcodes list
                     LazyVStack(alignment: .leading, spacing: 12) {
                         ForEach(Array(result.detectedBarcodes.enumerated()), id: \.offset) { index, barcode in
@@ -224,10 +223,10 @@ struct BarcodeDetailCard: View {
     let index: Int
     let barcodeManager: BarcodeDetectionManager
     @State private var showingActionSheet = false
-    
+
     var body: some View {
         let contentType = barcodeManager.parseQRCodeContent(barcode.payload)
-        
+
         VStack(alignment: .leading, spacing: 8) {
             // Header
             HStack {
@@ -242,27 +241,27 @@ struct BarcodeDetailCard: View {
                     .foregroundColor(.white)
                     .clipShape(Capsule())
             }
-            
+
             // Content preview with icon
             HStack(spacing: 8) {
                 Image(systemName: contentType.icon)
                     .foregroundColor(getContentColor(contentType))
                     .frame(width: 20)
-                
+
                 VStack(alignment: .leading, spacing: 2) {
                     Text(getContentTitle(contentType))
                         .font(.subheadline)
                         .fontWeight(.medium)
-                    
+
                     Text(barcode.payload)
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .lineLimit(3)
                 }
-                
+
                 Spacer()
             }
-            
+
             // Action button
             Button(action: { showingActionSheet = true }) {
                 HStack {
@@ -284,7 +283,7 @@ struct BarcodeDetailCard: View {
             createActionSheet(for: barcode, contentType: contentType)
         }
     }
-    
+
     private func getContentColor(_ contentType: QRCodeContentType) -> Color {
         switch contentType {
         case .url: return .blue
@@ -297,7 +296,7 @@ struct BarcodeDetailCard: View {
         case .unknown: return .secondary
         }
     }
-    
+
     private func getContentTitle(_ contentType: QRCodeContentType) -> String {
         switch contentType {
         case .url: return "Website URL"
@@ -310,10 +309,10 @@ struct BarcodeDetailCard: View {
         case .unknown: return "Unknown Content"
         }
     }
-    
+
     private func createActionSheet(for barcode: StoredDetectedBarcode, contentType: QRCodeContentType) -> ActionSheet {
         var buttons: [ActionSheet.Button] = []
-        
+
         // Add primary action based on content type
         switch contentType {
         case .url(let url):
@@ -346,14 +345,14 @@ struct BarcodeDetailCard: View {
         default:
             break
         }
-        
+
         // Always add copy option
         buttons.append(.default(Text("Copy Content")) {
             UIPasteboard.general.string = barcode.payload
         })
-        
+
         buttons.append(.cancel())
-        
+
         return ActionSheet(
             title: Text(barcode.symbology),
             message: Text(contentType.actionTitle),

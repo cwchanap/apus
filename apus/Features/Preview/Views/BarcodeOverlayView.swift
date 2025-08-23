@@ -1,4 +1,3 @@
-
 //
 //  BarcodeOverlayView.swift
 //  apus
@@ -16,7 +15,7 @@ struct BarcodeOverlayView: View {
     let displaySize: CGSize
     @State private var selectedBarcode: VNBarcodeObservation?
     @State private var showingActionSheet = false
-    
+
     // Inject barcode detection manager for content parsing
     private let barcodeManager = BarcodeDetectionManager()
 
@@ -41,7 +40,7 @@ struct BarcodeOverlayView: View {
                 HStack(spacing: 4) {
                     Image(systemName: getIcon(for: contentType))
                         .font(.caption2)
-                    
+
                     Text(getDisplayText(for: barcode, contentType: contentType))
                         .font(.caption2)
                         .lineLimit(1)
@@ -52,7 +51,7 @@ struct BarcodeOverlayView: View {
                 .background(getBorderColor(for: barcode).opacity(0.9))
                 .clipShape(RoundedRectangle(cornerRadius: 6))
                 .position(x: transformedRect.midX, y: transformedRect.minY - 15)
-                
+
                 // QR Code corner indicators for better visibility
                 if isQRCode {
                     ForEach(0..<4, id: \.self) { corner in
@@ -65,16 +64,16 @@ struct BarcodeOverlayView: View {
             createActionSheet(for: selectedBarcode)
         }
     }
-    
+
     // MARK: - Helper Methods
-    
+
     private func parseContentType(_ barcode: VNBarcodeObservation) -> QRCodeContentType {
         guard let payload = barcode.payloadStringValue else {
             return .unknown("")
         }
         return barcodeManager.parseQRCodeContent(payload)
     }
-    
+
     private func getBorderColor(for barcode: VNBarcodeObservation) -> Color {
         if barcode.symbology == .qr {
             let contentType = parseContentType(barcode)
@@ -92,14 +91,14 @@ struct BarcodeOverlayView: View {
             return .red // Traditional barcodes
         }
     }
-    
+
     private func getIcon(for contentType: QRCodeContentType) -> String {
         return contentType.icon
     }
-    
+
     private func getDisplayText(for barcode: VNBarcodeObservation, contentType: QRCodeContentType) -> String {
         let symbologyText = barcode.symbology == .qr ? "QR" : barcode.symbology.rawValue.uppercased()
-        
+
         switch contentType {
         case .url(let url):
             return "\(symbologyText): \(url.host ?? url.absoluteString)"
@@ -121,14 +120,14 @@ struct BarcodeOverlayView: View {
             return "\(symbologyText): \(preview)"
         }
     }
-    
+
     private func cornerIndicator(for corner: Int, in rect: CGRect) -> some View {
         let cornerSize: CGFloat = 12
         let offset: CGFloat = 4
-        
+
         let position: CGPoint
         let rotation: Double
-        
+
         switch corner {
         case 0: // Top-left
             position = CGPoint(x: rect.minX - offset, y: rect.minY - offset)
@@ -146,7 +145,7 @@ struct BarcodeOverlayView: View {
             position = .zero
             rotation = 0
         }
-        
+
         return Image(systemName: "qrcode.viewfinder")
             .font(.system(size: cornerSize))
             .foregroundColor(.white)
@@ -155,16 +154,16 @@ struct BarcodeOverlayView: View {
             .rotationEffect(.degrees(rotation))
             .position(position)
     }
-    
+
     private func createActionSheet(for barcode: VNBarcodeObservation?) -> ActionSheet {
         guard let barcode = barcode,
               let payload = barcode.payloadStringValue else {
             return ActionSheet(title: Text("Barcode"), buttons: [.cancel()])
         }
-        
+
         let contentType = parseContentType(barcode)
         var buttons: [ActionSheet.Button] = []
-        
+
         // Add primary action based on content type
         switch contentType {
         case .url(let url):
@@ -197,14 +196,14 @@ struct BarcodeOverlayView: View {
         default:
             break
         }
-        
+
         // Always add copy option
         buttons.append(.default(Text("Copy Content")) {
             UIPasteboard.general.string = payload
         })
-        
+
         buttons.append(.cancel())
-        
+
         return ActionSheet(
             title: Text(barcode.symbology == .qr ? "QR Code" : "Barcode"),
             message: Text(contentType.actionTitle),
@@ -227,7 +226,7 @@ struct BarcodeOverlayView: View {
 
 struct BarcodeDetectionOverlay: View {
     let barcodes: [VNBarcodeObservation]
-    
+
     var body: some View {
         GeometryReader { geometry in
             ZStack {
@@ -239,12 +238,12 @@ struct BarcodeDetectionOverlay: View {
                         width: boundingBox.width * geometry.size.width,
                         height: boundingBox.height * geometry.size.height
                     )
-                    
+
                     Rectangle()
                         .stroke(Color.red, lineWidth: 2)
                         .frame(width: rect.width, height: rect.height)
                         .position(x: rect.midX, y: rect.midY)
-                    
+
                     Text(barcode.payloadStringValue ?? "")
                         .foregroundColor(.white)
                         .background(Color.red)

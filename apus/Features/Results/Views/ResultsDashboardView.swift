@@ -123,7 +123,7 @@ struct ResultsDashboardView: View {
                                         Text("Storage limits can be configured per category")
                                             .font(.caption)
                                             .foregroundColor(.secondary)
-                                        
+
                                         Text("Oldest results are automatically removed when limits are exceeded")
                                             .font(.caption2)
                                             .foregroundColor(.secondary.opacity(0.8))
@@ -138,7 +138,7 @@ struct ResultsDashboardView: View {
                                 VStack {
                                     HStack {
                                         Spacer()
-                                        
+
                                         Text("⚙️ Adjust Storage Limits")
                                             .font(.subheadline)
                                             .fontWeight(.medium)
@@ -154,7 +154,7 @@ struct ResultsDashboardView: View {
                                             )
                                             .clipShape(RoundedRectangle(cornerRadius: 12))
                                             .shadow(color: .blue.opacity(0.3), radius: 4, x: 0, y: 2)
-                                        
+
                                         Spacer()
                                     }
                                 }
