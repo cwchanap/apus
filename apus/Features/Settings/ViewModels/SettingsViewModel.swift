@@ -117,38 +117,98 @@ class SettingsViewModel: ObservableObject {
 
     private func setupStorageLimitBindings() {
         // AppSettings to ViewModel bindings
-        bindAppSettingsToViewModel(keyPath: \.ocrResultsLimit, to: \.ocrResultsLimit)
-        bindAppSettingsToViewModel(keyPath: \.objectDetectionResultsLimit, to: \.objectDetectionResultsLimit)
-        bindAppSettingsToViewModel(keyPath: \.classificationResultsLimit, to: \.classificationResultsLimit)
-        bindAppSettingsToViewModel(keyPath: \.contourDetectionResultsLimit, to: \.contourDetectionResultsLimit)
-        bindAppSettingsToViewModel(keyPath: \.barcodeDetectionResultsLimit, to: \.barcodeDetectionResultsLimit)
-
-        // ViewModel to AppSettings bindings
-        bindViewModelToAppSettings(keyPath: \.ocrResultsLimit, to: \.ocrResultsLimit)
-        bindViewModelToAppSettings(keyPath: \.objectDetectionResultsLimit, to: \.objectDetectionResultsLimit)
-        bindViewModelToAppSettings(keyPath: \.classificationResultsLimit, to: \.classificationResultsLimit)
-        bindViewModelToAppSettings(keyPath: \.contourDetectionResultsLimit, to: \.contourDetectionResultsLimit)
-        bindViewModelToAppSettings(keyPath: \.barcodeDetectionResultsLimit, to: \.barcodeDetectionResultsLimit)
-    }
-
-    private func bindAppSettingsToViewModel<T: Equatable>(keyPath appKeyPath: KeyPath<AppSettings, T>, to viewModelKeyPath: ReferenceWritableKeyPath<SettingsViewModel, T>) {
-        appSettings[keyPath: appKeyPath.appending(path: \.$wrappedValue)]
+        appSettings.$ocrResultsLimit
             .removeDuplicates()
             .sink { [weak self] newValue in
-                if self?[keyPath: viewModelKeyPath] != newValue {
-                    self?[keyPath: viewModelKeyPath] = newValue
+                if self?.ocrResultsLimit != newValue {
+                    self?.ocrResultsLimit = newValue
                 }
             }
             .store(in: &cancellables)
-    }
 
-    private func bindViewModelToAppSettings<T: Equatable>(keyPath viewModelKeyPath: KeyPath<SettingsViewModel, T>, to appKeyPath: ReferenceWritableKeyPath<AppSettings, T>) {
-        self[keyPath: viewModelKeyPath.appending(path: \.$wrappedValue)]
+        appSettings.$objectDetectionResultsLimit
+            .removeDuplicates()
+            .sink { [weak self] newValue in
+                if self?.objectDetectionResultsLimit != newValue {
+                    self?.objectDetectionResultsLimit = newValue
+                }
+            }
+            .store(in: &cancellables)
+
+        appSettings.$classificationResultsLimit
+            .removeDuplicates()
+            .sink { [weak self] newValue in
+                if self?.classificationResultsLimit != newValue {
+                    self?.classificationResultsLimit = newValue
+                }
+            }
+            .store(in: &cancellables)
+
+        appSettings.$contourDetectionResultsLimit
+            .removeDuplicates()
+            .sink { [weak self] newValue in
+                if self?.contourDetectionResultsLimit != newValue {
+                    self?.contourDetectionResultsLimit = newValue
+                }
+            }
+            .store(in: &cancellables)
+
+        appSettings.$barcodeDetectionResultsLimit
+            .removeDuplicates()
+            .sink { [weak self] newValue in
+                if self?.barcodeDetectionResultsLimit != newValue {
+                    self?.barcodeDetectionResultsLimit = newValue
+                }
+            }
+            .store(in: &cancellables)
+
+        // ViewModel to AppSettings bindings
+        $ocrResultsLimit
             .dropFirst()
             .removeDuplicates()
             .sink { [weak self] newValue in
-                if self?.appSettings[keyPath: appKeyPath] != newValue {
-                    self?.appSettings[keyPath: appKeyPath] = newValue
+                if self?.appSettings.ocrResultsLimit != newValue {
+                    self?.appSettings.ocrResultsLimit = newValue
+                }
+            }
+            .store(in: &cancellables)
+
+        $objectDetectionResultsLimit
+            .dropFirst()
+            .removeDuplicates()
+            .sink { [weak self] newValue in
+                if self?.appSettings.objectDetectionResultsLimit != newValue {
+                    self?.appSettings.objectDetectionResultsLimit = newValue
+                }
+            }
+            .store(in: &cancellables)
+
+        $classificationResultsLimit
+            .dropFirst()
+            .removeDuplicates()
+            .sink { [weak self] newValue in
+                if self?.appSettings.classificationResultsLimit != newValue {
+                    self?.appSettings.classificationResultsLimit = newValue
+                }
+            }
+            .store(in: &cancellables)
+
+        $contourDetectionResultsLimit
+            .dropFirst()
+            .removeDuplicates()
+            .sink { [weak self] newValue in
+                if self?.appSettings.contourDetectionResultsLimit != newValue {
+                    self?.appSettings.contourDetectionResultsLimit = newValue
+                }
+            }
+            .store(in: &cancellables)
+
+        $barcodeDetectionResultsLimit
+            .dropFirst()
+            .removeDuplicates()
+            .sink { [weak self] newValue in
+                if self?.appSettings.barcodeDetectionResultsLimit != newValue {
+                    self?.appSettings.barcodeDetectionResultsLimit = newValue
                 }
             }
             .store(in: &cancellables)
