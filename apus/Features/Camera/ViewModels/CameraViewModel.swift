@@ -21,8 +21,8 @@ class CameraViewModel: ObservableObject {
     @Published var detectedBarcodes: [VNBarcodeObservation] = []
 
     // MARK: - Dependencies (Injected)
-    @Injected private var cameraManager: CameraManagerProtocol
-    @Injected private var objectDetectionManager: ObjectDetectionProtocol
+    @Injected private var cameraManager: any CameraManagerProtocol
+    @Injected private var objectDetectionManager: any UnifiedObjectDetectionProtocol
     @Injected private var barcodeDetectionManager: BarcodeDetectionProtocol
 
     // MARK: - Settings
@@ -38,7 +38,16 @@ class CameraViewModel: ObservableObject {
 
     var detections: [Detection] {
         // Only return detections if real-time object detection is enabled
-        return appSettings.isRealTimeObjectDetectionEnabled ? objectDetectionManager.detections : []
+        guard appSettings.isRealTimeObjectDetectionEnabled else { return [] }
+
+        // Convert DetectedObject to Detection for backward compatibility
+        return objectDetectionManager.lastDetectedObjects.map { detectedObject in
+            Detection(
+                boundingBox: detectedObject.boundingBox,
+                className: detectedObject.className,
+                confidence: detectedObject.confidence
+            )
+        }
     }
 
     var isRealTimeObjectDetectionEnabled: Bool {
@@ -64,10 +73,10 @@ class CameraViewModel: ObservableObject {
     }
 
     // MARK: - Alternative initializer for testing
-    init(cameraManager: CameraManagerProtocol, objectDetectionManager: ObjectDetectionProtocol, barcodeDetectionManager: BarcodeDetectionProtocol) {
+    init(cameraManager: any CameraManagerProtocol, objectDetectionManager: any UnifiedObjectDetectionProtocol, barcodeDetectionManager: BarcodeDetectionProtocol) {
         // Register test dependencies
-        DIContainer.shared.register(CameraManagerProtocol.self, instance: cameraManager)
-        DIContainer.shared.register(ObjectDetectionProtocol.self, instance: objectDetectionManager)
+        DIContainer.shared.register((any CameraManagerProtocol).self, instance: cameraManager)
+        DIContainer.shared.register((any UnifiedObjectDetectionProtocol).self, instance: objectDetectionManager)
         DIContainer.shared.register(BarcodeDetectionProtocol.self, instance: barcodeDetectionManager)
         setupBindings()
     }
@@ -77,16 +86,21 @@ class CameraViewModel: ObservableObject {
         // Set up object detection processing with settings check
         cameraManager.setObjectDetectionHandler { [weak self] pixelBuffer in
             guard let self = self else { return }
-            if self.appSettings.isRealTimeObjectDetectionEnabled {
-                self.objectDetectionManager.processFrame(pixelBuffer)
-            }
-            if self.appSettings.isRealTimeBarcodeDetectionEnabled {
-                // Convert CVPixelBuffer to UIImage
-                let ciImage = CIImage(cvPixelBuffer: pixelBuffer)
-                let context = CIContext()
-                guard let cgImage = context.createCGImage(ciImage, from: ciImage.extent) else { return }
-                let image = UIImage(cgImage: cgImage)
 
+            // Convert CVPixelBuffer to UIImage for both object detection and barcode detection
+            let ciImage = CIImage(cvPixelBuffer: pixelBuffer)
+            let context = CIContext()
+            guard let cgImage = context.createCGImage(ciImage, from: ciImage.extent) else { return }
+            let image = UIImage(cgImage: cgImage)
+
+            if self.appSettings.isRealTimeObjectDetectionEnabled {
+                self.objectDetectionManager.detectObjects(in: image) { _ in
+                    // The unified protocol handles updating lastDetectedObjects internally
+                    // No need to manually update anything here
+                }
+            }
+
+            if self.appSettings.isRealTimeBarcodeDetectionEnabled {
                 self.barcodeDetectionManager.detectBarcodes(on: image) { barcodes in
                     DispatchQueue.main.async {
                         self.detectedBarcodes = barcodes

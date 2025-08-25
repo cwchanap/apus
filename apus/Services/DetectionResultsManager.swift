@@ -187,7 +187,7 @@ class DetectionResultsManager: ObservableObject {
         // Add to beginning of array and limit to max count
         self.classificationResults.insert(newResult, at: 0)
         let limit = appSettings.getStorageLimit(for: .classification)
-        enforceLimit(for: &classificationResults, limit: limit)
+        enforceLimit(for: &self.classificationResults, limit: limit)
 
         updateCachedValues()
         saveClassificationResults()

@@ -21,7 +21,7 @@ final class MockUnifiedObjectDetectionManager: UnifiedObjectDetectionProtocol {
     func detectObjects(in image: UIImage, completion: @escaping (Result<[DetectedObject], Error>) -> Void) {
         isDetecting = true
 
-        let delay = framework == .tensorflowLite ? 2.0 : 1.2
+        let delay = framework == .coreML ? 1.5 : 1.2
         DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
             self.isDetecting = false
             let mockDetections = self.generateMockDetections(for: image)
@@ -44,14 +44,14 @@ final class MockUnifiedObjectDetectionManager: UnifiedObjectDetectionProtocol {
                 createVisionObjectDetections(),
                 createVisionMixedDetections()
             ]
-        case .tensorflowLite:
+        case .coreML:
             detectionSets = [
-                createTensorFlowPeopleDetections(),
-                createTensorFlowAnimalDetections(),
-                createTensorFlowVehicleDetections(),
-                createTensorFlowFoodDetections(),
-                createTensorFlowObjectDetections(),
-                createTensorFlowMixedDetections()
+                createCoreMLPeopleDetections(),
+                createCoreMLAnimalDetections(),
+                createCoreMLVehicleDetections(),
+                createCoreMLFoodDetections(),
+                createCoreMLObjectDetections(),
+                createCoreMLMixedDetections()
             ]
         }
 
@@ -123,7 +123,52 @@ final class MockUnifiedObjectDetectionManager: UnifiedObjectDetectionProtocol {
         ]
     }
 
-    // MARK: - TFLite Mock Sets
+    // MARK: - Core ML Mock Sets
+    private func createCoreMLPeopleDetections() -> [DetectedObject] {
+        [
+            DetectedObject(boundingBox: CGRect(x: 0.23, y: 0.12, width: 0.32, height: 0.68), className: "person", confidence: 0.94, framework: framework),
+            DetectedObject(boundingBox: CGRect(x: 0.61, y: 0.23, width: 0.24, height: 0.58), className: "person", confidence: 0.89, framework: framework)
+        ]
+    }
+
+    private func createCoreMLAnimalDetections() -> [DetectedObject] {
+        [
+            DetectedObject(boundingBox: CGRect(x: 0.16, y: 0.32, width: 0.52, height: 0.42), className: "dog", confidence: 0.93, framework: framework),
+            DetectedObject(boundingBox: CGRect(x: 0.73, y: 0.61, width: 0.19, height: 0.27), className: "cat", confidence: 0.81, framework: framework)
+        ]
+    }
+
+    private func createCoreMLVehicleDetections() -> [DetectedObject] {
+        [
+            DetectedObject(boundingBox: CGRect(x: 0.11, y: 0.41, width: 0.62, height: 0.37), className: "car", confidence: 0.97, framework: framework),
+            DetectedObject(boundingBox: CGRect(x: 0.76, y: 0.21, width: 0.21, height: 0.31), className: "bicycle", confidence: 0.72, framework: framework)
+        ]
+    }
+
+    private func createCoreMLFoodDetections() -> [DetectedObject] {
+        [
+            DetectedObject(boundingBox: CGRect(x: 0.21, y: 0.21, width: 0.42, height: 0.42), className: "pizza", confidence: 0.88, framework: framework),
+            DetectedObject(boundingBox: CGRect(x: 0.66, y: 0.16, width: 0.26, height: 0.31), className: "cup", confidence: 0.76, framework: framework),
+            DetectedObject(boundingBox: CGRect(x: 0.13, y: 0.68, width: 0.29, height: 0.24), className: "apple", confidence: 0.84, framework: framework)
+        ]
+    }
+
+    private func createCoreMLObjectDetections() -> [DetectedObject] {
+        [
+            DetectedObject(boundingBox: CGRect(x: 0.31, y: 0.11, width: 0.42, height: 0.52), className: "laptop", confidence: 0.95, framework: framework),
+            DetectedObject(boundingBox: CGRect(x: 0.11, y: 0.71, width: 0.19, height: 0.14), className: "mouse", confidence: 0.78, framework: framework)
+        ]
+    }
+
+    private func createCoreMLMixedDetections() -> [DetectedObject] {
+        [
+            DetectedObject(boundingBox: CGRect(x: 0.11, y: 0.11, width: 0.26, height: 0.41), className: "person", confidence: 0.91, framework: framework),
+            DetectedObject(boundingBox: CGRect(x: 0.41, y: 0.51, width: 0.31, height: 0.19), className: "chair", confidence: 0.77, framework: framework),
+            DetectedObject(boundingBox: CGRect(x: 0.74, y: 0.31, width: 0.19, height: 0.24), className: "bottle", confidence: 0.73, framework: framework)
+        ]
+    }
+
+    // MARK: - TFLite Mock Sets (Legacy)
     private func createTensorFlowPeopleDetections() -> [DetectedObject] {
         [
             DetectedObject(boundingBox: CGRect(x: 0.25, y: 0.15, width: 0.28, height: 0.65), className: "human_face", confidence: 0.89, framework: framework),

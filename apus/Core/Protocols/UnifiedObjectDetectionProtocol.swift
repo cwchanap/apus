@@ -92,8 +92,8 @@ class ObjectDetectionFactory {
         switch framework {
         case .vision:
             return VisionUnifiedObjectDetectionManager()
-        case .tensorflowLite:
-            return TensorFlowLiteObjectDetectionManager()
+        case .coreML:
+            return CoreMLObjectDetectionManager()
         }
         #endif
     }

@@ -11,14 +11,14 @@ import SwiftUI
 /// Object detection framework options
 enum ObjectDetectionFramework: String, CaseIterable {
     case vision = "vision"
-    case tensorflowLite = "tensorflow_lite"
+    case coreML = "core_ml"
 
     var displayName: String {
         switch self {
         case .vision:
             return "Apple Vision"
-        case .tensorflowLite:
-            return "TensorFlow Lite"
+        case .coreML:
+            return "Core ML"
         }
     }
 
@@ -26,8 +26,8 @@ enum ObjectDetectionFramework: String, CaseIterable {
         switch self {
         case .vision:
             return "Native iOS framework with optimized performance"
-        case .tensorflowLite:
-            return "Google's lightweight ML framework"
+        case .coreML:
+            return "Apple's on-device machine learning framework"
         }
     }
 
@@ -35,8 +35,8 @@ enum ObjectDetectionFramework: String, CaseIterable {
         switch self {
         case .vision:
             return "eye.circle"
-        case .tensorflowLite:
-            return "cpu.fill"
+        case .coreML:
+            return "brain.head.profile"
         }
     }
 }

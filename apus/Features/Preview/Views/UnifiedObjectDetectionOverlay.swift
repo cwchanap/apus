@@ -48,8 +48,8 @@ struct UnifiedDetectionBox: View {
         switch detection.framework {
         case .vision:
             return visionFrameworkColor(for: detection.className)
-        case .tensorflowLite:
-            return tensorFlowFrameworkColor(for: detection.className)
+        case .coreML:
+            return coreMLFrameworkColor(for: detection.className)
         }
     }
 
@@ -75,8 +75,8 @@ struct UnifiedDetectionBox: View {
         }
     }
 
-    private func tensorFlowFrameworkColor(for className: String) -> Color {
-        // TensorFlow Lite colors (more technical/vibrant feel)
+    private func coreMLFrameworkColor(for className: String) -> Color {
+        // Core ML colors (more technical/vibrant feel)
         switch className.lowercased() {
         case let name where name.contains("person") || name.contains("human") || name.contains("face"):
             return .indigo
@@ -99,7 +99,7 @@ struct UnifiedDetectionBox: View {
 
     private var strokeWidth: CGFloat {
         // Vary stroke width based on confidence and framework
-        let baseWidth: CGFloat = detection.framework == .tensorflowLite ? 2.5 : 2.0
+        let baseWidth: CGFloat = detection.framework == .coreML ? 2.5 : 2.0
         let confidenceMultiplier = CGFloat(detection.confidence)
         return baseWidth * (0.5 + confidenceMultiplier * 0.5)
     }
@@ -183,7 +183,7 @@ struct UnifiedDetectionBox: View {
                         boundingBox: CGRect(x: 0.6, y: 0.1, width: 0.25, height: 0.3),
                         className: "golden_retriever",
                         confidence: 0.87,
-                        framework: .tensorflowLite
+                        framework: .coreML
                     )
                 ],
                 imageSize: CGSize(width: 400, height: 300),

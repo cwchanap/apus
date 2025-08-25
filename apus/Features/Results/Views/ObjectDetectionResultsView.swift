@@ -367,7 +367,13 @@ struct DetectedObjectRow: View {
     }
 
     private var frameworkBadge: String {
-        return detectedObject.framework.lowercased().contains("vision") ? "VN" : "TF"
+        if detectedObject.framework.lowercased().contains("vision") {
+            return "VN"
+        } else if detectedObject.framework.lowercased().contains("core ml") {
+            return "CM"
+        } else {
+            return "TF"  // Legacy TensorFlow Lite support
+        }
     }
 }
 
@@ -380,7 +386,7 @@ struct ObjectDetectionResultsView_Previews: PreviewProvider {
         let sampleImage = UIImage(systemName: "photo") ?? UIImage()
         let sampleObjects = [
             DetectedObject(boundingBox: CGRect(x: 0.1, y: 0.1, width: 0.3, height: 0.4), className: "person", confidence: 0.92, framework: .vision),
-            DetectedObject(boundingBox: CGRect(x: 0.6, y: 0.2, width: 0.25, height: 0.3), className: "dog", confidence: 0.87, framework: .tensorflowLite)
+            DetectedObject(boundingBox: CGRect(x: 0.6, y: 0.2, width: 0.25, height: 0.3), className: "dog", confidence: 0.87, framework: .coreML)
         ]
 
         manager.saveObjectDetectionResult(detectedObjects: sampleObjects, image: sampleImage)

@@ -147,7 +147,15 @@ struct StoredDetectedObject: Codable, Identifiable {
     }
 
     func toDetectedObject() -> DetectedObject {
-        let frameworkEnum = ObjectDetectionFramework.allCases.first { $0.displayName == framework } ?? .vision
+        // Handle legacy framework names for backward compatibility
+        let frameworkEnum: ObjectDetectionFramework
+        if framework.lowercased().contains("tensorflow") || framework.lowercased().contains("tflite") {
+            // Map legacy TensorFlow Lite entries to Core ML
+            frameworkEnum = .coreML
+        } else {
+            frameworkEnum = ObjectDetectionFramework.allCases.first { $0.displayName == framework } ?? .vision
+        }
+
         return DetectedObject(
             boundingBox: boundingBox,
             className: className,
@@ -219,7 +227,7 @@ struct StoredClassification: Codable, Identifiable {
 
 extension ObjectDetectionFramework {
     static var allCases: [ObjectDetectionFramework] {
-        return [.vision, .tensorflowLite]
+        return [.vision, .coreML]
     }
 }
 

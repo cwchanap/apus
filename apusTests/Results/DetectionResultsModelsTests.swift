@@ -102,7 +102,7 @@ final class DetectionResultsModelsTests: XCTestCase {
         // Given
         let detectedObjects = [
             DetectedObject(boundingBox: CGRect(x: 0.1, y: 0.1, width: 0.3, height: 0.4), className: "person", confidence: 0.92, framework: .vision),
-            DetectedObject(boundingBox: CGRect(x: 0.6, y: 0.2, width: 0.25, height: 0.3), className: "dog", confidence: 0.87, framework: .tensorflowLite)
+            DetectedObject(boundingBox: CGRect(x: 0.6, y: 0.2, width: 0.25, height: 0.3), className: "dog", confidence: 0.87, framework: .coreML)
         ]
 
         // When
@@ -250,20 +250,20 @@ final class DetectionResultsModelsTests: XCTestCase {
     func testStoredDetectedObjectFrameworkConversion() throws {
         // Given
         let visionObject = DetectedObject(boundingBox: CGRect.zero, className: "test", confidence: 0.8, framework: .vision)
-        let tensorflowObject = DetectedObject(boundingBox: CGRect.zero, className: "test", confidence: 0.8, framework: .tensorflowLite)
+        let coreMLObject = DetectedObject(boundingBox: CGRect.zero, className: "test", confidence: 0.8, framework: .coreML)
 
         // When
         let storedVision = StoredDetectedObject(from: visionObject)
-        let storedTensorflow = StoredDetectedObject(from: tensorflowObject)
+        let storedCoreML = StoredDetectedObject(from: coreMLObject)
 
         let convertedVision = storedVision.toDetectedObject()
-        let convertedTensorflow = storedTensorflow.toDetectedObject()
+        let convertedCoreML = storedCoreML.toDetectedObject()
 
         // Then
         XCTAssertEqual(storedVision.framework, "Vision", "Should store Vision framework name")
-        XCTAssertEqual(storedTensorflow.framework, "TensorFlow Lite", "Should store TensorFlow Lite framework name")
+        XCTAssertEqual(storedCoreML.framework, "Core ML", "Should store Core ML framework name")
         XCTAssertEqual(convertedVision.framework, .vision, "Should convert back to Vision framework")
-        XCTAssertEqual(convertedTensorflow.framework, .tensorflowLite, "Should convert back to TensorFlow Lite framework")
+        XCTAssertEqual(convertedCoreML.framework, .coreML, "Should convert back to Core ML framework")
     }
 
     // MARK: - StoredClassification Tests
