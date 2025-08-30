@@ -1,11 +1,65 @@
 [
   {
     "character" : null,
-    "file" : "/Users/chanwaichan/workspace/apus/apus/Services/DetectionResultsManager.swift",
-    "line" : 562,
-    "reason" : "File should contain 500 lines or less: currently contains 562",
-    "rule_id" : "file_length",
+    "file" : "/Users/chanwaichan/workspace/apus/apus/Services/DetectionResultsManager+OCR.swift",
+    "line" : 65,
+    "reason" : "Files should have a single trailing newline",
+    "rule_id" : "trailing_newline",
     "severity" : "Warning",
-    "type" : "File Length"
+    "type" : "Trailing Newline"
+  },
+  {
+    "character" : null,
+    "file" : "/Users/chanwaichan/workspace/apus/apus/Services/DetectionResultsManager+Barcode.swift",
+    "line" : 66,
+    "reason" : "Files should have a single trailing newline",
+    "rule_id" : "trailing_newline",
+    "severity" : "Warning",
+    "type" : "Trailing Newline"
+  },
+  {
+    "character" : null,
+    "file" : "/Users/chanwaichan/workspace/apus/apus/Services/DetectionResultsManager+Classification.swift",
+    "line" : 65,
+    "reason" : "Files should have a single trailing newline",
+    "rule_id" : "trailing_newline",
+    "severity" : "Warning",
+    "type" : "Trailing Newline"
+  },
+  {
+    "character" : null,
+    "file" : "/Users/chanwaichan/workspace/apus/apus/Services/DetectionResultsManager+Helpers.swift",
+    "line" : 15,
+    "reason" : "Files should have a single trailing newline",
+    "rule_id" : "trailing_newline",
+    "severity" : "Warning",
+    "type" : "Trailing Newline"
+  },
+  {
+    "character" : null,
+    "file" : "/Users/chanwaichan/workspace/apus/apus/Services/DetectionResultsManager+ObjectDetection.swift",
+    "line" : 65,
+    "reason" : "Files should have a single trailing newline",
+    "rule_id" : "trailing_newline",
+    "severity" : "Warning",
+    "type" : "Trailing Newline"
+  },
+  {
+    "character" : null,
+    "file" : "/Users/chanwaichan/workspace/apus/apus/Services/DetectionResultsManager+Contour.swift",
+    "line" : 65,
+    "reason" : "Files should have a single trailing newline",
+    "rule_id" : "trailing_newline",
+    "severity" : "Warning",
+    "type" : "Trailing Newline"
+  },
+  {
+    "character" : null,
+    "file" : "/Users/chanwaichan/workspace/apus/apus/Services/DetectionResultsManager+AsyncLoading.swift",
+    "line" : 86,
+    "reason" : "Files should have a single trailing newline",
+    "rule_id" : "trailing_newline",
+    "severity" : "Warning",
+    "type" : "Trailing Newline"
   }
 ]
