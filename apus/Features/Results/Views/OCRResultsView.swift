@@ -53,7 +53,7 @@ struct OCRResultsView: View {
             ToolbarItem(placement: .navigationBarTrailing) {
                 if !resultsManager.ocrResults.isEmpty {
                     Button("Clear All") { showClearConfirm = true }
-                    .foregroundColor(.red)
+                        .foregroundColor(.red)
                 }
             }
         }
@@ -76,12 +76,12 @@ struct OCRResultsView: View {
                     }
                 }
             )
-                .presentationDetents([.medium, .fraction(0.9), .large], selection: $selectedDetent)
-                .presentationBackgroundInteraction(.enabled(upThrough: .medium))
-                .presentationDragIndicator(.visible)
-                .onChange(of: selectedDetent) { newValue in
-                    storedDetentOCR = detentString(newValue)
-                }
+            .presentationDetents([.medium, .fraction(0.9), .large], selection: $selectedDetent)
+            .presentationBackgroundInteraction(.enabled(upThrough: .medium))
+            .presentationDragIndicator(.visible)
+            .onChange(of: selectedDetent) { newValue in
+                storedDetentOCR = detentString(newValue)
+            }
         }
     }
 

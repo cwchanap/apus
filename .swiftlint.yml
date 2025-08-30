@@ -1,5 +1,16 @@
+included:
+  - apus
+  - apusTests
+  - apusUITests
+
 excluded:
   - Pods
+  - .venv
+  - venv_coreml
+  - src
+  - scripts
+  - models
+  - .git
 
 # Keep pragmatic thresholds for this SwiftUI-heavy project
 line_length:

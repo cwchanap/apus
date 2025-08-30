@@ -18,34 +18,34 @@ struct ObjectDetectionResultsView: View {
     var body: some View {
         Group {
             if resultsManager.objectDetectionResults.isEmpty {
-            EmptyResultsView(
-                category: .objectDetection,
-                message: "No object detection results yet",
-                description: "Detect objects in images to see results here"
-            )
-        } else {
-            List {
-                ForEach(resultsManager.objectDetectionResults) { result in
-                    ObjectDetectionResultRow(result: result) {
-                        withAnimation(.spring(response: 0.35, dampingFraction: 0.85, blendDuration: 0.1)) {
-                            selectedDetent = detent(from: storedDetentObject) ?? .fraction(0.9)
-                            selectedResult = result
+                EmptyResultsView(
+                    category: .objectDetection,
+                    message: "No object detection results yet",
+                    description: "Detect objects in images to see results here"
+                )
+            } else {
+                List {
+                    ForEach(resultsManager.objectDetectionResults) { result in
+                        ObjectDetectionResultRow(result: result) {
+                            withAnimation(.spring(response: 0.35, dampingFraction: 0.85, blendDuration: 0.1)) {
+                                selectedDetent = detent(from: storedDetentObject) ?? .fraction(0.9)
+                                selectedResult = result
+                            }
+                        }
+                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                            Button(role: .destructive) {
+                                resultsManager.deleteObjectDetectionResult(id: result.id)
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
                         }
                     }
-                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                        Button(role: .destructive) {
-                            resultsManager.deleteObjectDetectionResult(id: result.id)
-                        } label: {
-                            Label("Delete", systemImage: "trash")
-                        }
-                    }
+                    .onDelete(perform: deleteResults)
                 }
-                .onDelete(perform: deleteResults)
+                .refreshable {
+                    // Refresh functionality if needed
+                }
             }
-            .refreshable {
-                // Refresh functionality if needed
-            }
-        }
         }
         .navigationTitle("Object Detection Results")
         .navigationBarTitleDisplayMode(.large)
@@ -53,7 +53,7 @@ struct ObjectDetectionResultsView: View {
             ToolbarItem(placement: .navigationBarTrailing) {
                 if !resultsManager.objectDetectionResults.isEmpty {
                     Button("Clear All") { showClearConfirm = true }
-                    .foregroundColor(.red)
+                        .foregroundColor(.red)
                 }
             }
         }
@@ -76,12 +76,12 @@ struct ObjectDetectionResultsView: View {
                     }
                 }
             )
-                .presentationDetents([.medium, .fraction(0.9), .large], selection: $selectedDetent)
-                .presentationBackgroundInteraction(.enabled(upThrough: .medium))
-                .presentationDragIndicator(.visible)
-                .onChange(of: selectedDetent) { newValue in
-                    storedDetentObject = detentString(newValue)
-                }
+            .presentationDetents([.medium, .fraction(0.9), .large], selection: $selectedDetent)
+            .presentationBackgroundInteraction(.enabled(upThrough: .medium))
+            .presentationDragIndicator(.visible)
+            .onChange(of: selectedDetent) { newValue in
+                storedDetentObject = detentString(newValue)
+            }
         }
     }
 

@@ -18,34 +18,34 @@ struct ClassificationResultsView: View {
     var body: some View {
         Group {
             if resultsManager.classificationResults.isEmpty {
-            EmptyResultsView(
-                category: .classification,
-                message: "No classification results yet",
-                description: "Classify images to see results here"
-            )
-        } else {
-            List {
-                ForEach(resultsManager.classificationResults) { result in
-                    ClassificationResultRow(result: result) {
-                        withAnimation(.spring(response: 0.35, dampingFraction: 0.85, blendDuration: 0.1)) {
-                            selectedDetent = detent(from: storedDetentClassification) ?? .medium
-                            selectedResult = result
+                EmptyResultsView(
+                    category: .classification,
+                    message: "No classification results yet",
+                    description: "Classify images to see results here"
+                )
+            } else {
+                List {
+                    ForEach(resultsManager.classificationResults) { result in
+                        ClassificationResultRow(result: result) {
+                            withAnimation(.spring(response: 0.35, dampingFraction: 0.85, blendDuration: 0.1)) {
+                                selectedDetent = detent(from: storedDetentClassification) ?? .medium
+                                selectedResult = result
+                            }
+                        }
+                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                            Button(role: .destructive) {
+                                resultsManager.deleteClassificationResult(id: result.id)
+                            } label: {
+                                Label("Delete", systemImage: "trash")
+                            }
                         }
                     }
-                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                        Button(role: .destructive) {
-                            resultsManager.deleteClassificationResult(id: result.id)
-                        } label: {
-                            Label("Delete", systemImage: "trash")
-                        }
-                    }
+                    .onDelete(perform: deleteResults)
                 }
-                .onDelete(perform: deleteResults)
+                .refreshable {
+                    // Refresh functionality if needed
+                }
             }
-            .refreshable {
-                // Refresh functionality if needed
-            }
-        }
         }
         .navigationTitle("Classification Results")
         .navigationBarTitleDisplayMode(.large)
@@ -53,7 +53,7 @@ struct ClassificationResultsView: View {
             ToolbarItem(placement: .navigationBarTrailing) {
                 if !resultsManager.classificationResults.isEmpty {
                     Button("Clear All") { showClearConfirm = true }
-                    .foregroundColor(.red)
+                        .foregroundColor(.red)
                 }
             }
         }
@@ -76,12 +76,12 @@ struct ClassificationResultsView: View {
                     }
                 }
             )
-                .presentationDetents([.medium, .fraction(0.9), .large], selection: $selectedDetent)
-                .presentationBackgroundInteraction(.enabled(upThrough: .medium))
-                .presentationDragIndicator(.visible)
-                .onChange(of: selectedDetent) { newValue in
-                    storedDetentClassification = detentString(newValue)
-                }
+            .presentationDetents([.medium, .fraction(0.9), .large], selection: $selectedDetent)
+            .presentationBackgroundInteraction(.enabled(upThrough: .medium))
+            .presentationDragIndicator(.visible)
+            .onChange(of: selectedDetent) { newValue in
+                storedDetentClassification = detentString(newValue)
+            }
         }
     }
 
