@@ -50,15 +50,11 @@
 		};
 		24829C812E0FB0E900F99FD7 /* apusTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
 			path = apusTests;
 			sourceTree = "<group>";
 		};
 		24829C8B2E0FB0E900F99FD7 /* apusUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-			);
 			path = apusUITests;
 			sourceTree = "<group>";
 		};

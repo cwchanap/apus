@@ -81,7 +81,12 @@ class ObjectDetectionFactory {
         #if DEBUG || targetEnvironment(simulator)
         return MockUnifiedObjectDetectionManager(framework: .vision)
         #else
-        return VisionUnifiedObjectDetectionManager()
+        // Prefer Core ML YOLO if a bundled model is present; otherwise fallback to Vision
+        if YOLOv12CoreMLObjectDetectionManager.loadBundledModel() != nil {
+            return YOLOv12CoreMLObjectDetectionManager()
+        } else {
+            return VisionUnifiedObjectDetectionManager()
+        }
         #endif
     }
 
@@ -93,7 +98,12 @@ class ObjectDetectionFactory {
         case .vision:
             return VisionUnifiedObjectDetectionManager()
         case .coreML:
-            return CoreMLObjectDetectionManager()
+            // Use YOLO Core ML implementation when explicitly requesting Core ML
+            if YOLOv12CoreMLObjectDetectionManager.loadBundledModel() != nil {
+                return YOLOv12CoreMLObjectDetectionManager()
+            } else {
+                return CoreMLObjectDetectionManager()
+            }
         }
         #endif
     }

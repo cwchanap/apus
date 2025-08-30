@@ -1,3 +1,4 @@
 Pods/
 /models/
 .env
+apus/Resources/Models/**/*.mlpackage/**/weights/*
