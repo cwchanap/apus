@@ -60,21 +60,6 @@ class DetectionResultsManager: ObservableObject {
 
     // MARK: - Feature Results are split into extensions
 
-    // Delete specific Classification results
-    func deleteClassificationResults(at offsets: IndexSet) {
-        classificationResults.remove(atOffsets: offsets)
-        saveClassificationResults()
-        updateCachedValues()
-    }
-
-    func deleteClassificationResult(id: UUID) {
-        if let index = classificationResults.firstIndex(where: { $0.id == id }) {
-            classificationResults.remove(at: index)
-            saveClassificationResults()
-            updateCachedValues()
-        }
-    }
-
     // See DetectionResultsManager+Classification.swift
 
     // MARK: - General Management
