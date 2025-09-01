@@ -8,6 +8,30 @@
 import Foundation
 import SwiftUI
 
+/// Object detection model options (primarily for Core ML)
+enum ObjectDetectionModel: String, CaseIterable, Equatable {
+    // Currently bundled model
+    case yoloV12s = "yolov12s"
+
+    var displayName: String {
+        switch self {
+        case .yoloV12s: return "YOLOv12s"
+        }
+    }
+
+    var description: String {
+        switch self {
+        case .yoloV12s: return "Small YOLOv12 model (fast, good accuracy)"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .yoloV12s: return "brain"
+        }
+    }
+}
+
 /// Object detection framework options
 enum ObjectDetectionFramework: String, CaseIterable {
     case vision = "vision"
@@ -16,7 +40,7 @@ enum ObjectDetectionFramework: String, CaseIterable {
     var displayName: String {
         switch self {
         case .vision:
-            return "Apple Vision"
+            return "Vision"
         case .coreML:
             return "Core ML"
         }
@@ -102,6 +126,13 @@ class AppSettings: ObservableObject {
         }
     }
 
+    // Selected object detection model (applies when using Core ML)
+    @Published var objectDetectionModel: ObjectDetectionModel {
+        didSet {
+            UserDefaults.standard.set(objectDetectionModel.rawValue, forKey: UserDefaults.Keys.objectDetectionModel)
+        }
+    }
+
     @Published var ocrResultsLimit: Int {
         didSet {
             UserDefaults.standard.set(ocrResultsLimit, forKey: UserDefaults.Keys.ocrResultsLimit)
@@ -146,6 +177,10 @@ class AppSettings: ObservableObject {
         let frameworkRawValue = defaults.string(forKey: UserDefaults.Keys.objectDetectionFramework) ?? ObjectDetectionFramework.vision.rawValue
         self.objectDetectionFramework = ObjectDetectionFramework(rawValue: frameworkRawValue) ?? .vision
 
+        // Default to YOLOv12s (the currently bundled Core ML model)
+        let modelRawValue = defaults.string(forKey: UserDefaults.Keys.objectDetectionModel) ?? ObjectDetectionModel.yoloV12s.rawValue
+        self.objectDetectionModel = ObjectDetectionModel(rawValue: modelRawValue) ?? .yoloV12s
+
         // Load storage limits with default of 10 for all categories
         self.ocrResultsLimit = defaults.object(forKey: UserDefaults.Keys.ocrResultsLimit) != nil ?
             defaults.integer(forKey: UserDefaults.Keys.ocrResultsLimit) : 10
@@ -167,6 +202,7 @@ class AppSettings: ObservableObject {
         isRealTimeObjectDetectionEnabled = true
         isRealTimeBarcodeDetectionEnabled = true
         objectDetectionFramework = .vision
+        objectDetectionModel = .yoloV12s
         ocrResultsLimit = 10
         objectDetectionResultsLimit = 10
         classificationResultsLimit = 10
@@ -212,6 +248,7 @@ extension UserDefaults {
         static let isRealTimeObjectDetectionEnabled = "isRealTimeObjectDetectionEnabled"
         static let isRealTimeBarcodeDetectionEnabled = "isRealTimeBarcodeDetectionEnabled"
         static let objectDetectionFramework = "objectDetectionFramework"
+        static let objectDetectionModel = "objectDetectionModel"
         static let ocrResultsLimit = "ocrResultsLimit"
         static let objectDetectionResultsLimit = "objectDetectionResultsLimit"
         static let classificationResultsLimit = "classificationResultsLimit"

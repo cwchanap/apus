@@ -13,7 +13,7 @@ import Combine
 final class CameraViewModelTests: XCTestCase {
     var sut: CameraViewModel!
     var mockCameraManager: MockCameraManager!
-    var mockObjectDetectionManager: MockObjectDetectionManager!
+    var mockObjectDetectionManager: MockUnifiedObjectDetectionManager!
     var mockBarcodeDetectionManager: MockBarcodeDetectionManager!
     var testContainer: TestDIContainer!
     var cancellables: Set<AnyCancellable>!
@@ -24,12 +24,12 @@ final class CameraViewModelTests: XCTestCase {
         // Setup test dependencies
         testContainer = TestDIContainer()
         mockCameraManager = MockCameraManager()
-        mockObjectDetectionManager = MockObjectDetectionManager()
+        mockObjectDetectionManager = MockUnifiedObjectDetectionManager(framework: .vision)
         mockBarcodeDetectionManager = MockBarcodeDetectionManager()
 
         // Register test dependencies
         testContainer.register(CameraManagerProtocol.self, instance: mockCameraManager)
-        testContainer.register(ObjectDetectionProtocol.self, instance: mockObjectDetectionManager)
+        testContainer.register(UnifiedObjectDetectionProtocol.self, instance: mockObjectDetectionManager)
         testContainer.register(BarcodeDetectionProtocol.self, instance: mockBarcodeDetectionManager)
 
         // Create view model with test dependencies
@@ -184,9 +184,9 @@ final class CameraViewModelTests: XCTestCase {
     func testDetections_ReturnsObjectDetectionManagerDetections() {
         // Given
         let mockDetections = [
-            Detection(boundingBox: CGRect(x: 0, y: 0, width: 100, height: 100), className: "person", confidence: 0.9)
+            DetectedObject(boundingBox: CGRect(x: 0.1, y: 0.1, width: 0.25, height: 0.25), className: "person", confidence: 0.9, framework: .vision)
         ]
-        mockObjectDetectionManager.detections = mockDetections
+        mockObjectDetectionManager.lastDetectedObjects = mockDetections
 
         // When
         let detections = sut.detections
@@ -202,8 +202,8 @@ final class CameraViewModelTests: XCTestCase {
         let concreteCameraManager = sut.concreteCameraManager
 
         // Then
-        XCTAssertTrue(concreteCameraManager is CameraManager)
-        // Note: In a real test, this would be the actual CameraManager type
-        // The cast in the implementation should be safe in production
+        // In unit tests we pass a mock, so this should be nil
+        XCTAssertNil(concreteCameraManager)
+        // In production, with a real CameraManager, this would be non-nil
     }
 }

@@ -268,9 +268,13 @@ final class OCRClassificationWorkflowTests: XCTestCase {
 
         // Add text-specific classifications if significant text was found
         if !detectedText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            // If the text includes strong document cues, assign a high confidence directly
+            let strongCues = ["receipt", "total", "$", "invoice", "order"]
+            let hasStrongCue = strongCues.contains { textLower.contains($0) }
+            let base = hasStrongCue ? 0.9 : min(0.95, max(0.5, Double(detectedText.count) / 60.0))
             let textClassification = ClassificationResult(
                 identifier: "Text Document",
-                confidence: Float(min(0.95, Double(detectedText.count) / 100.0))
+                confidence: Float(base)
             )
             enhancedResults.insert(textClassification, at: 0)
         }

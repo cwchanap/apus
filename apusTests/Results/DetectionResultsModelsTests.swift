@@ -6,6 +6,7 @@
 //
 
 import XCTest
+import Vision
 @testable import apus
 import UIKit
 
@@ -306,10 +307,12 @@ final class DetectionResultsModelsTests: XCTestCase {
         let allCases = DetectionCategory.allCases
 
         // Then
-        XCTAssertEqual(allCases.count, 3, "Should have 3 detection categories")
+        XCTAssertEqual(allCases.count, 5, "Should have 5 detection categories")
         XCTAssertTrue(allCases.contains(.ocr), "Should contain OCR category")
         XCTAssertTrue(allCases.contains(.objectDetection), "Should contain Object Detection category")
         XCTAssertTrue(allCases.contains(.classification), "Should contain Classification category")
+        XCTAssertTrue(allCases.contains(.contourDetection), "Should contain Contour Detection category")
+        XCTAssertTrue(allCases.contains(.barcode), "Should contain Barcode category")
     }
 
     // MARK: - Image Compression Tests

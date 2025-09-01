@@ -5,6 +5,7 @@
 //  Created by wa-ik on 2025/08/17
 //
 import XCTest
+import Vision
 @testable import apus
 
 class DetectionResultsManagerTests: XCTestCase {

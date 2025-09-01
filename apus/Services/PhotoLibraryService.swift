@@ -39,7 +39,14 @@ enum PhotoLibraryError: LocalizedError {
 class PhotoLibraryService: PhotoLibraryServiceProtocol {
 
     func requestPermission() -> AnyPublisher<Bool, Never> {
-        Future<Bool, Never> { promise in
+        // If already determined, avoid prompting and return immediately
+        let current = PHPhotoLibrary.authorizationStatus(for: .addOnly)
+        if current != .notDetermined {
+            return Just(current == .authorized)
+                .eraseToAnyPublisher()
+        }
+
+        return Future<Bool, Never> { promise in
             PHPhotoLibrary.requestAuthorization(for: .addOnly) { status in
                 DispatchQueue.main.async {
                     promise(.success(status == .authorized))

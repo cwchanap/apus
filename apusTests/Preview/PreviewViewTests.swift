@@ -23,7 +23,8 @@ class PreviewViewTests: XCTestCase {
 
     func test_toggleBarcodes_showsAndHidesBarcodeOverlay() {
         // Given
-        sut.detectedBarcodes = [VNBarcodeObservation()]
+        // We don't need real VNBarcodeObservation instances for toggling logic
+        sut.detectedBarcodes = []
         sut.hasDetectedBarcodes = true
 
         // When

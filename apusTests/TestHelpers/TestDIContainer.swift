@@ -69,7 +69,8 @@ class TestDependencySetup {
     static func setupMockDependencies(container: TestDIContainer) {
         // Register mock camera dependencies
         container.register(CameraManagerProtocol.self, instance: MockCameraManager())
-        container.register(ObjectDetectionProtocol.self, instance: MockObjectDetectionManager())
+        // Use unified object detection mock for modern path
+        container.register(UnifiedObjectDetectionProtocol.self, instance: MockUnifiedObjectDetectionManager(framework: .vision))
 
         // Register mock text recognition
         container.register(VisionTextRecognitionProtocol.self, instance: MockVisionTextRecognitionManager())

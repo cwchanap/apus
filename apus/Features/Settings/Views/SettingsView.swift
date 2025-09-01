@@ -155,6 +155,70 @@ struct SettingsView: View {
                     }
                 }
                 .padding(.vertical, 4)
+
+                // Model Selection (Core ML only)
+                if viewModel.objectDetectionFramework == .coreML {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Image(systemName: "square.stack.3d.up")
+                                .foregroundColor(.teal)
+                                .frame(width: 24, height: 24)
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Detection Model")
+                                    .font(.body)
+                                Text("Choose the Core ML model for detection")
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+
+                            Spacer()
+                        }
+
+                        VStack(spacing: 8) {
+                            ForEach(ObjectDetectionModel.allCases, id: \.self) { model in
+                                Button(action: {
+                                    viewModel.objectDetectionModel = model
+                                }) {
+                                    HStack {
+                                        Image(systemName: model.icon)
+                                            .foregroundColor(viewModel.objectDetectionModel == model ? .white : .primary)
+                                            .frame(width: 20, height: 20)
+
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text(model.displayName)
+                                                .font(.subheadline)
+                                                .fontWeight(.medium)
+                                                .foregroundColor(viewModel.objectDetectionModel == model ? .white : .primary)
+                                            Text(model.description)
+                                                .font(.caption)
+                                                .foregroundColor(viewModel.objectDetectionModel == model ? .white.opacity(0.8) : .secondary)
+                                        }
+
+                                        Spacer()
+
+                                        if viewModel.objectDetectionModel == model {
+                                            Image(systemName: "checkmark.circle.fill")
+                                                .foregroundColor(.white)
+                                        }
+                                    }
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 10)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .fill(viewModel.objectDetectionModel == model ? Color.accentColor : Color.clear)
+                                    )
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .stroke(viewModel.objectDetectionModel == model ? Color.clear : Color.gray.opacity(0.3), lineWidth: 1)
+                                    )
+                                }
+                                .buttonStyle(PlainButtonStyle())
+                            }
+                        }
+                    }
+                    .padding(.vertical, 4)
+                }
             }
 
             // Storage Limits Section

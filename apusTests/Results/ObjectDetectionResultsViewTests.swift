@@ -30,7 +30,7 @@ final class ObjectDetectionResultsViewTests: XCTestCase {
         let storedObject = createTestStoredDetectedObject(
             className: "person",
             confidence: 0.95,
-            framework: "Apple Vision"
+            framework: "Vision"
         )
 
         // When
@@ -48,7 +48,7 @@ final class ObjectDetectionResultsViewTests: XCTestCase {
         let highConfidenceObject = createTestStoredDetectedObject(
             className: "dog",
             confidence: 0.95,
-            framework: "Apple Vision"
+            framework: "Vision"
         )
 
         // Test medium confidence (0.7-0.9) - should be orange
@@ -62,7 +62,7 @@ final class ObjectDetectionResultsViewTests: XCTestCase {
         let lowConfidenceObject = createTestStoredDetectedObject(
             className: "bird",
             confidence: 0.6,
-            framework: "Apple Vision"
+            framework: "Vision"
         )
 
         // We test the logic by checking confidence values
@@ -76,7 +76,7 @@ final class ObjectDetectionResultsViewTests: XCTestCase {
         let visionObject = createTestStoredDetectedObject(
             className: "person",
             confidence: 0.9,
-            framework: "Apple Vision"
+            framework: "Vision"
         )
 
         // Test TensorFlow Lite framework
@@ -110,7 +110,7 @@ final class ObjectDetectionResultsViewTests: XCTestCase {
 
     func testDetectedObjectRowWithDifferentFrameworks() throws {
         // Test various framework names
-        let frameworks = ["Apple Vision", "TensorFlow Lite", "vision", "tensorflow"]
+        let frameworks = ["Vision", "TensorFlow Lite", "vision", "tensorflow"]
 
         for framework in frameworks {
             let object = createTestStoredDetectedObject(
@@ -135,7 +135,7 @@ final class ObjectDetectionResultsViewTests: XCTestCase {
         let storedObject = createTestStoredDetectedObject(
             className: "bicycle",
             confidence: 0.88,
-            framework: "Apple Vision"
+            framework: "Vision"
         )
 
         // When
@@ -144,7 +144,7 @@ final class ObjectDetectionResultsViewTests: XCTestCase {
         // Then
         XCTAssertEqual(detectedObject.className, "bicycle")
         XCTAssertEqual(detectedObject.confidence, 0.88, accuracy: 0.001)
-        XCTAssertEqual(detectedObject.framework.displayName, "Apple Vision")
+        XCTAssertEqual(detectedObject.framework.displayName, "Vision")
         XCTAssertEqual(detectedObject.boundingBox, storedObject.boundingBox)
     }
 
@@ -169,11 +169,11 @@ final class ObjectDetectionResultsViewTests: XCTestCase {
         let classNames = ["person", "PERSON", "Person", "car", "DOG", "bicycle"]
 
         for className in classNames {
-            let object = createTestStoredDetectedObject(
-                className: className,
-                confidence: 0.8,
-                framework: "Apple Vision"
-            )
+        let object = createTestStoredDetectedObject(
+            className: className,
+            confidence: 0.8,
+            framework: "Vision"
+        )
 
             XCTAssertEqual(object.className, className)
             // The capitalization should happen in the view, not the model
@@ -189,7 +189,7 @@ final class ObjectDetectionResultsViewTests: XCTestCase {
         let storedObject = createTestStoredDetectedObject(
             className: "person",
             confidence: 0.9,
-            framework: "Apple Vision"
+            framework: "Vision"
         )
 
         // We can't directly test SwiftUI color properties, but we can ensure
@@ -198,7 +198,7 @@ final class ObjectDetectionResultsViewTests: XCTestCase {
         XCTAssertFalse(storedObject.framework.isEmpty)
 
         // Verify the framework string is properly formatted for display
-        XCTAssertEqual(storedObject.framework, "Apple Vision")
+        XCTAssertEqual(storedObject.framework, "Vision")
     }
 
     // MARK: - Helper Methods
@@ -236,8 +236,16 @@ extension StoredDetectedObject {
         confidence: Float,
         framework: String
     ) -> StoredDetectedObject {
-        // Create a mock DetectedObject first
-        let frameworkEnum = ObjectDetectionFramework.allCases.first { $0.displayName == framework } ?? .vision
+        // Map common legacy strings to current frameworks
+        let lower = framework.lowercased()
+        let frameworkEnum: ObjectDetectionFramework
+        if lower.contains("tensorflow") || lower.contains("tflite") {
+            frameworkEnum = .coreML
+        } else if ObjectDetectionFramework.allCases.contains(where: { $0.displayName == framework }) {
+            frameworkEnum = ObjectDetectionFramework.allCases.first { $0.displayName == framework } ?? .vision
+        } else {
+            frameworkEnum = .vision
+        }
         let detectedObject = DetectedObject(
             boundingBox: boundingBox,
             className: className,

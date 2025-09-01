@@ -18,6 +18,7 @@ class SettingsViewModel: ObservableObject {
     @Published var isRealTimeObjectDetectionEnabled: Bool = true
     @Published var isRealTimeBarcodeDetectionEnabled: Bool = true
     @Published var objectDetectionFramework: ObjectDetectionFramework = .vision
+    @Published var objectDetectionModel: ObjectDetectionModel = .yoloV12s
 
     // Storage limits - published for UI updates
     @Published var ocrResultsLimit: Int = 10
@@ -32,6 +33,7 @@ class SettingsViewModel: ObservableObject {
         self.isRealTimeObjectDetectionEnabled = appSettings.isRealTimeObjectDetectionEnabled
         self.isRealTimeBarcodeDetectionEnabled = appSettings.isRealTimeBarcodeDetectionEnabled
         self.objectDetectionFramework = appSettings.objectDetectionFramework
+        self.objectDetectionModel = appSettings.objectDetectionModel
 
         // Initialize storage limits
         self.ocrResultsLimit = appSettings.ocrResultsLimit
@@ -40,10 +42,8 @@ class SettingsViewModel: ObservableObject {
         self.contourDetectionResultsLimit = appSettings.contourDetectionResultsLimit
         self.barcodeDetectionResultsLimit = appSettings.barcodeDetectionResultsLimit
 
-        // Defer binding setup to avoid blocking main thread during init
-        Task { @MainActor in
-            setupBindings()
-        }
+        // Bindings are lightweight; set them up immediately for deterministic tests
+        setupBindings()
     }
 
     private func setupBindings() {
@@ -80,6 +80,15 @@ class SettingsViewModel: ObservableObject {
             }
             .store(in: &cancellables)
 
+        appSettings.$objectDetectionModel
+            .removeDuplicates()
+            .sink { [weak self] newValue in
+                if self?.objectDetectionModel != newValue {
+                    self?.objectDetectionModel = newValue
+                }
+            }
+            .store(in: &cancellables)
+
         // Update AppSettings when ViewModel changes
         $isRealTimeObjectDetectionEnabled
             .dropFirst()
@@ -110,6 +119,16 @@ class SettingsViewModel: ObservableObject {
             .sink { [weak self] newValue in
                 if self?.appSettings.objectDetectionFramework != newValue {
                     self?.appSettings.objectDetectionFramework = newValue
+                }
+            }
+            .store(in: &cancellables)
+
+        $objectDetectionModel
+            .dropFirst()
+            .removeDuplicates()
+            .sink { [weak self] newValue in
+                if self?.appSettings.objectDetectionModel != newValue {
+                    self?.appSettings.objectDetectionModel = newValue
                 }
             }
             .store(in: &cancellables)

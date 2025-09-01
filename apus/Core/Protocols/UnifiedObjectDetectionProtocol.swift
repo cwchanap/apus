@@ -47,13 +47,16 @@ struct DetectedObject {
             )
         }
 
-        // Scale normalized coordinates to display coordinates
-        return CGRect(
-            x: boundingBox.minX * imageDisplaySize.width + imageOffset.x,
-            y: boundingBox.minY * imageDisplaySize.height + imageOffset.y,
-            width: boundingBox.width * imageDisplaySize.width,
-            height: boundingBox.height * imageDisplaySize.height
-        )
+        // Scale normalized coordinates to display coordinates and clamp within view bounds
+        let rawX = boundingBox.minX * imageDisplaySize.width + imageOffset.x
+        let rawY = boundingBox.minY * imageDisplaySize.height + imageOffset.y
+        let rawW = boundingBox.width * imageDisplaySize.width
+        let rawH = boundingBox.height * imageDisplaySize.height
+
+        let clampedX = max(0, min(rawX, displaySize.width - rawW))
+        let clampedY = max(0, min(rawY, displaySize.height - rawH))
+
+        return CGRect(x: clampedX, y: clampedY, width: rawW, height: rawH)
     }
 }
 

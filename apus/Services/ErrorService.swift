@@ -120,14 +120,18 @@ class ErrorService: ErrorServiceProtocol, ObservableObject {
     }
 
     func handleAppError(_ error: AppError) {
-        DispatchQueue.main.async {
+        if Thread.isMainThread {
             self.currentError = ErrorPresentation(from: error)
+        } else {
+            DispatchQueue.main.sync { self.currentError = ErrorPresentation(from: error) }
         }
     }
 
     func clearError() {
-        DispatchQueue.main.async {
+        if Thread.isMainThread {
             self.currentError = nil
+        } else {
+            DispatchQueue.main.sync { self.currentError = nil }
         }
     }
 
