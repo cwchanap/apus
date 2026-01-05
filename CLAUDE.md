@@ -4,213 +4,247 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a SwiftUI iOS camera application named "apus" that provides full camera functionality with advanced computer vision capabilities. The app features comprehensive camera controls, photo capture, gallery access, real-time object detection, image classification, contour detection, and uses SwiftData for data persistence. Built with a modular architecture using dependency injection for high testability and maintainability.
+APUS is an iOS 18.5+ machine learning application featuring real-time computer vision capabilities: object detection (Vision/Core ML YOLO), OCR, image classification, contour detection, and barcode scanning. Built with SwiftUI and protocol-driven architecture using custom dependency injection.
+
+## Build Commands
+
+- **Xcode GUI** (recommended): Open `apus.xcodeproj` in Xcode
+- **Command line**: `./build.sh` - Builds for iPhone 16 simulator with sandbox disabled
+- **Requirements**: iOS 18.5+, physical device recommended for camera/ML testing
+
+## Test Commands
+
+```bash
+# Run all tests
+xcodebuild -project apus.xcodeproj -scheme apus test
+
+# Run specific test class
+xcodebuild -project apus.xcodeproj -scheme apus test -only-testing:apusTests/CameraViewModelTests
+
+# Run single test method
+xcodebuild -project apus.xcodeproj -scheme apus test -only-testing:apusTests/CameraViewModelTests/testCapturePhoto_UpdatesCapturedImage
+
+# Xcode GUI: Product → Test (⌘+U) or Test Navigator (⌘+6)
+```
+
+## Lint Commands
+
+```bash
+swiftlint                                                      # Run linter
+swiftlint --autocorrect                                        # Auto-fix violations
+swiftlint lint --path apus/Features/Camera/Views/CameraView.swift  # Lint specific file
+```
 
 ## Architecture
 
-### Core Architecture Components
-- **App Entry Point**: `apusApp.swift` - SwiftData ModelContainer setup with forced dark mode and hidden status bar
-- **Dependency Injection**: `DIContainer.swift` - Complete DI system with protocol-based dependencies, property wrappers (@Injected, @OptionalInjected), and testing support
-- **Root Navigation**: `ContentView.swift` - Navigation view with hamburger menu switching between Home and Settings
-- **Service Layer**: Modular services (CameraManager, PhotoLibraryService, PermissionService, ErrorService, HapticService)
+### Dependency Injection System
 
-### Feature Modules
-- **Camera Module**: `CameraView.swift`, `CameraViewModel.swift`, `CameraManager.swift` - Full AVFoundation integration with state management
-- **Object Detection Module**: Multiple detection systems (TensorFlow Lite, Vision framework, unified detection)
-- **Image Classification Module**: ML-powered image analysis with classification history
-- **Preview Module**: `PreviewView.swift` with zoomable image display and processing pipeline
-- **Settings Module**: `SettingsView.swift` with app configuration and preferences
+The codebase uses a custom DI container (`DIContainer.swift`) with property wrapper injection:
 
-### Data Layer
-- **Models**: `Item.swift` (SwiftData), `AppSettings.swift`, `DetectionResults.swift`
-- **Extensions**: `UIImage+Processing.swift` for image normalization and optimization
+- **Property Wrappers**: `@Injected<T>` for required dependencies, `@OptionalInjected<T>` for optional
+- **Registration**: `AppDependencies.swift` configures all dependencies at startup
+- **Singleton Pattern**: Most services registered as singletons, some use factories
+- **Lazy Initialization**: Dependencies configured on first access via `ensureDependenciesConfigured()`
+- **Testing Support**: `configureForTesting()` registers mock implementations
 
-## Key Technologies
-
-- **SwiftUI**: Declarative UI framework with state management
-- **SwiftData**: Persistent data storage with model container
-- **AVFoundation**: Camera capture, video processing, and media handling
-- **Vision Framework**: Apple's native computer vision for object detection
-- **TensorFlow Lite**: Custom ML model inference with GPU acceleration
-- **CoreVideo**: Pixel buffer handling and image preprocessing
-- **Photos Framework**: Photo library access and integration
-- **Combine**: Reactive programming for async operations
-- **Swift Testing + XCTest**: Comprehensive unit and UI testing frameworks
-
-## Development Commands
-
-### Building and Running
-- **IMPORTANT**: Open `apus.xcworkspace` (not `apus.xcodeproj`) in Xcode due to CocoaPods integration
-- **Recommended**: Use Xcode GUI for building - command line builds may fail due to CocoaPods sandbox permissions
-- **Alternative command line**: `./build.sh` (simulator build with sandbox workaround)
-- **Device requirement**: Physical device required for camera and ML model testing
-- **Simulator limitations**: No camera access, no GPU acceleration for TensorFlow Lite
-- **iOS version**: Requires iOS 18.5+ deployment target
-
-### Dependencies Setup
-- **Install dependencies**: `pod install` (when Podfile.lock changes)
-- **Key dependencies**: TensorFlow Lite Swift (~2.14.0) with potential GPU/Metal support
-- **Sandbox settings**: User script sandboxing disabled for CocoaPods compatibility
-
-### Testing Commands
-```bash
-# Run all tests via command line
-xcodebuild -workspace apus.xcworkspace -scheme apus test
-
-# Run specific test class
-xcodebuild -workspace apus.xcworkspace -scheme apus test -only-testing:apusTests/CameraViewModelTests
-
-# Run specific test method  
-xcodebuild -workspace apus.xcworkspace -scheme apus test -only-testing:apusTests/CameraViewModelTests/testCapturePhoto_UpdatesCapturedImage
+**Usage Example**:
+```swift
+class CameraViewModel {
+    @Injected var cameraManager: CameraManagerProtocol
+    @Injected var objectDetection: ObjectDetectionProtocol
+}
 ```
 
-### Code Quality Commands
-```bash
-# Run SwiftLint for code style checking
-swiftlint
+**Important**: Dependencies must be configured via `AppDependencies.shared` before using `@Injected`. The container uses type-based string keys (`String(describing: type)`) for registration.
 
-# SwiftLint with autocorrect (fixes some violations automatically)
-swiftlint --autocorrect
+### Protocol-First Design
 
-# SwiftLint for specific files
-swiftlint lint --path apus/Features/Camera/Views/CameraView.swift
+All major components are abstracted behind protocols (suffix: `Protocol`):
+
+**Detection Protocols**:
+- `ObjectDetectionProtocol` - Real-time frame processing (camera feed)
+- `UnifiedObjectDetectionProtocol` - High-level API supporting multiple frameworks (Vision/Core ML)
+- `VisionObjectDetectionProtocol` - Detailed Vision framework interface
+- `VisionTextRecognitionProtocol` - OCR with character-level recognition
+- `ImageClassificationProtocol` - Image classification
+- `ContourDetectionProtocol` - Shape/contour detection
+- `BarcodeDetectionProtocol` - Barcode/QR code scanning
+- `CameraManagerProtocol` - Camera session control
+
+**Service Protocols**:
+- `PermissionServiceProtocol` - iOS permissions (camera/photos)
+- `PhotoLibraryServiceProtocol` - Photo library access
+- `ErrorServiceProtocol` - Centralized error handling
+- `HapticServiceProtocol` - Haptic feedback
+
+### Feature-Based Organization
+
+```
+Features/
+├── Camera/              # Live camera feed with real-time detection
+├── ObjectDetection/     # Multiple detection framework implementations
+├── ImageClassification/ # Image classification
+├── ContourDetection/    # Shape detection
+├── Preview/             # Detection result preview
+├── Results/             # Results display and management
+├── Settings/            # App configuration
+└── Navigation/          # App navigation (ContentView)
 ```
 
-### SwiftLint Configuration
-- **Configuration**: `.swiftlint.yml` with pragmatic thresholds optimized for SwiftUI development
-- **Line length**: 180 warning, 220 error (ignores comments, URLs, interpolated strings)
-- **Function body**: 120 warning, 170 error lines
-- **Type body**: 400 warning, 600 error lines
-- **File length**: 500 warning, 800 error lines
-- **Disabled rules**: `multiple_closures_with_trailing_closure`, `orphaned_doc_comment`, `no_fallthrough_only` for SwiftUI ergonomics
+Each feature contains: `Managers/`, `ViewModels/`, `Views/`, `Models/` (as needed).
 
-### Testing via Xcode
-- **All tests**: Xcode Test Navigator (⌘+6) or Product → Test (⌘+U)
-- **Test structure**: Comprehensive unit tests with dependency injection and mocking
-- **Coverage**: 100% coverage across services, ViewModels, views, extensions, and integration tests
+### Detection Framework Abstraction
 
-## Dependency Injection Architecture
+The app supports multiple ML frameworks through `ObjectDetectionFactory`:
 
-The app uses a comprehensive dependency injection system for testability and modularity:
+```swift
+// Auto-selects based on device capability
+let manager = ObjectDetectionFactory.createObjectDetectionManager()
 
-### Core DI Components
-- **DIContainer**: Type-safe dependency registration and resolution with singleton/factory support
-- **Property Wrappers**: `@Injected` (required dependencies), `@OptionalInjected` (optional dependencies)
-- **ServiceLocator**: Alternative access pattern for common dependencies
-- **AppDependencies**: Centralized configuration with production/testing modes
+// Explicit framework selection
+let manager = ObjectDetectionFactory.createObjectDetectionManager(framework: .coreML)
+```
 
-### Camera Architecture
+**Frameworks**:
+- **Vision**: Native iOS, always available
+- **Core ML**: YOLO v12s (when bundled model present in `Resources/Models/yolov12s.mlpackage`)
 
-The camera implementation uses protocol-based architecture with dependency injection:
-- **CameraManagerProtocol**: Interface for camera operations with mock support
-- **CameraViewModel**: State management with injected dependencies
-- **Permission handling**: Integrated via PermissionService with proper Info.plist configuration
-- **Error handling**: Centralized via ErrorService with user feedback
+Framework selection stored in `AppSettings.shared.objectDetectionFramework`.
 
-## Navigation Flow
+### Results Management
 
-The app uses state-based navigation with `NavigationPage` enum:
-- **Home**: Displays the camera interface (`CameraView`)
-- **Settings**: App configuration and preferences
-- **Results**: Detection results dashboard with category-based navigation
-- **Menu**: Floating overlay buttons for navigation between sections
+`DetectionResultsManager` (split across 8 extension files) handles persistence:
 
-## SwiftData Integration
+**Extensions**:
+- `DetectionResultsManager+OCR.swift`
+- `DetectionResultsManager+ObjectDetection.swift`
+- `DetectionResultsManager+Classification.swift`
+- `DetectionResultsManager+Contour.swift`
+- `DetectionResultsManager+Barcode.swift`
+- `DetectionResultsManager+AsyncLoading.swift`
+- `DetectionResultsManager+Helpers.swift`
 
-The app uses a persistent ModelContainer configured in the main app file with the Item schema. The model context is injected into the environment and accessed via `@Environment(\.modelContext)` in views. Currently minimal but extensible for photo metadata storage.
+**Stored Result Types**: `StoredOCRResult`, `StoredObjectDetectionResult`, etc.
+- Image data (JPEG compressed)
+- Thumbnail caching (max 160px)
+- Metadata (timestamp, confidence stats)
+- Per-category storage limits (configurable in `AppSettings`)
 
-## Computer Vision Architecture
+### Error Handling
 
-The app features multiple computer vision systems with unified interface:
+Use `ErrorService` for centralized error presentation:
 
-### Detection System Overview
-- **Unified Detection Interface**: `UnifiedObjectDetectionProtocol` for framework selection
-- **Multiple Backends**: TensorFlow Lite, Vision Framework, and hybrid approaches
-- **Framework Selection**: Automatic or manual selection based on performance/accuracy needs
-- **Real-time Processing**: Optimized for 10fps with background threading
+```swift
+@Injected var errorService: ErrorServiceProtocol
 
-### TensorFlow Lite Detection
-- **Model**: EfficientDet-Lite0 (4.5MB, 320x320 resolution)
-- **Dataset**: COCO (80 object classes)
-- **Acceleration**: GPU support via MetalDelegate (device-only)
-- **Manager**: `TensorFlowLiteObjectDetectionManager.swift`
+// Present error with optional recovery
+errorService.presentError(error, context: "capturing photo")
+```
 
-### Vision Framework Detection  
-- **Integration**: Native iOS Vision framework
-- **Performance**: Optimized for iOS devices
-- **Manager**: `VisionObjectDetectionManager.swift`
-- **Benefits**: Built-in optimization and system integration
+**Error Types** (`AppError` enum):
+- Localized messages
+- Recovery suggestions
+- Permission-aware (shows settings button when appropriate)
 
-### Additional Vision Features
-- **Image Classification**: ML-powered classification with history tracking
-- **Contour Detection**: Computer vision-based shape analysis  
-- **OCR/Text Recognition**: Vision framework text detection and recognition with results storage
-- **Barcode Detection**: QR code and barcode scanning with smart content parsing
-- **Image Processing**: Normalization, resizing, optimization pipelines
+### Settings Management
 
-### Results System Architecture
-- **DetectionResultsManager**: Centralized results storage using AppStorage with JSON serialization
-- **Result Types**: StoredOCRResult, StoredObjectDetectionResult, StoredClassificationResult, StoredBarcodeResult
-- **Results Dashboard**: NavigationStack-based UI for browsing historical results by category
-- **Data Persistence**: Local storage with automatic cleanup (max 10 results per category)
+Global singleton: `AppSettings.shared`
 
-### Computer Vision Files
-- **Models**: `efficientdet_lite0.tflite`, `coco_labels.txt`
-- **Managers**: Detection, classification, contour analysis, text recognition, and barcode detection managers
-- **Extensions**: `UIImage+Processing.swift` for image optimization
+**Key Settings**:
+- `isRealTimeObjectDetectionEnabled: Bool`
+- `isRealTimeBarcodeDetectionEnabled: Bool`
+- `objectDetectionFramework: ObjectDetectionFramework` (.vision or .coreML)
+- `objectDetectionModel: ObjectDetectionModel` (.yoloV12s)
+- Storage limits per detection category (1-100 results)
 
-## Project Structure and Development Notes
+Settings automatically persist to `UserDefaults` via `didSet` observers.
 
-### Key Configuration Files
-- **Workspace**: `apus.xcworkspace` (use this, not .xcodeproj due to CocoaPods)
-- **Dependencies**: `Podfile`, `Podfile.lock` with TensorFlow Lite Swift integration
-- **Permissions**: `Info.plist` with camera and photo library usage descriptions
-- **Entitlements**: `apus.entitlements` and `apusDebug.entitlements` for app capabilities
-- **Build Scripts**: `build.sh` for command-line builds with sandbox workarounds
+### Threading Model
 
-### ML Assets and Resources
-- **TensorFlow Model**: `efficientdet_lite0.tflite` (4.5MB, 320x320 input)
-- **Labels**: `coco_labels.txt` (80 COCO dataset object classes)
-- **App Assets**: `Assets.xcassets` with app icons and color sets
+- **@MainActor**: All ViewModels and UI updates
+- **Background Processing**: Heavy ML operations on `.utility` QoS
+- **Preloading**: Models preload asynchronously in `AppDependencies.configureDependencies()`
 
-### Development Constraints and Important Notes
-- **CocoaPods Integration**: Always use `.xcworkspace`, not `.xcodeproj`
-- **Sandbox Issues**: Command-line builds may fail; prefer Xcode GUI or use `build.sh`
-- **Device Requirements**: Physical device needed for camera and GPU-accelerated ML
-- **Simulator Limitations**: No camera access, no GPU acceleration, limited ML performance
-- **Permission Requirements**: Camera and photo library permissions must be granted
-- **iOS Version**: Minimum iOS 18.5+ deployment target
-- **Testing**: Comprehensive test suite with 100% coverage using dependency injection
-- **Code Quality**: SwiftLint configured with pragmatic thresholds for SwiftUI development
+Example:
+```swift
+DispatchQueue.global(qos: .utility).async {
+    objectDetectionManager.preload()
+}
+```
 
-## Testing Strategy
+## Code Style Guidelines
 
-### Unit Testing
-- **Test Structure**: Located in `apusTests/` with organized subdirectories
-- **Dependency Injection**: Uses `TestDIContainer.swift` for mock dependencies
-- **Coverage Areas**: Services, ViewModels, managers, extensions, and data models
-- **Test Helpers**: Mock implementations for all protocols
+- **Imports**: Group by framework (stdlib → system → third-party → local); sort alphabetically
+- **Formatting**: Follow `.swiftlint.yml` (line length 180/220, function body 120/170)
+- **Types**: PascalCase for classes/structs/enums; camelCase for properties/methods
+- **Naming**: Descriptive, avoid abbreviations; protocols end with "Protocol"
+- **Error Handling**: Use `ErrorService` for user-facing errors; throw/return Results where appropriate
+- **Architecture**: Protocol-first with dependency injection (`@Injected`); background threading for heavy ops
 
-### UI Testing
-- **Location**: `apusUITests/` for end-to-end testing
-- **Launch Tests**: Basic app launch and navigation validation
+## Testing
 
-### Running Tests
-- **Xcode**: Use Test Navigator (⌘+6) or Product → Test (⌘+U)
-- **Command Line**: `xcodebuild -workspace apus.xcworkspace -scheme apus test`
-- **Specific Tests**: Use `-only-testing` flag for targeted test execution
+- **Framework**: XCTest with async/await
+- **Test Container**: `TestDIContainer` for isolation
+- **Mocks**: Comprehensive mock implementations in `AppDependencies.configureForTesting()`
+  - `MockCameraManager`, `MockObjectDetectionManager`, `MockPermissionService`, etc.
+- **Helpers**: `TestRunner.swift`, `TestDIContainer.swift`
 
-## Development Workflow
+**Pattern**:
+```swift
+@MainActor
+class CameraViewModelTests: XCTestCase {
+    var viewModel: CameraViewModel!
 
-### Code Organization
-- **Features**: Organized by feature modules in `apus/Features/`
-- **Core**: Shared utilities and protocols in `apus/Core/`
-- **Services**: Business logic and external integrations in `apus/Services/`
-- **Resources**: Assets, models, and configuration files in `apus/Resources/`
+    override func setUp() {
+        super.setUp()
+        AppDependencies.shared.configureForTesting()
+        viewModel = CameraViewModel()
+    }
+}
+```
 
-### Best Practices
-- **Protocol-First**: All managers implement protocols for testability
-- **Dependency Injection**: Use `@Injected` for required dependencies
-- **Error Handling**: Centralized via `ErrorService` with user feedback
-- **Performance**: Background threading for heavy operations
-- **SwiftUI**: Declarative UI with state management patterns
+## ML Model Integration
+
+- **Model**: YOLOv12s Core ML model in `Resources/Models/yolov12s.mlpackage/`
+- **Format**: `.mlpackage` (Apple's recommended format)
+- **Preloading**: Background preload via `UnifiedObjectDetectionProtocol.preload()`
+- **Python Tools**: `src/apus_ml_tools/` for model conversion (torch → ONNX → Core ML)
+  - Requires Python 3.12+, managed via `pyproject.toml`
+
+## Key Files
+
+- `apus/App/AppDependencies.swift` - Centralized DI configuration
+- `apus/Core/DependencyInjection/DIContainer.swift` - DI container implementation
+- `apus/Core/Models/AppSettings.swift` - Global settings singleton
+- `apus/Core/Protocols/` - Protocol definitions (8 files)
+- `apus/Services/DetectionResultsManager/` - Result persistence (8 extension files)
+- `apus/Features/Camera/Managers/CameraManager.swift` - Camera session management
+- `apus/Features/ObjectDetection/Managers/` - Detection framework implementations
+
+## Common Patterns
+
+### Adding a New Feature
+
+1. Create feature directory under `Features/`
+2. Define protocol in `Core/Protocols/` if new capability
+3. Implement manager conforming to protocol
+4. Register in `AppDependencies.configureDependencies()`
+5. Create ViewModel with `@Injected` dependencies
+6. Build SwiftUI views
+7. Add mock implementation for testing
+
+### Switching Detection Frameworks
+
+User controls via Settings UI. Code reads `AppSettings.shared.objectDetectionFramework`:
+```swift
+let framework = AppSettings.shared.objectDetectionFramework
+let manager = ObjectDetectionFactory.createObjectDetectionManager(framework: framework)
+```
+
+### Adding Storage for New Detection Type
+
+1. Add case to `DetectionCategory` enum in `AppSettings.swift`
+2. Add stored result type in `DetectionResults.swift`
+3. Create extension file: `DetectionResultsManager+NewType.swift`
+4. Add storage limit property to `AppSettings`
+5. Update `getStorageLimit()` and `setStorageLimit()` switch statements
