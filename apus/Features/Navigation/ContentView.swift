@@ -12,6 +12,7 @@ enum NavigationPage {
     case home
     case settings
     case results
+    case timeline
 }
 
 struct ContentView: View {
@@ -55,6 +56,23 @@ struct ContentView: View {
                             CategoryResultsView(category: category)
                         }
                 }
+
+            case .timeline:
+                NavigationStack(path: $resultsPath) {
+                    TimelineView(path: $resultsPath)
+                        .toolbar {
+                            if resultsPath.isEmpty {
+                                ToolbarItem(placement: .navigationBarLeading) {
+                                    Button("Back to Camera") {
+                                        currentPage = .home
+                                    }
+                                }
+                            }
+                        }
+                        .navigationDestination(for: DetectionCategory.self) { category in
+                            CategoryResultsView(category: category)
+                        }
+                }
             }
 
             // Floating menu buttons for camera view
@@ -79,6 +97,18 @@ struct ContentView: View {
                                 currentPage = .results
                             }) {
                                 Image(systemName: "chart.bar.doc.horizontal")
+                                    .font(.title2)
+                                    .foregroundColor(.white)
+                                    .frame(width: 44, height: 44)
+                                    .background(Color.black.opacity(0.6))
+                                    .clipShape(Circle())
+                            }
+
+                            Button(action: {
+                                hapticService.buttonTap()
+                                currentPage = .timeline
+                            }) {
+                                Image(systemName: "clock.arrow.circlepath")
                                     .font(.title2)
                                     .foregroundColor(.white)
                                     .frame(width: 44, height: 44)

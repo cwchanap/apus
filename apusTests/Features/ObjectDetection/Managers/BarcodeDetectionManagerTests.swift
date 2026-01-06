@@ -55,9 +55,11 @@ class BarcodeDetectionManagerTests: XCTestCase {
 
 private func generateQRCodeImage(from string: String) -> UIImage {
     let data = Data(string.utf8)
-    let filter = CIFilter.qrCodeGenerator()
+    guard let filter = CIFilter(name: "CIQRCodeGenerator") else {
+        return UIImage()
+    }
     filter.setValue(data, forKey: "inputMessage")
-    filter.correctionLevel = "M"
+    filter.setValue("M", forKey: "inputCorrectionLevel")
 
     let transform = CGAffineTransform(scaleX: 6, y: 6)
     if let outputImage = filter.outputImage?.transformed(by: transform) {
