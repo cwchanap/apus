@@ -21,7 +21,8 @@
       "Bash(swiftlint:*)",
       "mcp__XcodeBuildMCP__list_schemes",
       "mcp__XcodeBuildMCP__build_sim",
-      "mcp__XcodeBuildMCP__test_sim"
+      "mcp__XcodeBuildMCP__test_sim",
+      "Bash(xcodebuild:*)"
     ],
     "deny": [],
     "defaultMode": "acceptEdits"
