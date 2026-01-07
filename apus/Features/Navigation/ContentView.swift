@@ -18,6 +18,7 @@ enum NavigationPage {
 struct ContentView: View {
     @State private var currentPage: NavigationPage = .home
     @State private var resultsPath: [DetectionCategory] = []
+    @State private var timelinePath: [DetectionCategory] = []
     @Injected private var hapticService: HapticServiceProtocol
 
     var body: some View {
@@ -58,10 +59,10 @@ struct ContentView: View {
                 }
 
             case .timeline:
-                NavigationStack(path: $resultsPath) {
-                    TimelineView(path: $resultsPath)
+                NavigationStack(path: $timelinePath) {
+                    TimelineView()
                         .toolbar {
-                            if resultsPath.isEmpty {
+                            if timelinePath.isEmpty {
                                 ToolbarItem(placement: .navigationBarLeading) {
                                     Button("Back to Camera") {
                                         currentPage = .home

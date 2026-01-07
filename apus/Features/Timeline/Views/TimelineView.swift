@@ -15,9 +15,6 @@ struct TimelineView: View {
     @StateObject private var viewModel = TimelineViewModel()
     @EnvironmentObject var resultsManager: DetectionResultsManager
 
-    /// Navigation path for drill-down to category details
-    @Binding var path: [DetectionCategory]
-
     /// Currently selected result for detail sheet presentation
     @State private var selectedResult: TimelineResult?
 
@@ -465,7 +462,8 @@ struct TimelineBarcodeDetectionDetailView: View {
 struct TimelineView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationStack {
-            TimelineView(path: .constant([]))
+            TimelineView()
+                .environmentObject(DetectionResultsManager())
         }
     }
 }

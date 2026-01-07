@@ -48,11 +48,16 @@ struct TimelineRowView: View {
             Image(systemName: "chevron.right")
                 .font(.caption)
                 .foregroundColor(.secondary)
+                .accessibilityHidden(true)  // Decorative indicator
         }
         .padding()
         .background(Color(.systemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(result.category.rawValue): \(result.previewText)")
+        .accessibilityValue(result.timestamp.formatted(date: .abbreviated, time: .shortened))
+        .accessibilityHint("Tap to view details")
     }
 
     // MARK: - Thumbnail View
@@ -130,6 +135,7 @@ struct EmptyTimelineView: View {
             Image(systemName: hasFilters ? "magnifyingglass" : "clock")
                 .font(.system(size: 60))
                 .foregroundColor(.gray)
+                .accessibilityHidden(true)  // Decorative icon
 
             VStack(spacing: 8) {
                 Text(hasFilters ? "No Results Found" : "No Detection History")
@@ -159,10 +165,17 @@ struct EmptyTimelineView: View {
                         .background(Color.accentColor)
                         .clipShape(Capsule())
                 }
+                .accessibilityLabel("Clear Filters")
+                .accessibilityHint("Removes all active filters")
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(.systemGroupedBackground))
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(hasFilters ? "No results found" : "No detection history")
+        .accessibilityHint(hasFilters
+            ? "Adjust filters or clear them to see results"
+            : "Start detecting items to populate timeline")
     }
 }
 

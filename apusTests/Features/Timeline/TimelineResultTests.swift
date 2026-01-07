@@ -193,7 +193,7 @@ final class TimelineResultTests: XCTestCase {
         let timelineResult = TimelineResult.objectDetection(objResult)
 
         // Then
-        XCTAssertTrue(timelineResult.statsText.contains("1 objects"))
+        XCTAssertTrue(timelineResult.statsText.contains("1 object"))
         XCTAssertTrue(timelineResult.statsText.contains("Vision"))
     }
 
