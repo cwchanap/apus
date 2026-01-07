@@ -99,7 +99,9 @@ enum TimelineResult: Identifiable {
             return "\(result.totalTextCount) texts \u{2022} \(Int(result.averageConfidence * 100))%"
 
         case .objectDetection(let result):
-            return "\(result.totalObjectCount) objects \u{2022} \(result.framework)"
+            let count = result.totalObjectCount
+            let objectWord = count == 1 ? "object" : "objects"
+            return "\(count) \(objectWord) \u{2022} \(result.framework)"
 
         case .classification(let result):
             if let top = result.topResult {
@@ -159,11 +161,13 @@ enum TimelineResult: Identifiable {
     func group(relativeTo referenceDate: Date = Date()) -> TimelineGroup {
         let calendar = Calendar.current
 
-        if calendar.isDateInToday(timestamp) {
+        // Use referenceDate instead of current date
+        if calendar.isDate(timestamp, inSameDayAs: referenceDate) {
             return .today
         }
 
-        if calendar.isDateInYesterday(timestamp) {
+        if let yesterday = calendar.date(byAdding: .day, value: -1, to: referenceDate),
+           calendar.isDate(timestamp, inSameDayAs: yesterday) {
             return .yesterday
         }
 
@@ -223,7 +227,7 @@ enum DateFilterPreset: String, CaseIterable {
             return true
 
         case .today:
-            return calendar.isDateInToday(date)
+            return calendar.isDate(date, inSameDayAs: referenceDate)
 
         case .last7Days:
             guard let cutoff = calendar.date(byAdding: .day, value: -7, to: referenceDate) else {

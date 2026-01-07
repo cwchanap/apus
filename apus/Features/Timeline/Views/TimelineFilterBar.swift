@@ -51,6 +51,8 @@ struct TimelineSearchBar: View {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundColor(.secondary)
                 }
+                .accessibilityLabel("Clear search")
+                .accessibilityHint("Clears the search text field")
             }
         }
         .padding(10)
@@ -105,9 +107,10 @@ struct CategoryFilterChip: View {
                         .fontWeight(.semibold)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
+                        .foregroundColor(isSelected ? .white : .black)
                         .background(
                             isSelected
-                                ? Color.white.opacity(0.3)
+                                ? Color.black.opacity(0.3)
                                 : Color.gray.opacity(0.3)
                         )
                         .clipShape(Capsule())
@@ -120,6 +123,10 @@ struct CategoryFilterChip: View {
             .clipShape(Capsule())
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(category.rawValue)
+        .accessibilityValue(isSelected ? "Selected" : "Not selected")
+        .accessibilityHint(count > 0 ? "\(count) items" : "Filter by \(category.rawValue)")
+        .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
     }
 }
 
@@ -163,6 +170,8 @@ struct DatePresetChip: View {
                 .clipShape(Capsule())
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(preset.rawValue)
+        .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
     }
 }
 
