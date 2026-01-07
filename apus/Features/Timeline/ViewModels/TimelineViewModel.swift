@@ -187,11 +187,12 @@ class TimelineViewModel: ObservableObject {
 
     private func computeResultsHash() -> Int {
         var hasher = Hasher()
-        hasher.combine(resultsManager.ocrResults.count)
-        hasher.combine(resultsManager.objectDetectionResults.count)
-        hasher.combine(resultsManager.classificationResults.count)
-        hasher.combine(resultsManager.contourResults.count)
-        hasher.combine(resultsManager.barcodeResults.count)
+        // Hash actual result IDs, not just counts, to detect content changes
+        hasher.combine(contentsOf: resultsManager.ocrResults.map { $0.id })
+        hasher.combine(contentsOf: resultsManager.objectDetectionResults.map { $0.id })
+        hasher.combine(contentsOf: resultsManager.classificationResults.map { $0.id })
+        hasher.combine(contentsOf: resultsManager.contourResults.map { $0.id })
+        hasher.combine(contentsOf: resultsManager.barcodeResults.map { $0.id })
         return hasher.finalize()
     }
 
