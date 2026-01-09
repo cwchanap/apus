@@ -13,7 +13,6 @@ import SwiftUI
 /// with filtering by category, search, and date range
 struct TimelineView: View {
     @StateObject private var viewModel = TimelineViewModel()
-    @EnvironmentObject var resultsManager: DetectionResultsManager
 
     /// Currently selected result for detail sheet presentation
     @State private var selectedResult: TimelineResult?
@@ -30,7 +29,9 @@ struct TimelineView: View {
 
             // Timeline content
             if viewModel.isEmpty {
-                EmptyTimelineView(hasFilters: false) {}
+                EmptyTimelineView(hasFilters: viewModel.hasActiveFilters) {
+                    viewModel.clearFilters()
+                }
             } else if viewModel.sections.isEmpty {
                 EmptyTimelineView(hasFilters: viewModel.hasActiveFilters) {
                     viewModel.clearFilters()
@@ -110,7 +111,6 @@ struct TimelineView: View {
 struct TimelineDetailSheet: View {
     let result: TimelineResult
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject var resultsManager: DetectionResultsManager
 
     var body: some View {
         NavigationStack {
@@ -129,39 +129,19 @@ struct TimelineDetailSheet: View {
     private var detailContent: some View {
         switch result {
         case .ocr(let ocrResult):
-            TimelineOCRDetailView(
-                result: ocrResult,
-                onDelete: nil,
-                showImage: .constant(false)
-            )
+            TimelineOCRDetailView(result: ocrResult)
 
         case .objectDetection(let objResult):
-            TimelineObjectDetectionDetailView(
-                result: objResult,
-                onDelete: nil,
-                showImage: .constant(false)
-            )
+            TimelineObjectDetectionDetailView(result: objResult)
 
         case .classification(let classResult):
-            TimelineClassificationDetailView(
-                result: classResult,
-                onDelete: nil,
-                showImage: .constant(false)
-            )
+            TimelineClassificationDetailView(result: classResult)
 
         case .contour(let contourResult):
-            TimelineContourDetectionDetailView(
-                result: contourResult,
-                onDelete: nil,
-                showImage: .constant(false)
-            )
+            TimelineContourDetectionDetailView(result: contourResult)
 
         case .barcode(let barcodeResult):
-            TimelineBarcodeDetectionDetailView(
-                result: barcodeResult,
-                onDelete: nil,
-                showImage: .constant(false)
-            )
+            TimelineBarcodeDetectionDetailView(result: barcodeResult)
         }
     }
 }
@@ -171,8 +151,6 @@ struct TimelineDetailSheet: View {
 /// OCR result detail view wrapper for timeline
 struct TimelineOCRDetailView: View {
     let result: StoredOCRResult
-    let onDelete: (() -> Void)?
-    @Binding var showImage: Bool
 
     var body: some View {
         ScrollView {
@@ -222,8 +200,6 @@ struct TimelineOCRDetailView: View {
 /// Object detection result detail view wrapper for timeline
 struct TimelineObjectDetectionDetailView: View {
     let result: StoredObjectDetectionResult
-    let onDelete: (() -> Void)?
-    @Binding var showImage: Bool
 
     var body: some View {
         ScrollView {
@@ -280,8 +256,6 @@ struct TimelineObjectDetectionDetailView: View {
 /// Classification result detail view wrapper for timeline
 struct TimelineClassificationDetailView: View {
     let result: StoredClassificationResult
-    let onDelete: (() -> Void)?
-    @Binding var showImage: Bool
 
     var body: some View {
         ScrollView {
@@ -339,8 +313,6 @@ struct TimelineClassificationDetailView: View {
 /// Contour detection result detail view wrapper for timeline
 struct TimelineContourDetectionDetailView: View {
     let result: StoredContourDetectionResult
-    let onDelete: (() -> Void)?
-    @Binding var showImage: Bool
 
     var body: some View {
         ScrollView {
@@ -396,8 +368,6 @@ struct TimelineContourDetectionDetailView: View {
 /// Barcode detection result detail view wrapper for timeline
 struct TimelineBarcodeDetectionDetailView: View {
     let result: StoredBarcodeDetectionResult
-    let onDelete: (() -> Void)?
-    @Binding var showImage: Bool
 
     var body: some View {
         ScrollView {
@@ -463,7 +433,6 @@ struct TimelineView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationStack {
             TimelineView()
-                .environmentObject(DetectionResultsManager())
         }
     }
 }
