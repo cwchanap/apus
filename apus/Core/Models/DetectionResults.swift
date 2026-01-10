@@ -32,6 +32,17 @@ struct StoredOCRResult: Codable, Identifiable {
         self.thumbnailData = thumb.jpegData(compressionQuality: 0.6)
     }
 
+    /// Initializer with custom timestamp for testing
+    init(detectedTexts: [DetectedText], image: UIImage, timestamp: Date) {
+        self.timestamp = timestamp
+        self.detectedTexts = detectedTexts.map { StoredDetectedText(from: $0) }
+        self.imageData = image.jpegData(compressionQuality: 0.7) ?? Data()
+        self.imageSize = image.size
+        let maxThumb: CGFloat = 160
+        let thumb = image.resizedMaintainingAspectRatio(to: CGSize(width: maxThumb, height: maxThumb))
+        self.thumbnailData = thumb.jpegData(compressionQuality: 0.6)
+    }
+
     var image: UIImage? {
         return UIImage(data: imageData)
     }
@@ -95,6 +106,18 @@ struct StoredObjectDetectionResult: Codable, Identifiable {
 
     init(detectedObjects: [DetectedObject], image: UIImage) {
         self.timestamp = Date()
+        self.detectedObjects = detectedObjects.map { StoredDetectedObject(from: $0) }
+        self.imageData = image.jpegData(compressionQuality: 0.7) ?? Data()
+        self.imageSize = image.size
+        self.framework = detectedObjects.first?.framework.displayName ?? "Unknown"
+        let maxThumb: CGFloat = 160
+        let thumb = image.resizedMaintainingAspectRatio(to: CGSize(width: maxThumb, height: maxThumb))
+        self.thumbnailData = thumb.jpegData(compressionQuality: 0.6)
+    }
+
+    /// Initializer with custom timestamp for testing
+    init(detectedObjects: [DetectedObject], image: UIImage, timestamp: Date) {
+        self.timestamp = timestamp
         self.detectedObjects = detectedObjects.map { StoredDetectedObject(from: $0) }
         self.imageData = image.jpegData(compressionQuality: 0.7) ?? Data()
         self.imageSize = image.size
