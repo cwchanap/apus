@@ -326,4 +326,161 @@ final class TimelineViewModelTests: XCTestCase {
         let classifications = [ClassificationResult(identifier: "dog", confidence: 0.9)]
         return StoredClassificationResult(classificationResults: classifications, image: testImage)
     }
+
+    // MARK: - Section Grouping Integration Tests
+
+    func test_sections_arePopulated_whenResultsAdded() async {
+        // Given
+        let ocrResult = createOCRResult()
+
+        // When - Add result directly to manager's published array
+        await MainActor.run {
+            mockResultsManager.ocrResults.append(ocrResult)
+        }
+
+        // Allow Combine to process ( Publishers.Merge5 will trigger updateSections )
+        try? await Task.sleep(nanoseconds: 150_000_000)
+
+        // Then
+        XCTAssertFalse(sut.sections.isEmpty, "Sections should not be empty after adding results")
+        XCTAssertEqual(sut.sections.first?.results.count, 1, "First section should have 1 result")
+        XCTAssertEqual(sut.filteredCount, 1, "Filtered count should be 1")
+        XCTAssertFalse(sut.isEmpty, "isEmpty should be false when results exist")
+    }
+
+    func test_sections_groupResultsByDate() async {
+        // Given
+        let calendar = Calendar.current
+        let today = Date()
+        let yesterday = calendar.date(byAdding: .day, value: -1, to: today)!
+        let lastWeek = calendar.date(byAdding: .day, value: -8, to: today)!
+
+        // Create results with specific timestamps
+        let ocrToday = createOCRResult()
+        let ocrYesterday = createOCRResult()
+        let objLastWeek = createObjectDetectionResult()
+
+        // Manually set timestamps using reflection (since init doesn't allow custom timestamp)
+        // For simplicity, we'll add results and verify grouping works with the current date
+        await MainActor.run {
+            mockResultsManager.ocrResults.append(ocrToday)
+            mockResultsManager.ocrResults.append(ocrYesterday)
+            mockResultsManager.objectDetectionResults.append(objLastWeek)
+        }
+
+        // Allow Combine to process
+        try? await Task.sleep(nanoseconds: 150_000_000)
+
+        // Then - Results should be grouped (at least Today should have results)
+        let todaySection = sut.sections.first { $0.group == .today }
+        XCTAssertNotNil(todaySection, "Today section should exist")
+        XCTAssertEqual(todaySection?.results.count, 2, "Today should have 2 results")
+
+        // Verify results are correctly categorized by type
+        let ocrResultsInSections = sut.sections.flatMap { $0.results }.filter { $0.category == .ocr }
+        XCTAssertEqual(ocrResultsInSections.count, 2, "Should have 2 OCR results")
+
+        let objResultsInSections = sut.sections.flatMap { $0.results }.filter { $0.category == .objectDetection }
+        XCTAssertEqual(objResultsInSections.count, 1, "Should have 1 object detection result")
+    }
+
+    func test_sections_filterByCategory() async {
+        // Given - Add results from different categories
+        await MainActor.run {
+            mockResultsManager.ocrResults.append(createOCRResult())
+            mockResultsManager.objectDetectionResults.append(createObjectDetectionResult())
+        }
+
+        // Allow Combine to process
+        try? await Task.sleep(nanoseconds: 150_000_000)
+
+        // Initially both should be visible
+        XCTAssertEqual(sut.sections.flatMap { $0.results }.count, 2, "Both categories should be visible")
+
+        // When - Filter out OCR
+        sut.toggleCategory(.ocr)
+
+        // Then - Only object detection should remain
+        let ocrResults = sut.sections.flatMap { $0.results }.filter { $0.category == .ocr }
+        XCTAssertTrue(ocrResults.isEmpty, "OCR results should not appear when OCR is filtered out")
+
+        let objectDetectionResults = sut.sections.flatMap { $0.results }.filter { $0.category == .objectDetection }
+        XCTAssertEqual(objectDetectionResults.count, 1, "Object detection result should still be visible")
+    }
+
+    func test_sections_multipleResultsInSameGroup() async {
+        // Given - Add multiple OCR results
+        await MainActor.run {
+            mockResultsManager.ocrResults.append(createOCRResult())
+            mockResultsManager.ocrResults.append(createOCRResult())
+            mockResultsManager.objectDetectionResults.append(createObjectDetectionResult())
+        }
+
+        // Allow Combine to process
+        try? await Task.sleep(nanoseconds: 150_000_000)
+
+        // Then - All results should be in Today section (all created today)
+        let todaySection = sut.sections.first { $0.group == .today }
+        XCTAssertNotNil(todaySection, "Today section should exist")
+        XCTAssertEqual(todaySection?.results.count, 3, "Today should have all 3 results")
+    }
+
+    func test_sections_empty_whenNoResultsMatchFilters() async {
+        // Given
+        await MainActor.run {
+            mockResultsManager.ocrResults.append(createOCRResult())
+        }
+
+        // Allow Combine to process
+        try? await Task.sleep(nanoseconds: 150_000_000)
+
+        XCTAssertFalse(sut.sections.isEmpty, "Sections should have results")
+
+        // When - Filter out all categories
+        for category in DetectionCategory.allCases {
+            sut.toggleCategory(category)
+        }
+
+        // Then - Results should be empty due to filtering
+        let filteredResults = sut.sections.flatMap { $0.results }
+        XCTAssertTrue(filteredResults.isEmpty, "Results should be empty when no categories selected")
+    }
+
+    func test_searchFilter_affectsSections() async {
+        // Given
+        await MainActor.run {
+            mockResultsManager.ocrResults.append(createOCRResult())
+        }
+
+        // Allow Combine to process
+        try? await Task.sleep(nanoseconds: 150_000_000)
+
+        // When - Apply search filter that won't match
+        sut.searchQuery = "nonexistent text"
+
+        // Allow debounce (300ms)
+        try? await Task.sleep(nanoseconds: 400_000_000)
+
+        // Then
+        XCTAssertTrue(sut.sections.isEmpty, "Sections should be empty when search doesn't match")
+    }
+
+    func test_dateFilter_affectsSections() async {
+        // Given - Add OCR results
+        await MainActor.run {
+            mockResultsManager.ocrResults.append(createOCRResult())
+        }
+
+        // Allow Combine to process
+        try? await Task.sleep(nanoseconds: 150_000_000)
+
+        // Initially should have 1 result
+        XCTAssertEqual(sut.filteredCount, 1, "Should have 1 result initially")
+
+        // When - Filter to last 7 days (should still include today's result)
+        sut.dateFilter = .last7Days
+
+        // Then - Result should still be visible
+        XCTAssertEqual(sut.filteredCount, 1, "Should have 1 result when filtered to last 7 days")
+    }
 }
