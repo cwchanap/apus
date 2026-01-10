@@ -206,7 +206,7 @@ class TimelineViewModel: ObservableObject {
         return hasher.finalize()
     }
 
-    private func updateSections() {
+    func updateSections() {
         let allResults = mergeAllResults()
 
         // Update empty state
