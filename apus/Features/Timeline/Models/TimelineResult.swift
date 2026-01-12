@@ -82,7 +82,7 @@ enum TimelineResult: Identifiable {
         case .contour(let result):
             let count = result.totalContourCount
             if count == 0 { return "No contours detected" }
-            let types = result.typeBreakdown.keys.prefix(2).joined(separator: ", ")
+            let types = result.typeBreakdown.keys.sorted().prefix(2).joined(separator: ", ")
             return types.isEmpty ? "\(count) contours" : types
 
         case .barcode(let result):
@@ -171,15 +171,15 @@ enum TimelineResult: Identifiable {
             return .yesterday
         }
 
-        // This week (within last 7 days)
+        // This week (within last 7 days, inclusive)
         if let weekAgo = calendar.date(byAdding: .day, value: -7, to: referenceDate),
-           timestamp > weekAgo {
+           timestamp >= weekAgo {
             return .thisWeek
         }
 
-        // Last week (8-14 days ago)
+        // Last week (8-14 days ago, inclusive)
         if let twoWeeksAgo = calendar.date(byAdding: .day, value: -14, to: referenceDate),
-           timestamp > twoWeeksAgo {
+           timestamp >= twoWeeksAgo {
             return .lastWeek
         }
 
@@ -233,13 +233,13 @@ enum DateFilterPreset: String, CaseIterable {
             guard let cutoff = calendar.date(byAdding: .day, value: -7, to: referenceDate) else {
                 return false
             }
-            return date > cutoff
+            return date >= cutoff && date <= referenceDate
 
         case .last30Days:
             guard let cutoff = calendar.date(byAdding: .day, value: -30, to: referenceDate) else {
                 return false
             }
-            return date > cutoff
+            return date >= cutoff && date <= referenceDate
         }
     }
 }

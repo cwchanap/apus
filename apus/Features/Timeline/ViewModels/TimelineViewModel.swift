@@ -13,9 +13,12 @@ import SwiftUI
 
 /// Represents a grouped section in the timeline
 struct TimelineSection: Identifiable {
-    let id = UUID()
     let group: TimelineGroup
     let results: [TimelineResult]
+
+    var id: TimelineGroup {
+        group
+    }
 
     var title: String {
         group.rawValue
@@ -89,6 +92,7 @@ class TimelineViewModel: ObservableObject {
             resultsManager.$contourResults.map { _ in () },
             resultsManager.$barcodeResults.map { _ in () }
         )
+        .receive(on: DispatchQueue.main)
         .sink { [weak self] _ in
             self?.invalidateCache()
             self?.updateSections()
@@ -150,13 +154,14 @@ class TimelineViewModel: ObservableObject {
 
     /// Get the count of results for a specific category
     func countForCategory(_ category: DetectionCategory) -> Int {
-        cachedMergedResults.filter { $0.category == category }.count
+        mergeAllResults().filter { $0.category == category }.count
     }
 
     // MARK: - Private Methods
 
     private func invalidateCache() {
         lastResultsHash = 0
+        cachedMergedResults = []
     }
 
     private func mergeAllResults() -> [TimelineResult] {

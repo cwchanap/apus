@@ -107,7 +107,7 @@ struct CategoryFilterChip: View {
                         .fontWeight(.semibold)
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
-                        .foregroundColor(isSelected ? .white : .black)
+                        .foregroundColor(isSelected ? .white : .primary)
                         .background(
                             isSelected
                                 ? Color.black.opacity(0.3)
