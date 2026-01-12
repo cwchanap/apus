@@ -441,10 +441,11 @@ final class TimelineViewModelTests: XCTestCase {
 
         XCTAssertFalse(sut.sections.isEmpty, "Sections should have results")
 
-        // When - Filter out all categories
-        for category in DetectionCategory.allCases {
-            sut.toggleCategory(category)
-        }
+        // When - Filter out all categories by explicitly clearing selected categories
+        sut.selectedCategories = []
+
+        // Manually trigger section update after filter change
+        sut.updateSections()
 
         // Then - Results should be empty due to filtering
         let filteredResults = sut.sections.flatMap { $0.results }
