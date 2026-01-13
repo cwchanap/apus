@@ -1,0 +1,50 @@
+name: Unit Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    name: Run Unit Tests
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set Xcode version
+        run: sudo xcode-select -s /Applications/Xcode_16.2.app
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Cache DerivedData
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-deriveddata-${{ hashFiles('**/*.swift', '**/*.h', '**/*.m') }}
+          restore-keys: |
+            ${{ runner.os }}-deriveddata-
+
+      - name: Build and Test
+        run: |
+          xcodebuild \
+            -project apus.xcodeproj \
+            -scheme apus \
+            -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.2' \
+            -enableCodeCoverage YES \
+            clean test
+
+      - name: Upload Test Results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: ~/Library/Developer/Xcode/DerivedData/**/TestResults/*.xcresult
+
+      - name: Code Coverage Summary
+        run: |
+          xcrun xccov view --report --json ~/Library/Developer/Xcode/DerivedData/**/Coverage.profdata 2>/dev/null || echo "No coverage data found"
