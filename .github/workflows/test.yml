@@ -31,10 +31,11 @@ jobs:
 
       - name: Build and Test
         run: |
+          xcrun simctl list devices available | head -20
           xcodebuild \
             -project apus.xcodeproj \
             -scheme apus \
-            -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.2' \
+            -destination 'generic/platform=iOS Simulator' \
             -enableCodeCoverage YES \
             clean test
 
