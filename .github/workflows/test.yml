@@ -35,7 +35,7 @@ jobs:
           xcodebuild \
             -project apus.xcodeproj \
             -scheme apus \
-            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -destination 'platform=iOS Simulator,name=iPhone 16,OS=18.5' \
             -enableCodeCoverage YES \
             clean test
 
