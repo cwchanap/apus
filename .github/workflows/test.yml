@@ -31,11 +31,17 @@ jobs:
 
       - name: Build and Test
         run: |
-          xcrun simctl list devices available | head -20
+          # Find the first available iPhone simulator
+          DEVICE_ID=$(xcrun simctl list devices available | grep "iPhone 16" | grep -E "iOS 18\.[4-6]" | head -1 | sed 's/.*(\([^)]*\)).*/\1/')
+          echo "Using device ID: $DEVICE_ID"
+          if [ -z "$DEVICE_ID" ]; then
+            echo "Error: Could not find available iPhone 16 simulator"
+            exit 1
+          fi
           xcodebuild \
             -project apus.xcodeproj \
             -scheme apus \
-            -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=18.4' \
+            -destination 'platform=iOS Simulator,id='$DEVICE_ID \
             -enableCodeCoverage YES \
             clean test
 
