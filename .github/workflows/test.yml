@@ -31,11 +31,14 @@ jobs:
 
       - name: Build and Test
         run: |
-          # Find the first available iPhone simulator
-          DEVICE_ID=$(xcrun simctl list devices available | grep "iPhone 16" | grep -E "iOS 18\.[4-6]" | head -1 | sed 's/.*(\([^)]*\)).*/\1/')
+          # Find first available iPhone 16 simulator
+          xcrun simctl list devices available > /tmp/devices.txt
+          cat /tmp/devices.txt
+          DEVICE_ID=$(cat /tmp/devices.txt | grep -A 50 "iOS 18\.[456]" | grep "iPhone 16" | head -1 | sed 's/.*(\([^)]*\)).*/\1/')
           echo "Using device ID: $DEVICE_ID"
           if [ -z "$DEVICE_ID" ]; then
             echo "Error: Could not find available iPhone 16 simulator"
+            cat /tmp/devices.txt
             exit 1
           fi
           xcodebuild \
