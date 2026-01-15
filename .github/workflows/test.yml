@@ -46,6 +46,18 @@ jobs:
             echo "Removed yolov12s.mlmodel to keep only yolov12s.mlpackage"
           fi
 
+      - name: Verify CoreML model
+        run: |
+          echo "Checking mlpackage contents:"
+          ls -la apus/Resources/Models/yolov12s.mlpackage/
+          echo ""
+          echo "Checking Data directory:"
+          ls -la apus/Resources/Models/yolov12s.mlpackage/Data/
+          echo ""
+          echo "Checking for weights:"
+          find apus/Resources/Models/yolov12s.mlpackage/Data -name "weight.bin" && echo "✓ Weights file found" || echo "✗ Weights file missing!"
+          find apus/Resources/Models/yolov12s.mlpackage/Data -name "model.mlmodel" && echo "✓ Model file found" || echo "✗ Model file missing!"
+
       - name: Cache DerivedData
         uses: actions/cache@v4
         with:
