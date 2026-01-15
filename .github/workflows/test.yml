@@ -21,6 +21,24 @@ jobs:
       - name: List available simulators
         run: xcrun simctl list devices available
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install uv (Python package manager)
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+      - name: Generate CoreML Model
+        run: |
+          cd scripts
+          uv run python convert_yolov12_to_coreml.py \
+            --weights https://github.com/sunsmarterjie/yolov12/releases/download/v1.0/yolov12s.pt \
+            --imgsz 640 \
+            --output ../apus/Resources/Models/yolov12s
+
       - name: Cache DerivedData
         uses: actions/cache@v4
         with:
