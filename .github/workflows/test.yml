@@ -41,7 +41,18 @@ jobs:
             --weights https://github.com/sunsmarterjie/yolov12/releases/download/v1.0/yolov12s.pt \
             --imgsz 640 \
             --output apus/Resources/Models/yolov12s \
-            --onnx-only
+            --onnx-only \
+            --no-ultralytics
+
+      - name: Verify ONNX file generated
+        run: |
+          ls -la apus/Resources/Models/
+          if [ -f apus/Resources/Models/yolov12s.onnx ]; then
+            echo "✓ ONNX file generated successfully"
+          else
+            echo "✗ ONNX file not found!"
+            exit 1
+          fi
 
       - name: Convert ONNX to CoreML
         run: |
