@@ -39,6 +39,13 @@ jobs:
             --imgsz 640 \
             --output apus/Resources/Models/yolov12s
 
+      - name: Remove duplicate .mlmodel file
+        run: |
+          if [ -f apus/Resources/Models/yolov12s.mlmodel ]; then
+            rm apus/Resources/Models/yolov12s.mlmodel
+            echo "Removed yolov12s.mlmodel to keep only yolov12s.mlpackage"
+          fi
+
       - name: Cache DerivedData
         uses: actions/cache@v4
         with:
