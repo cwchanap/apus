@@ -18,6 +18,9 @@ jobs:
       - name: Show Xcode version
         run: xcodebuild -version
 
+      - name: List available simulators
+        run: xcrun simctl list devices available
+
       - name: Cache DerivedData
         uses: actions/cache@v4
         with:
@@ -28,19 +31,10 @@ jobs:
 
       - name: Build and Test
         run: |
-          # Find first available iPhone 16 simulator
-          xcrun simctl list devices available > /tmp/devices.txt
-          cat /tmp/devices.txt
-          DEVICE_ID=$(cat /tmp/devices.txt | grep -E "iPhone 16.*\(.*\)" | grep -oE '[0-9A-F]{8}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{4}-[0-9A-F]{12}' | head -1)
-          echo "Using device ID: $DEVICE_ID"
-          if [ -z "$DEVICE_ID" ]; then
-            echo "Error: Could not find available iPhone 16 simulator"
-            exit 1
-          fi
           xcodebuild \
             -project apus.xcodeproj \
             -scheme apus \
-            -destination 'platform=iOS Simulator,id='$DEVICE_ID \
+            -destination 'platform=iOS Simulator,name=iPhone 16' \
             -enableCodeCoverage YES \
             clean test
 
