@@ -33,11 +33,11 @@ jobs:
 
       - name: Generate CoreML Model
         run: |
-          cd scripts
-          uv run python convert_yolov12_to_coreml.py \
+          uv sync
+          uv run python scripts/convert_yolov12_to_coreml.py \
             --weights https://github.com/sunsmarterjie/yolov12/releases/download/v1.0/yolov12s.pt \
             --imgsz 640 \
-            --output ../apus/Resources/Models/yolov12s
+            --output apus/Resources/Models/yolov12s
 
       - name: Cache DerivedData
         uses: actions/cache@v4
