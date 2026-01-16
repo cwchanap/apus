@@ -5,10 +5,10 @@ description = "Utilities for converting ML models for the apus iOS app"
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
  dependencies = [
-   "numpy>=1.24",
+   "numpy>=1.24,<2.0",
    "torch>=2.5,<2.6",
    "onnx==1.16.2",
-   "coremltools==7.2",
+   "coremltools>=7.0",
    "tqdm>=4.66",
    "requests>=2.31",
    # Optional, used if present for a simpler export path
