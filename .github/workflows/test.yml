@@ -68,6 +68,7 @@ jobs:
             -destination 'platform=iOS Simulator,name=iPhone 16' \
             -enableCodeCoverage YES \
             -only-testing:apusTests \
+            -skip-testing:apusUITests \
             clean test
 
       - name: Upload Test Results
