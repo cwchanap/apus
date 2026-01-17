@@ -248,7 +248,7 @@ def onnx_to_coreml(onnx_path: Path, out_dir: Path, fp16: bool) -> Path:
     print("[coreml] Converting ONNX to Core ML...")
     mlmodel = ct.convert(
         onnx_path,
-        source="onnx",
+        source="auto",
         convert_to="mlprogram",
         minimum_deployment_target=ct.target.iOS17,
         compute_units=ct.ComputeUnit.ALL,
