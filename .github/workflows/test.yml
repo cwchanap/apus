@@ -40,40 +40,17 @@ jobs:
           uv run python scripts/convert_yolov12_to_coreml.py \
             --weights https://github.com/sunsmarterjie/yolov12/releases/download/v1.0/yolov12s.pt \
             --imgsz 640 \
-            --output apus/Resources/Models/yolov12s \
-            --onnx-only \
-            --no-ultralytics
+            --output apus/Resources/Models/yolov12s
 
-      - name: Verify ONNX file generated
+      - name: Verify CoreML model generated
         run: |
           ls -la apus/Resources/Models/
-          if [ -f apus/Resources/Models/yolov12s.onnx ]; then
-            echo "✓ ONNX file generated successfully"
+          if [ -d apus/Resources/Models/yolov12s.mlpackage ] || [ -f apus/Resources/Models/yolov12s.mlmodel ]; then
+            echo "✓ CoreML model generated successfully"
           else
-            echo "✗ ONNX file not found!"
+            echo "✗ CoreML model not found!"
             exit 1
           fi
-
-      - name: Convert ONNX to CoreML
-        run: |
-          uv run python -c "
-          import coremltools as ct
-          import onnx
-          import numpy as np
-
-          model = onnx.load('apus/Resources/Models/yolov12s.onnx')
-          mlmodel = ct.convert(
-            model,
-            source='onnx',
-            inputs=[ct.TensorType(name='images', shape=(1, 3, 640, 640), dtype=np.float32)],
-            minimum_deployment_target=ct.target.iOS13
-          )
-          mlmodel.save('apus/Resources/Models/yolov12s.mlmodel')
-          print('CoreML model saved successfully')
-          "
-
-      - name: Clean up ONNX file
-        run: rm apus/Resources/Models/yolov12s.onnx
 
       - name: Cache DerivedData
         uses: actions/cache@v4
