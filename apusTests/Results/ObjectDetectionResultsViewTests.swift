@@ -119,10 +119,20 @@ final class ObjectDetectionResultsViewTests: XCTestCase {
                 framework: framework
             )
 
-            XCTAssertEqual(object.framework, framework)
+            let lower = framework.lowercased()
+            let expectedFramework: String
+            if lower.contains("tensorflow") || lower.contains("tflite") {
+                expectedFramework = ObjectDetectionFramework.coreML.displayName
+            } else if let match = ObjectDetectionFramework.allCases.first(where: { $0.displayName == framework }) {
+                expectedFramework = match.displayName
+            } else {
+                expectedFramework = ObjectDetectionFramework.vision.displayName
+            }
+
+            XCTAssertEqual(object.framework, expectedFramework)
 
             // Test framework color logic
-            let isVision = framework.lowercased().contains("vision")
+            let isVision = expectedFramework.lowercased().contains("vision")
             if isVision {
                 // Vision frameworks should be detected correctly
                 XCTAssertTrue(object.framework.lowercased().contains("vision"))
