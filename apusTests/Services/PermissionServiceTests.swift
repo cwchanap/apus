@@ -5,8 +5,9 @@
 //  Created by Rovo Dev on 28/7/2025.
 //
 
-import XCTest
 import Combine
+import Foundation
+import XCTest
 @testable import apus
 
 final class PermissionServiceTests: XCTestCase {
@@ -53,8 +54,9 @@ final class PermissionServiceTests: XCTestCase {
 
     // MARK: - Permission Request Tests
 
-    func testRequestPermission_ForCamera_ReturnsPublisher() {
+    func testRequestPermission_ForCamera_ReturnsPublisher() throws {
         // Given
+        try XCTSkipIf(ProcessInfo.processInfo.environment["CI"] == "true", "Camera permission prompts are unavailable in CI.")
         let expectation = XCTestExpectation(description: "Camera permission request completes")
         var receivedStatus: PermissionStatus?
 

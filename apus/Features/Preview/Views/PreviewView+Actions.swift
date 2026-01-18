@@ -190,19 +190,20 @@ extension PreviewView {
 
     // MARK: - Barcode Detection Actions
     func toggleBarcodes() {
-        guard let image = processingImage else { return }
-
         if showingBarcodes {
             showingBarcodes = false
             detectedBarcodes = []
-        } else {
-            if hasDetectedBarcodes {
-                detectedBarcodes = cachedBarcodes
-                showingBarcodes = true
-            } else {
-                performBarcodeDetection(on: image)
-            }
+            return
         }
+
+        if hasDetectedBarcodes {
+            detectedBarcodes = cachedBarcodes
+            showingBarcodes = true
+            return
+        }
+
+        guard let image = processingImage else { return }
+        performBarcodeDetection(on: image)
     }
 
     func performBarcodeDetection(on image: UIImage) {

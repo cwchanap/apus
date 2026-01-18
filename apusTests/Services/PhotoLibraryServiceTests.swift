@@ -5,9 +5,10 @@
 //  Created by Rovo Dev on 28/7/2025.
 //
 
-import XCTest
 import Combine
+import Foundation
 import Photos
+import XCTest
 @testable import apus
 
 final class PhotoLibraryServiceTests: XCTestCase {
@@ -38,8 +39,9 @@ final class PhotoLibraryServiceTests: XCTestCase {
 
     // MARK: - Permission Request Tests
 
-    func testRequestPermission_ReturnsPublisher() {
+    func testRequestPermission_ReturnsPublisher() throws {
         // Given
+        try XCTSkipIf(ProcessInfo.processInfo.environment["CI"] == "true", "Photo library permission prompts are unavailable in CI.")
         let expectation = XCTestExpectation(description: "Permission request completes")
         var receivedResult: Bool?
 
