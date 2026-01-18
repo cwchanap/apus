@@ -79,18 +79,24 @@ def try_ultralytics_export_coreml(weights: Path, imgsz: int, out_root: Path) -> 
             pass
 
         if candidates:
-            produced = sorted(candidates, key=lambda p: p.stat().st_mtime, reverse=True)[0]
+            packages = [p for p in candidates if p.suffix == ".mlpackage"]
+            models = [p for p in candidates if p.suffix == ".mlmodel"]
+            if packages:
+                produced = sorted(packages, key=lambda p: p.stat().st_mtime, reverse=True)[0]
+            else:
+                produced = sorted(models, key=lambda p: p.stat().st_mtime, reverse=True)[0]
             if produced.suffix in (".mlpackage", ".mlmodel"):
                 target = out_root.with_suffix(produced.suffix)
             else:
                 out_root.mkdir(parents=True, exist_ok=True)
                 target = out_root / produced.name
             if produced.resolve() != target.resolve():
-                try:
-                    produced.replace(target)
-                except Exception:
-                    # If cross-filesystem move fails, copy
-                    import shutil
+                import shutil
+                if produced.is_dir():
+                    if target.exists():
+                        shutil.rmtree(target)
+                    shutil.copytree(str(produced), str(target))
+                else:
                     shutil.copy2(str(produced), str(target))
             print(f"[ultralytics] Exported: {target}")
             return target
