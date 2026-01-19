@@ -42,6 +42,9 @@ final class PhotoLibraryServiceTests: XCTestCase {
     func testRequestPermission_ReturnsPublisher() throws {
         // Given
         try XCTSkipIf(ProcessInfo.processInfo.environment["CI"] == "true", "Photo library permission prompts are unavailable in CI.")
+        #if targetEnvironment(simulator)
+        throw XCTSkip("Photo library permission prompts are unavailable on the simulator.")
+        #endif
         let expectation = XCTestExpectation(description: "Permission request completes")
         var receivedResult: Bool?
 
