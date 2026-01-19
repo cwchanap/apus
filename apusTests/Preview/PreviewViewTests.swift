@@ -7,6 +7,7 @@
 import XCTest
 @testable import apus
 
+@MainActor
 class PreviewViewTests: XCTestCase {
 
     var sut: PreviewView!
@@ -24,12 +25,23 @@ class PreviewViewTests: XCTestCase {
 
     func test_toggleBarcodes_showsAndHidesBarcodeOverlay() {
         // Given
-        // We don't need real VNBarcodeObservation instances for toggling logic
         sut.detectedBarcodes = []
-        sut.hasDetectedBarcodes = true
+        sut.cachedBarcodes = []
+        sut.hasDetectedBarcodes = false
+        sut.showingBarcodes = false
+
+        let showExpectation = expectation(description: "Shows barcodes")
 
         // When
         sut.toggleBarcodes()
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
+            if self.sut.showingBarcodes {
+                showExpectation.fulfill()
+            }
+        }
+
+        wait(for: [showExpectation], timeout: 2.0)
 
         // Then
         XCTAssertTrue(sut.showingBarcodes)
