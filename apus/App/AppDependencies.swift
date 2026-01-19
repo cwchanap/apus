@@ -15,6 +15,7 @@ class AppDependencies: ObservableObject {
     static let shared = AppDependencies()
 
     private let container: DIContainer
+    private let configurationLock = NSLock()
 
     private init() {
         self.container = DIContainer.shared
@@ -22,10 +23,19 @@ class AppDependencies: ObservableObject {
     }
 
     private var dependenciesConfigured = false
+    private var testingDependenciesConfigured = false
+
+    private var isRunningTests: Bool {
+        ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
+    }
 
     /// Configure all app dependencies lazily
     private func ensureDependenciesConfigured() {
         guard !dependenciesConfigured else { return }
+        if isRunningTests {
+            configureForTesting()
+            return
+        }
 
         configureDependencies()
         dependenciesConfigured = true
@@ -124,6 +134,11 @@ class AppDependencies: ObservableObject {
 
     // MARK: - Testing Support
     func configureForTesting() {
+        configurationLock.lock()
+        defer { configurationLock.unlock() }
+
+        guard !testingDependenciesConfigured else { return }
+
         container.clear()
 
         // Register mock dependencies for testing
@@ -155,6 +170,10 @@ class AppDependencies: ObservableObject {
             VisionTextRecognitionProvider() as any VisionTextRecognitionProtocol
         }
 
+        // Register detection results manager for host app resolution during tests
+        let detectionResultsManager = DetectionResultsManager()
+        container.register(DetectionResultsManager.self, instance: detectionResultsManager)
+
         container.register(BarcodeDetectionProtocol.self) {
             MockBarcodeDetectionManager() as any BarcodeDetectionProtocol
         }
@@ -171,6 +190,9 @@ class AppDependencies: ObservableObject {
         container.register(ErrorServiceProtocol.self) {
             MockErrorService() as any ErrorServiceProtocol
         }
+
+        testingDependenciesConfigured = true
+        dependenciesConfigured = true
     }
 
     // MARK: - Dependency Access

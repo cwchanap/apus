@@ -57,6 +57,9 @@ final class PermissionServiceTests: XCTestCase {
     func testRequestPermission_ForCamera_ReturnsPublisher() throws {
         // Given
         try XCTSkipIf(ProcessInfo.processInfo.environment["CI"] == "true", "Camera permission prompts are unavailable in CI.")
+        #if targetEnvironment(simulator)
+        throw XCTSkip("Camera permission prompts are unavailable on the simulator.")
+        #endif
         let expectation = XCTestExpectation(description: "Camera permission request completes")
         var receivedStatus: PermissionStatus?
 

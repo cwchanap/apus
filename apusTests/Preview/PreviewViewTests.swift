@@ -13,6 +13,7 @@ class PreviewViewTests: XCTestCase {
 
     override func setUp() {
         super.setUp()
+        AppDependencies.shared.configureForTesting()
         sut = PreviewView(capturedImage: .constant(UIImage(systemName: "qrcode")!))
     }
 
