@@ -62,6 +62,7 @@ jobs:
 
       - name: Build and Test
         run: |
+          RESULT_BUNDLE="/tmp/apus-tests.xcresult"
           xcodebuild \
             -project apus.xcodeproj \
             -scheme apus-ci \
@@ -69,6 +70,7 @@ jobs:
             -enableCodeCoverage YES \
             -only-testing:apusTests \
             -skip-testing:apusUITests \
+            -resultBundlePath "$RESULT_BUNDLE" \
             clean test
 
       - name: Upload Test Results
@@ -76,7 +78,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: test-results
-          path: ~/Library/Developer/Xcode/DerivedData/**/TestResults/*.xcresult
+          path: /tmp/apus-tests.xcresult
 
       - name: Code Coverage Summary
         run: |
