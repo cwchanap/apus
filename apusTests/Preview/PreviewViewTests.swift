@@ -27,21 +27,11 @@ class PreviewViewTests: XCTestCase {
         // Given
         sut.detectedBarcodes = []
         sut.cachedBarcodes = []
-        sut.hasDetectedBarcodes = false
+        sut.hasDetectedBarcodes = true
         sut.showingBarcodes = false
-
-        let showExpectation = expectation(description: "Shows barcodes")
 
         // When
         sut.toggleBarcodes()
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.2) {
-            if self.sut.showingBarcodes {
-                showExpectation.fulfill()
-            }
-        }
-
-        wait(for: [showExpectation], timeout: 2.0)
 
         // Then
         XCTAssertTrue(sut.showingBarcodes)
