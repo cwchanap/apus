@@ -73,6 +73,31 @@ jobs:
             -resultBundlePath "$RESULT_BUNDLE" \
             clean test
 
+      - name: Print Test Failures
+        if: failure()
+        run: |
+          xcrun xcresulttool get --path "/tmp/apus-tests.xcresult" --format json --legacy \
+          | python3 - <<'PY'
+          import json, sys
+
+          data = json.load(sys.stdin)
+
+          def walk(obj):
+              if isinstance(obj, dict):
+                  t = obj.get("_type", {})
+                  if isinstance(t, dict) and t.get("_name") == "ActionTestFailureSummary":
+                      test = obj.get("testCaseName", {}).get("_value")
+                      msg = obj.get("message", {}).get("_value")
+                      print(f"{test}: {msg}")
+                  for v in obj.values():
+                      walk(v)
+              elif isinstance(obj, list):
+                  for v in obj:
+                      walk(v)
+
+          walk(data)
+          PY
+
       - name: Upload Test Results
         if: failure()
         uses: actions/upload-artifact@v4
