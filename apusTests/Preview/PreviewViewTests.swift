@@ -5,6 +5,7 @@
 //  Created by wa-ik on 2025/08/17
 //
 import XCTest
+import SwiftUI
 @testable import apus
 
 @MainActor
@@ -24,22 +25,25 @@ class PreviewViewTests: XCTestCase {
     }
 
     func test_toggleBarcodes_showsAndHidesBarcodeOverlay() {
+        let host = UIHostingController(rootView: sut)
+        host.loadViewIfNeeded()
+
         // Given
-        sut.detectedBarcodes = []
-        sut.cachedBarcodes = []
-        sut.hasDetectedBarcodes = true
-        sut.showingBarcodes = false
+        host.rootView.detectedBarcodes = []
+        host.rootView.cachedBarcodes = []
+        host.rootView.hasDetectedBarcodes = true
+        host.rootView.showingBarcodes = false
 
         // When
-        sut.toggleBarcodes()
+        host.rootView.toggleBarcodes()
 
         // Then
-        XCTAssertTrue(sut.showingBarcodes)
+        XCTAssertTrue(host.rootView.showingBarcodes)
 
         // When
-        sut.toggleBarcodes()
+        host.rootView.toggleBarcodes()
 
         // Then
-        XCTAssertFalse(sut.showingBarcodes)
+        XCTAssertFalse(host.rootView.showingBarcodes)
     }
 }
