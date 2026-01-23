@@ -76,11 +76,22 @@ jobs:
       - name: Print Test Failures
         if: failure()
         run: |
-          xcrun xcresulttool get --path "/tmp/apus-tests.xcresult" --format json --legacy \
+          RESULT_BUNDLE="/tmp/apus-tests.xcresult"
+          if [ ! -d "$RESULT_BUNDLE" ]; then
+            echo "No xcresult bundle found at $RESULT_BUNDLE"
+            exit 0
+          fi
+
+          xcrun xcresulttool get --path "$RESULT_BUNDLE" --format json --legacy \
           | python3 - <<'PY'
           import json, sys
 
-          data = json.load(sys.stdin)
+          raw = sys.stdin.read().strip()
+          if not raw:
+              print("xcresulttool produced no JSON output.")
+              sys.exit(0)
+
+          data = json.loads(raw)
 
           def walk(obj):
               if isinstance(obj, dict):
