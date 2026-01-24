@@ -189,16 +189,35 @@ extension PreviewView {
     }
 
     // MARK: - Barcode Detection Actions
-    func toggleBarcodes() {
+    @discardableResult
+    static func toggleBarcodesState(
+        showingBarcodes: inout Bool,
+        detectedBarcodes: inout [VNBarcodeObservation],
+        cachedBarcodes: [VNBarcodeObservation],
+        hasDetectedBarcodes: Bool
+    ) -> Bool {
         if showingBarcodes {
             showingBarcodes = false
             detectedBarcodes = []
-            return
+            return true
         }
 
         if hasDetectedBarcodes {
             detectedBarcodes = cachedBarcodes
             showingBarcodes = true
+            return true
+        }
+
+        return false
+    }
+
+    func toggleBarcodes() {
+        if PreviewView.toggleBarcodesState(
+            showingBarcodes: &showingBarcodes,
+            detectedBarcodes: &detectedBarcodes,
+            cachedBarcodes: cachedBarcodes,
+            hasDetectedBarcodes: hasDetectedBarcodes
+        ) {
             return
         }
 
