@@ -25,7 +25,7 @@ class PreviewViewTests: XCTestCase {
     }
 
     func test_toggleBarcodes_showsAndHidesBarcodeOverlay() {
-        let host = UIHostingController(rootView: sut)
+        let host = UIHostingController(rootView: sut!)
         host.loadViewIfNeeded()
 
         // Given
