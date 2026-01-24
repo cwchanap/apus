@@ -25,25 +25,34 @@ class PreviewViewTests: XCTestCase {
     }
 
     func test_toggleBarcodes_showsAndHidesBarcodeOverlay() {
-        let host = UIHostingController(rootView: sut!)
-        host.loadViewIfNeeded()
-
         // Given
-        host.rootView.detectedBarcodes = []
-        host.rootView.cachedBarcodes = []
-        host.rootView.hasDetectedBarcodes = true
-        host.rootView.showingBarcodes = false
+        var showingBarcodes = false
+        var detectedBarcodes: [VNBarcodeObservation] = []
+        let cachedBarcodes: [VNBarcodeObservation] = []
+        let hasDetectedBarcodes = true
 
         // When
-        host.rootView.toggleBarcodes()
+        let didToggleOn = PreviewView.toggleBarcodesState(
+            showingBarcodes: &showingBarcodes,
+            detectedBarcodes: &detectedBarcodes,
+            cachedBarcodes: cachedBarcodes,
+            hasDetectedBarcodes: hasDetectedBarcodes
+        )
 
         // Then
-        XCTAssertTrue(host.rootView.showingBarcodes)
+        XCTAssertTrue(didToggleOn)
+        XCTAssertTrue(showingBarcodes)
 
         // When
-        host.rootView.toggleBarcodes()
+        let didToggleOff = PreviewView.toggleBarcodesState(
+            showingBarcodes: &showingBarcodes,
+            detectedBarcodes: &detectedBarcodes,
+            cachedBarcodes: cachedBarcodes,
+            hasDetectedBarcodes: hasDetectedBarcodes
+        )
 
         // Then
-        XCTAssertFalse(host.rootView.showingBarcodes)
+        XCTAssertTrue(didToggleOff)
+        XCTAssertFalse(showingBarcodes)
     }
 }
