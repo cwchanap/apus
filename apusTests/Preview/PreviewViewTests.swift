@@ -6,6 +6,7 @@
 //
 import XCTest
 import SwiftUI
+import Vision
 @testable import apus
 
 @MainActor
