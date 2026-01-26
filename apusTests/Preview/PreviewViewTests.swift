@@ -12,19 +12,6 @@ import Vision
 @MainActor
 class PreviewViewTests: XCTestCase {
 
-    var sut: PreviewView!
-
-    override func setUp() {
-        super.setUp()
-        AppDependencies.shared.configureForTesting()
-        sut = PreviewView(capturedImage: .constant(UIImage(systemName: "qrcode")!))
-    }
-
-    override func tearDown() {
-        sut = nil
-        super.tearDown()
-    }
-
     func test_toggleBarcodes_showsAndHidesBarcodeOverlay() {
         // Given
         var showingBarcodes = false

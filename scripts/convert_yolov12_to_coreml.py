@@ -79,8 +79,20 @@ def try_ultralytics_export_coreml(weights: Path, imgsz: int, out_root: Path) -> 
             pass
 
         if candidates:
-            packages = [p for p in candidates if p.suffix == ".mlpackage"]
-            models = [p for p in candidates if p.suffix == ".mlmodel"]
+            weights_stem = weights.stem
+            runs_dirs = {"runs", "detect", "segment"}
+            def is_ultralytics_output(path: Path) -> bool:
+                parts = set(path.parts)
+                return bool(parts.intersection(runs_dirs))
+
+            def matches_stem(path: Path) -> bool:
+                return weights_stem in path.stem
+
+            filtered = [p for p in candidates if matches_stem(p) or is_ultralytics_output(p)]
+            preferred = filtered if filtered else candidates
+
+            packages = [p for p in preferred if p.suffix == ".mlpackage"]
+            models = [p for p in preferred if p.suffix == ".mlmodel"]
             if packages:
                 produced = sorted(packages, key=lambda p: p.stat().st_mtime, reverse=True)[0]
             else:

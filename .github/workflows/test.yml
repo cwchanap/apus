@@ -27,9 +27,9 @@ jobs:
           python-version: '3.12'
 
       - name: Install uv (Python package manager)
-        run: |
-          curl -LsSf https://astral.sh/uv/install.sh | sh
-          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+        uses: astral-sh/setup-uv@9cfd02964306b527feff5fee75acfd028cce4260
+        with:
+          version: "0.9.26"
 
       - name: Generate CoreML Model
         run: |
@@ -66,12 +66,12 @@ jobs:
           xcodebuild \
             -project apus.xcodeproj \
             -scheme apus-ci \
-            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -destination 'platform=iOS Simulator,OS=latest,name=iPhone 15' \
             -enableCodeCoverage YES \
             -only-testing:apusTests \
             -skip-testing:apusUITests \
             -resultBundlePath "$RESULT_BUNDLE" \
-            clean test
+            test
 
       - name: Print Test Failures
         if: failure()
@@ -118,4 +118,9 @@ jobs:
 
       - name: Code Coverage Summary
         run: |
-          xcrun xccov view --report --json ~/Library/Developer/Xcode/DerivedData/**/Coverage.profdata 2>/dev/null || echo "No coverage data found"
+          RESULT_BUNDLE="/tmp/apus-tests.xcresult"
+          if [ ! -d "$RESULT_BUNDLE" ]; then
+            echo "No xcresult bundle found at $RESULT_BUNDLE"
+            exit 0
+          fi
+          xcrun xccov view --report --json "$RESULT_BUNDLE" 2>/dev/null || echo "No coverage data found"
