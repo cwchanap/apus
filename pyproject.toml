@@ -11,8 +11,8 @@ requires-python = ">=3.12,<3.13"
    "coremltools>=7.0",
    "tqdm>=4.66",
    "requests>=2.31",
-   # Optional, used if present for a simpler export path
-   "ultralytics>=8.2; platform_system != 'Darwin' or python_version >= '3.9'",
+    # Required for the Ultralytics export path
+    "ultralytics>=8.2",
  ]
 
 [tool.uv]

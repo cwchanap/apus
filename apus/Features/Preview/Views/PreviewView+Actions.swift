@@ -212,6 +212,8 @@ extension PreviewView {
     }
 
     func toggleBarcodes() {
+        guard let image = processingImage else { return }
+
         if PreviewView.toggleBarcodesState(
             showingBarcodes: &showingBarcodes,
             detectedBarcodes: &detectedBarcodes,
@@ -220,8 +222,6 @@ extension PreviewView {
         ) {
             return
         }
-
-        guard let image = processingImage else { return }
         performBarcodeDetection(on: image)
     }
 

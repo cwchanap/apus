@@ -11,12 +11,14 @@ import Photos
 import XCTest
 @testable import apus
 
+@MainActor
 final class PhotoLibraryServiceTests: XCTestCase {
     var sut: PhotoLibraryService!
     var cancellables: Set<AnyCancellable>!
 
     override func setUp() {
         super.setUp()
+        AppDependencies.shared.configureForTesting()
         sut = PhotoLibraryService()
         cancellables = Set<AnyCancellable>()
     }
@@ -96,12 +98,14 @@ final class PhotoLibraryServiceTests: XCTestCase {
 
 // MARK: - Mock Photo Library Service Tests
 
+@MainActor
 final class MockPhotoLibraryServiceTests: XCTestCase {
     var sut: MockPhotoLibraryService!
     var cancellables: Set<AnyCancellable>!
 
     override func setUp() {
         super.setUp()
+        AppDependencies.shared.configureForTesting()
         sut = MockPhotoLibraryService()
         cancellables = Set<AnyCancellable>()
     }
