@@ -108,12 +108,17 @@ def try_ultralytics_export_coreml(weights: Path, imgsz: int, out_root: Path) -> 
                 target = out_root / produced.name
             if produced.resolve() != target.resolve():
                 import shutil
-                if produced.is_dir():
-                    if target.exists():
+                try:
+                    if produced.is_dir() and target.exists():
                         shutil.rmtree(target)
-                    shutil.copytree(str(produced), str(target))
-                else:
-                    shutil.copy2(str(produced), str(target))
+                    produced.replace(target)
+                except Exception:
+                    if produced.is_dir():
+                        if target.exists():
+                            shutil.rmtree(target)
+                        shutil.copytree(str(produced), str(target))
+                    else:
+                        shutil.copy2(str(produced), str(target))
             print(f"[ultralytics] Exported: {target}")
             return target
         print("[ultralytics] Export reported success but no artifact found.")
@@ -270,7 +275,7 @@ def onnx_to_coreml(onnx_path: Path, out_dir: Path, fp16: bool) -> Path:
     print("[coreml] Converting ONNX to Core ML...")
     mlmodel = ct.convert(
         onnx_path,
-        source="auto",
+        source="onnx",
         convert_to="mlprogram",
         minimum_deployment_target=ct.target.iOS17,
         compute_units=ct.ComputeUnit.ALL,
