@@ -90,9 +90,13 @@ def try_ultralytics_export_coreml(weights: Path, imgsz: int, out_root: Path) -> 
 
             filtered = [p for p in candidates if matches_stem(p) or is_ultralytics_output(p)]
             preferred = filtered if filtered else candidates
+            preferred = [p for p in preferred if p.suffix in (".mlpackage", ".mlmodel")]
 
             packages = [p for p in preferred if p.suffix == ".mlpackage"]
             models = [p for p in preferred if p.suffix == ".mlmodel"]
+            if not packages and not models:
+                print("[ultralytics] Export reported success but no Core ML artifacts found.")
+                return None
             if packages:
                 produced = sorted(packages, key=lambda p: p.stat().st_mtime, reverse=True)[0]
             else:
