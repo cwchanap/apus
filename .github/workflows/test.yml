@@ -124,3 +124,32 @@ jobs:
             exit 0
           fi
           xcrun xccov view --report --json "$RESULT_BUNDLE" 2>/dev/null || echo "No coverage data found"
+
+      - name: Upload Coverage Results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-results
+          path: /tmp/apus-tests.xcresult
+          if-no-files-found: warn
+
+  codecov:
+    name: Upload Coverage to Codecov
+    runs-on: macos-latest
+    needs: test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download coverage results
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-results
+          path: coverage-results
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          directory: coverage-results
+          token: ${{ secrets.CODECOV_TOKEN }}
