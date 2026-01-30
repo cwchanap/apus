@@ -125,12 +125,26 @@ jobs:
           fi
           xcrun xccov view --report --json "$RESULT_BUNDLE" 2>/dev/null || echo "No coverage data found"
 
+      - name: Export Coverage Report
+        if: always()
+        run: |
+          RESULT_BUNDLE="/tmp/apus-tests.xcresult"
+          COVERAGE_DIR="$GITHUB_WORKSPACE/coverage"
+          COVERAGE_REPORT="$COVERAGE_DIR/apus-coverage.txt"
+          if [ ! -d "$RESULT_BUNDLE" ]; then
+            echo "No xcresult bundle found at $RESULT_BUNDLE"
+            exit 0
+          fi
+          mkdir -p "$COVERAGE_DIR"
+          xcrun xccov view --report "$RESULT_BUNDLE" > "$COVERAGE_REPORT"
+          cp -R "$RESULT_BUNDLE" "$COVERAGE_DIR/apus-tests.xcresult"
+
       - name: Upload Coverage Results
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: coverage-results
-          path: /tmp/apus-tests.xcresult
+          path: coverage
           if-no-files-found: warn
 
   codecov:
@@ -151,5 +165,7 @@ jobs:
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
         with:
-          directory: coverage-results
+          files: coverage-results/apus-coverage.txt
+          disable_search: true
+          verbose: true
           token: ${{ secrets.CODECOV_TOKEN }}
