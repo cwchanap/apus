@@ -52,14 +52,6 @@ jobs:
             exit 1
           fi
 
-      - name: Cache DerivedData
-        uses: actions/cache@v4
-        with:
-          path: ~/Library/Developer/Xcode/DerivedData
-          key: ${{ runner.os }}-deriveddata-${{ hashFiles('**/*.swift', '**/*.h', '**/*.m') }}
-          restore-keys: |
-            ${{ runner.os }}-deriveddata-
-
       - name: Build and Test
         run: |
           RESULT_BUNDLE="/tmp/apus-tests.xcresult"
@@ -71,6 +63,8 @@ jobs:
             -only-testing:apusTests \
             -skip-testing:apusUITests \
             -resultBundlePath "$RESULT_BUNDLE" \
+            -derivedDataPath "$RUNNER_TEMP/DerivedData" \
+            -clonedSourcePackagesDirPath "$RUNNER_TEMP/SourcePackages" \
             test
 
       - name: Print Test Failures
@@ -137,6 +131,10 @@ jobs:
           COVERAGE_REPORT="$COVERAGE_DIR/cobertura.xml"
           if [ ! -d "$RESULT_BUNDLE" ]; then
             echo "No xcresult bundle found at $RESULT_BUNDLE"
+            exit 0
+          fi
+          if ! xcrun xccov view --report "$RESULT_BUNDLE" >/dev/null 2>&1; then
+            echo "No coverage report available in $RESULT_BUNDLE"
             exit 0
           fi
           mkdir -p "$COVERAGE_DIR"
