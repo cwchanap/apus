@@ -255,41 +255,39 @@ final class TimelineViewModelTests: XCTestCase {
     // MARK: - Cache Invalidation Tests
 
     func test_cacheInvalidates_whenResultsAreReplaced() async {
-        // Given - Add initial OCR results
-        let initialTexts = [DetectedText(text: "Initial", boundingBox: .zero, confidence: 0.9, characterBoxes: [])]
-        let initialResult = StoredOCRResult(detectedTexts: initialTexts, image: testImage)
-
-        // Simulate adding result to manager
         await MainActor.run {
-            // This would trigger cache population
-            // The exact way depends on DetectionResultsManager implementation
-            _ = sut.countForCategory(.ocr) // Force cache computation
+            mockResultsManager.ocrResults = [createOCRResult(text: "Initial")]
+            sut.searchQuery = "Initial"
+            sut.updateSections()
         }
 
-        // Store the initial cached result count
-        let initialCount = sut.countForCategory(.ocr)
+        XCTAssertEqual(sut.filteredCount, 1)
 
-        // When - Replace result with a different result (same count, different ID)
-        let newTexts = [DetectedText(text: "Updated", boundingBox: .zero, confidence: 0.95, characterBoxes: [])]
-        let updatedResult = StoredOCRResult(detectedTexts: newTexts, image: testImage)
+        await MainActor.run {
+            mockResultsManager.ocrResults = [createOCRResult(text: "Updated")]
+            sut.searchQuery = "Updated"
+            sut.updateSections()
+        }
 
-        // Verify they have different IDs (this ensures our hash-based cache invalidation works)
-        XCTAssertNotEqual(initialResult.id, updatedResult.id, "Results should have different IDs")
+        XCTAssertEqual(sut.filteredCount, 1)
+        XCTAssertEqual(sut.sections.flatMap { $0.results }.first?.previewText, "Updated")
 
-        // Then - If manager supports in-place updates, the cache should invalidate
-        // This test documents the expected behavior: cache should invalidate when IDs change
-        // Note: Actual behavior depends on DetectionResultsManager's update mechanism
+        await MainActor.run {
+            sut.searchQuery = "Initial"
+            sut.updateSections()
+        }
+
+        XCTAssertEqual(sut.filteredCount, 0)
     }
 
     func test_cacheInvalidates_onCountChanges() {
-        // Given - Cache is initially empty
         XCTAssertEqual(sut.countForCategory(.ocr), 0)
 
-        // When - This documents that cache should invalidate when result counts change
-        // (This was already working before the fix)
+        mockResultsManager.ocrResults.append(createOCRResult())
+        XCTAssertEqual(sut.countForCategory(.ocr), 1)
 
-        // Then - Cache should be invalidated
-        // The fix extends this behavior to ID-based invalidation
+        mockResultsManager.ocrResults.append(createOCRResult())
+        XCTAssertEqual(sut.countForCategory(.ocr), 2)
     }
 
     // MARK: - Count For Category Tests (with empty manager)
@@ -298,6 +296,20 @@ final class TimelineViewModelTests: XCTestCase {
         XCTAssertEqual(sut.countForCategory(.ocr), 0)
         XCTAssertEqual(sut.countForCategory(.objectDetection), 0)
         XCTAssertEqual(sut.countForCategory(.classification), 0)
+        XCTAssertEqual(sut.countForCategory(.contourDetection), 0)
+        XCTAssertEqual(sut.countForCategory(.barcode), 0)
+    }
+
+    func test_countForCategory_returnsCountsAcrossMixedResults() async {
+        await MainActor.run {
+            mockResultsManager.ocrResults = [createOCRResult()]
+            mockResultsManager.objectDetectionResults = [createObjectDetectionResult(), createObjectDetectionResult(className: "dog")]
+            mockResultsManager.classificationResults = [createClassificationResult(identifier: "bird")]
+        }
+
+        XCTAssertEqual(sut.countForCategory(.ocr), 1)
+        XCTAssertEqual(sut.countForCategory(.objectDetection), 2)
+        XCTAssertEqual(sut.countForCategory(.classification), 1)
         XCTAssertEqual(sut.countForCategory(.contourDetection), 0)
         XCTAssertEqual(sut.countForCategory(.barcode), 0)
     }
@@ -312,18 +324,18 @@ final class TimelineViewModelTests: XCTestCase {
         }
     }
 
-    private func createOCRResult(timestamp: Date = Date()) -> StoredOCRResult {
-        let texts = [DetectedText(text: "Test", boundingBox: .zero, confidence: 0.9, characterBoxes: [])]
+    private func createOCRResult(text: String = "Test", timestamp: Date = Date()) -> StoredOCRResult {
+        let texts = [DetectedText(text: text, boundingBox: .zero, confidence: 0.9, characterBoxes: [])]
         return StoredOCRResult(detectedTexts: texts, image: testImage, timestamp: timestamp)
     }
 
-    private func createObjectDetectionResult(timestamp: Date = Date()) -> StoredObjectDetectionResult {
-        let objects = [DetectedObject(boundingBox: .zero, className: "person", confidence: 0.9, framework: .vision)]
+    private func createObjectDetectionResult(className: String = "person", timestamp: Date = Date()) -> StoredObjectDetectionResult {
+        let objects = [DetectedObject(boundingBox: .zero, className: className, confidence: 0.9, framework: .vision)]
         return StoredObjectDetectionResult(detectedObjects: objects, image: testImage, timestamp: timestamp)
     }
 
-    private func createClassificationResult() -> StoredClassificationResult {
-        let classifications = [ClassificationResult(identifier: "dog", confidence: 0.9)]
+    private func createClassificationResult(identifier: String = "dog") -> StoredClassificationResult {
+        let classifications = [ClassificationResult(identifier: identifier, confidence: 0.9)]
         return StoredClassificationResult(classificationResults: classifications, image: testImage)
     }
 
@@ -473,6 +485,19 @@ final class TimelineViewModelTests: XCTestCase {
         XCTAssertTrue(sut.sections.isEmpty, "Sections should be empty when search doesn't match")
     }
 
+    func test_searchFilter_matchesObjectDetectionClassNames() async {
+        await MainActor.run {
+            mockResultsManager.objectDetectionResults.append(createObjectDetectionResult(className: "person"))
+            mockResultsManager.classificationResults.append(createClassificationResult(identifier: "cat"))
+            sut.searchQuery = "per"
+            sut.updateSections()
+        }
+
+        let filteredResults = sut.sections.flatMap { $0.results }
+        XCTAssertEqual(filteredResults.count, 1)
+        XCTAssertEqual(filteredResults.first?.category, .objectDetection)
+    }
+
     func test_dateFilter_affectsSections() async {
         // Given - Add OCR results
         await MainActor.run {
@@ -489,5 +514,37 @@ final class TimelineViewModelTests: XCTestCase {
 
         // Then - Result should still be visible
         XCTAssertEqual(sut.filteredCount, 1, "Should have 1 result when filtered to last 7 days")
+    }
+
+    func test_dateFilter_excludesOlderResults() async {
+        let oldDate = Calendar.current.date(byAdding: .day, value: -40, to: Date())!
+
+        await MainActor.run {
+            mockResultsManager.ocrResults = [createOCRResult(timestamp: oldDate)]
+            sut.dateFilter = .last7Days
+            sut.updateSections()
+        }
+
+        XCTAssertEqual(sut.filteredCount, 0)
+        XCTAssertTrue(sut.sections.isEmpty)
+    }
+
+    func test_sections_areOrderedByTimelineGroup() async {
+        let referenceDate = Date()
+        let today = referenceDate
+        let lastWeek = Calendar.current.date(byAdding: .day, value: -8, to: referenceDate)!
+        let older = Calendar.current.date(byAdding: .day, value: -40, to: referenceDate)!
+
+        await MainActor.run {
+            mockResultsManager.ocrResults = [
+                createOCRResult(text: "Today", timestamp: today),
+                createOCRResult(text: "Older", timestamp: older)
+            ]
+            mockResultsManager.objectDetectionResults = [createObjectDetectionResult(timestamp: lastWeek)]
+            sut.updateSections()
+        }
+
+        let groups = sut.sections.map(\.group)
+        XCTAssertEqual(groups, [.today, .lastWeek, .older])
     }
 }

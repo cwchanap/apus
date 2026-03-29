@@ -108,64 +108,68 @@ enum DetectionCategory: String, CaseIterable, Hashable {
 class AppSettings: ObservableObject {
     static let shared = AppSettings()
 
+    private let userDefaults: UserDefaults
+
     @Published var isRealTimeObjectDetectionEnabled: Bool {
         didSet {
-            UserDefaults.standard.set(isRealTimeObjectDetectionEnabled, forKey: UserDefaults.Keys.isRealTimeObjectDetectionEnabled)
+            userDefaults.set(isRealTimeObjectDetectionEnabled, forKey: UserDefaults.Keys.isRealTimeObjectDetectionEnabled)
         }
     }
 
     @Published var isRealTimeBarcodeDetectionEnabled: Bool {
         didSet {
-            UserDefaults.standard.set(isRealTimeBarcodeDetectionEnabled, forKey: UserDefaults.Keys.isRealTimeBarcodeDetectionEnabled)
+            userDefaults.set(isRealTimeBarcodeDetectionEnabled, forKey: UserDefaults.Keys.isRealTimeBarcodeDetectionEnabled)
         }
     }
 
     @Published var objectDetectionFramework: ObjectDetectionFramework {
         didSet {
-            UserDefaults.standard.set(objectDetectionFramework.rawValue, forKey: UserDefaults.Keys.objectDetectionFramework)
+            userDefaults.set(objectDetectionFramework.rawValue, forKey: UserDefaults.Keys.objectDetectionFramework)
         }
     }
 
     // Selected object detection model (applies when using Core ML)
     @Published var objectDetectionModel: ObjectDetectionModel {
         didSet {
-            UserDefaults.standard.set(objectDetectionModel.rawValue, forKey: UserDefaults.Keys.objectDetectionModel)
+            userDefaults.set(objectDetectionModel.rawValue, forKey: UserDefaults.Keys.objectDetectionModel)
         }
     }
 
     @Published var ocrResultsLimit: Int {
         didSet {
-            UserDefaults.standard.set(ocrResultsLimit, forKey: UserDefaults.Keys.ocrResultsLimit)
+            userDefaults.set(ocrResultsLimit, forKey: UserDefaults.Keys.ocrResultsLimit)
         }
     }
 
     @Published var objectDetectionResultsLimit: Int {
         didSet {
-            UserDefaults.standard.set(objectDetectionResultsLimit, forKey: UserDefaults.Keys.objectDetectionResultsLimit)
+            userDefaults.set(objectDetectionResultsLimit, forKey: UserDefaults.Keys.objectDetectionResultsLimit)
         }
     }
 
     @Published var classificationResultsLimit: Int {
         didSet {
-            UserDefaults.standard.set(classificationResultsLimit, forKey: UserDefaults.Keys.classificationResultsLimit)
+            userDefaults.set(classificationResultsLimit, forKey: UserDefaults.Keys.classificationResultsLimit)
         }
     }
 
     @Published var contourDetectionResultsLimit: Int {
         didSet {
-            UserDefaults.standard.set(contourDetectionResultsLimit, forKey: UserDefaults.Keys.contourDetectionResultsLimit)
+            userDefaults.set(contourDetectionResultsLimit, forKey: UserDefaults.Keys.contourDetectionResultsLimit)
         }
     }
 
     @Published var barcodeDetectionResultsLimit: Int {
         didSet {
-            UserDefaults.standard.set(barcodeDetectionResultsLimit, forKey: UserDefaults.Keys.barcodeDetectionResultsLimit)
+            userDefaults.set(barcodeDetectionResultsLimit, forKey: UserDefaults.Keys.barcodeDetectionResultsLimit)
         }
     }
 
-    private init() {
+    init(userDefaults: UserDefaults = .standard) {
+        self.userDefaults = userDefaults
+
         // Load saved settings or defaults (optimized for performance)
-        let defaults = UserDefaults.standard
+        let defaults = userDefaults
 
         // Use bool(forKey:) which is faster than object(forKey:)
         self.isRealTimeObjectDetectionEnabled = defaults.object(forKey: UserDefaults.Keys.isRealTimeObjectDetectionEnabled) != nil ?
