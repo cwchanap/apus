@@ -197,8 +197,8 @@ struct StoredClassificationResult: Codable, Identifiable {
     let imageSize: CGSize
     let thumbnailData: Data?
 
-    init(classificationResults: [ClassificationResult], image: UIImage) {
-        self.timestamp = Date()
+    init(classificationResults: [ClassificationResult], image: UIImage, timestamp: Date = Date()) {
+        self.timestamp = timestamp
         self.classificationResults = classificationResults.map { StoredClassification(from: $0) }
         self.imageData = image.jpegData(compressionQuality: 0.7) ?? Data()
         self.imageSize = image.size

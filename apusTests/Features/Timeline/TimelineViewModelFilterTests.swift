@@ -2,18 +2,18 @@
 //  TimelineViewModelFilterTests.swift
 //  apusTests
 //
-//  Created by Codex on 2026/03/29.
+//  Created by Codex on 2026/03/30.
 //
 
 import XCTest
+import Combine
 @testable import apus
 
-extension TimelineViewModelTests {
-    // MARK: - Cache Invalidation Tests
-
+@MainActor
+final class TimelineViewModelFilterTests: TimelineViewModelTestCase {
     func test_cacheInvalidates_whenResultsAreReplaced() async {
         await MainActor.run {
-            mockResultsManager.ocrResults = [createOCRResult(text: "Initial")]
+            resultsManager.ocrResults = [createOCRResult(text: "Initial")]
             sut.searchQuery = "Initial"
             sut.updateSections()
         }
@@ -21,7 +21,7 @@ extension TimelineViewModelTests {
         XCTAssertEqual(sut.filteredCount, 1)
 
         await MainActor.run {
-            mockResultsManager.ocrResults = [createOCRResult(text: "Updated")]
+            resultsManager.ocrResults = [createOCRResult(text: "Updated")]
             sut.searchQuery = "Updated"
             sut.updateSections()
         }
@@ -40,14 +40,12 @@ extension TimelineViewModelTests {
     func test_cacheInvalidates_onCountChanges() {
         XCTAssertEqual(sut.countForCategory(.ocr), 0)
 
-        mockResultsManager.ocrResults.append(createOCRResult())
+        resultsManager.ocrResults.append(createOCRResult())
         XCTAssertEqual(sut.countForCategory(.ocr), 1)
 
-        mockResultsManager.ocrResults.append(createOCRResult())
+        resultsManager.ocrResults.append(createOCRResult())
         XCTAssertEqual(sut.countForCategory(.ocr), 2)
     }
-
-    // MARK: - Count For Category Tests
 
     func test_countForCategory_returnsZero_whenNoResults() {
         XCTAssertEqual(sut.countForCategory(.ocr), 0)
@@ -59,9 +57,9 @@ extension TimelineViewModelTests {
 
     func test_countForCategory_returnsCountsAcrossMixedResults() async {
         await MainActor.run {
-            mockResultsManager.ocrResults = [createOCRResult()]
-            mockResultsManager.objectDetectionResults = [createObjectDetectionResult(), createObjectDetectionResult(className: "dog")]
-            mockResultsManager.classificationResults = [createClassificationResult(identifier: "bird")]
+            resultsManager.ocrResults = [createOCRResult()]
+            resultsManager.objectDetectionResults = [createObjectDetectionResult(), createObjectDetectionResult(className: "dog")]
+            resultsManager.classificationResults = [createClassificationResult(identifier: "bird")]
         }
 
         XCTAssertEqual(sut.countForCategory(.ocr), 1)
@@ -71,10 +69,26 @@ extension TimelineViewModelTests {
         XCTAssertEqual(sut.countForCategory(.barcode), 0)
     }
 
+    func test_searchFilter_affectsSections() async {
+        await MainActor.run {
+            resultsManager.ocrResults.append(createOCRResult())
+            sut.updateSections()
+        }
+
+        sut.searchQuery = "nonexistent text"
+
+        try? await Task.sleep(nanoseconds: 400_000_000)
+        await MainActor.run {
+            sut.updateSections()
+        }
+
+        XCTAssertTrue(sut.sections.isEmpty)
+    }
+
     func test_searchFilter_matchesObjectDetectionClassNames() async {
         await MainActor.run {
-            mockResultsManager.objectDetectionResults.append(createObjectDetectionResult(className: "person"))
-            mockResultsManager.classificationResults.append(createClassificationResult(identifier: "cat"))
+            resultsManager.objectDetectionResults.append(createObjectDetectionResult(className: "person"))
+            resultsManager.classificationResults.append(createClassificationResult(identifier: "cat"))
             sut.searchQuery = "per"
             sut.updateSections()
         }
@@ -84,60 +98,29 @@ extension TimelineViewModelTests {
         XCTAssertEqual(filteredResults.first?.category, .objectDetection)
     }
 
+    func test_dateFilter_affectsSections() async {
+        await MainActor.run {
+            resultsManager.ocrResults.append(createOCRResult())
+            sut.updateSections()
+        }
+
+        XCTAssertEqual(sut.filteredCount, 1)
+
+        sut.dateFilter = .last7Days
+
+        XCTAssertEqual(sut.filteredCount, 1)
+    }
+
     func test_dateFilter_excludesOlderResults() async {
         let oldDate = Calendar.current.date(byAdding: .day, value: -40, to: Date())!
 
         await MainActor.run {
-            mockResultsManager.ocrResults = [createOCRResult(timestamp: oldDate)]
+            resultsManager.ocrResults = [createOCRResult(timestamp: oldDate)]
             sut.dateFilter = .last7Days
             sut.updateSections()
         }
 
         XCTAssertEqual(sut.filteredCount, 0)
         XCTAssertTrue(sut.sections.isEmpty)
-    }
-
-    func test_sections_areOrderedByTimelineGroup() async {
-        let referenceDate = Date()
-        let today = referenceDate
-        let lastWeek = Calendar.current.date(byAdding: .day, value: -8, to: referenceDate)!
-        let older = Calendar.current.date(byAdding: .day, value: -40, to: referenceDate)!
-
-        await MainActor.run {
-            mockResultsManager.ocrResults = [
-                createOCRResult(text: "Today", timestamp: today),
-                createOCRResult(text: "Older", timestamp: older)
-            ]
-            mockResultsManager.objectDetectionResults = [createObjectDetectionResult(timestamp: lastWeek)]
-            sut.updateSections()
-        }
-
-        let groups = sut.sections.map(\.group)
-        XCTAssertEqual(groups, [.today, .lastWeek, .older])
-    }
-
-    // MARK: - Helpers
-
-    func createTestImage(size: CGSize) -> UIImage {
-        let renderer = UIGraphicsImageRenderer(size: size)
-        return renderer.image { context in
-            UIColor.white.setFill()
-            context.fill(CGRect(origin: .zero, size: size))
-        }
-    }
-
-    func createOCRResult(text: String = "Test", timestamp: Date = Date()) -> StoredOCRResult {
-        let texts = [DetectedText(text: text, boundingBox: .zero, confidence: 0.9, characterBoxes: [])]
-        return StoredOCRResult(detectedTexts: texts, image: testImage, timestamp: timestamp)
-    }
-
-    func createObjectDetectionResult(className: String = "person", timestamp: Date = Date()) -> StoredObjectDetectionResult {
-        let objects = [DetectedObject(boundingBox: .zero, className: className, confidence: 0.9, framework: .vision)]
-        return StoredObjectDetectionResult(detectedObjects: objects, image: testImage, timestamp: timestamp)
-    }
-
-    func createClassificationResult(identifier: String = "dog") -> StoredClassificationResult {
-        let classifications = [ClassificationResult(identifier: identifier, confidence: 0.9)]
-        return StoredClassificationResult(classificationResults: classifications, image: testImage)
     }
 }

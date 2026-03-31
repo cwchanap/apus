@@ -10,10 +10,11 @@ import XCTest
 
 final class AppSettingsTests: XCTestCase {
     private var userDefaults: UserDefaults!
-    private let suiteName = "AppSettingsTests"
+    private var suiteName: String!
 
     override func setUpWithError() throws {
         try super.setUpWithError()
+        suiteName = "AppSettingsTests.\(UUID().uuidString)"
         userDefaults = UserDefaults(suiteName: suiteName)
         userDefaults.removePersistentDomain(forName: suiteName)
     }
@@ -21,6 +22,7 @@ final class AppSettingsTests: XCTestCase {
     override func tearDownWithError() throws {
         userDefaults.removePersistentDomain(forName: suiteName)
         userDefaults = nil
+        suiteName = nil
         try super.tearDownWithError()
     }
 
