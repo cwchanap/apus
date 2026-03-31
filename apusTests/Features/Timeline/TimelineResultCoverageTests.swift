@@ -133,6 +133,7 @@ extension TimelineResultTests {
     }
 
     private func makeBarcodeResult(payloads: [(payload: String, symbology: String)]) throws -> StoredBarcodeDetectionResult {
+        let imageData = try XCTUnwrap(testImage.jpegData(compressionQuality: 0.7))
         let fixtures = [
             DetectionResultsTestSupport.StoredBarcodeDetectionResultFixture(
                 timestamp: Date(timeIntervalSince1970: 9_999),
@@ -144,7 +145,7 @@ extension TimelineResultTests {
                         confidence: 0.9
                     )
                 },
-                imageData: testImage.jpegData(compressionQuality: 0.7) ?? Data(),
+                imageData: imageData,
                 imageSize: testImage.size,
                 thumbnailData: nil
             )

@@ -13,6 +13,7 @@ import Combine
 class SettingsViewModel: ObservableObject {
     // MARK: - Settings Reference
     @ObservedObject private var appSettings = AppSettings.shared
+    private let container: DIContainerProtocol
 
     // MARK: - Published Properties (for direct binding)
     @Published var isRealTimeObjectDetectionEnabled: Bool = true
@@ -28,7 +29,9 @@ class SettingsViewModel: ObservableObject {
     @Published var barcodeDetectionResultsLimit: Int = 10
 
     // MARK: - Initialization
-    init() {
+    init(container: DIContainerProtocol = DIContainer.shared) {
+        self.container = container
+
         // Initialize with current settings (fast, no heavy operations)
         self.isRealTimeObjectDetectionEnabled = appSettings.isRealTimeObjectDetectionEnabled
         self.isRealTimeBarcodeDetectionEnabled = appSettings.isRealTimeBarcodeDetectionEnabled
@@ -237,16 +240,8 @@ class SettingsViewModel: ObservableObject {
 
     // MARK: - Private Methods
     private func preloadModelsInBackground() {
-        // Use Task to avoid blocking main thread with DI resolution
-        Task.detached(priority: .utility) {
-            do {
-                // Resolve DI on background thread to avoid main thread blocking
-                let manager: ObjectDetectionProtocol = DIContainer.shared.resolve(ObjectDetectionProtocol.self)
-                manager.preload()
-            } catch {
-                print("Failed to preload models: \(error)")
-            }
-        }
+        let manager: any ObjectDetectionProtocol = container.resolve((any ObjectDetectionProtocol).self)
+        manager.preload()
     }
 
     // MARK: - Public Methods

@@ -13,22 +13,26 @@ final class SettingsViewModelTests: XCTestCase {
     var sut: SettingsViewModel!
     var appSettings: AppSettings!
     var cancellables: Set<AnyCancellable>!
+    var testContainer: TestDIContainer!
 
     override func setUp() async throws {
         try await super.setUp()
 
+        AppDependencies.shared.configureForTesting()
         appSettings = AppSettings.shared
         appSettings.resetToDefaults()
-        DIContainer.shared.clear()
-        sut = SettingsViewModel()
+        testContainer = TestDIContainer()
+        TestDependencySetup.setupMockDependencies(container: testContainer)
+        testContainer.register((any ObjectDetectionProtocol).self, instance: MockObjectDetectionManager())
+        sut = SettingsViewModel(container: testContainer)
         cancellables = Set<AnyCancellable>()
     }
 
     override func tearDown() async throws {
-        appSettings.resetToDefaults()
-        DIContainer.shared.clear()
         sut = nil
+        appSettings.resetToDefaults()
         appSettings = nil
+        testContainer = nil
         cancellables = nil
         try await super.tearDown()
     }

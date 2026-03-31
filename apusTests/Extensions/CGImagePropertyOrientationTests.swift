@@ -8,6 +8,7 @@
 import ImageIO
 import UIKit
 import XCTest
+
 @testable import apus
 
 final class CGImagePropertyOrientationTests: XCTestCase {
