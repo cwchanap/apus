@@ -18,11 +18,15 @@ final class SettingsViewModelTests: XCTestCase {
         try await super.setUp()
 
         appSettings = AppSettings.shared
+        appSettings.resetToDefaults()
+        DIContainer.shared.clear()
         sut = SettingsViewModel()
         cancellables = Set<AnyCancellable>()
     }
 
     override func tearDown() async throws {
+        appSettings.resetToDefaults()
+        DIContainer.shared.clear()
         sut = nil
         appSettings = nil
         cancellables = nil
