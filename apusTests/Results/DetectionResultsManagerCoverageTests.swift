@@ -10,6 +10,7 @@ import Vision
 import XCTest
 @testable import apus
 
+@MainActor
 final class DetectionResultsManagerCoverageTests: XCTestCase {
     private var sut: DetectionResultsManager!
     private var appSettings: AppSettings!

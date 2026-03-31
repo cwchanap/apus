@@ -21,7 +21,7 @@ extension SettingsViewModelTests {
         appSettings.contourDetectionResultsLimit = 6
         appSettings.barcodeDetectionResultsLimit = 7
 
-        sut = SettingsViewModel()
+        sut = SettingsViewModel(container: testContainer)
 
         XCTAssertFalse(sut.isRealTimeObjectDetectionEnabled)
         XCTAssertFalse(sut.isRealTimeBarcodeDetectionEnabled)
@@ -107,7 +107,7 @@ extension SettingsViewModelTests {
 
     func test_enablingRealTimeObjectDetection_preloadsModelsInBackground() {
         let preloadManager = PreloadTrackingObjectDetectionManager()
-        DIContainer.shared.register(ObjectDetectionProtocol.self, instance: preloadManager)
+        testContainer.register((any ObjectDetectionProtocol).self, instance: preloadManager)
 
         sut.isRealTimeObjectDetectionEnabled = false
         sut.isRealTimeObjectDetectionEnabled = true
