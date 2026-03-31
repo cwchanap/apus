@@ -9,7 +9,7 @@ import XCTest
 @testable import apus
 
 extension DetectionResultsModelsTests {
-    func testStoredDetectedObjectFrameworkConversion_mapsLegacyTensorFlowLiteToCoreML() throws {
+    func testStoredDetectedObjectFrameworkConversionMapsLegacyTensorFlowLiteToCoreML() throws {
         let originalObject = StoredDetectedObject(
             from: DetectedObject(
                 boundingBox: CGRect(x: 0.2, y: 0.1, width: 0.4, height: 0.3),
@@ -20,13 +20,13 @@ extension DetectionResultsModelsTests {
         )
 
         let encoded = try JSONEncoder().encode(originalObject)
-        let updatedData = try replacingJSONValue("TensorFlow Lite", forKey: "framework", in: encoded)
+        let updatedData = try DetectionResultsTestSupport.replacingJSONValue("TensorFlow Lite", forKey: "framework", in: encoded)
         let decoded = try JSONDecoder().decode(StoredDetectedObject.self, from: updatedData)
 
         XCTAssertEqual(decoded.toDetectedObject().framework, .coreML)
     }
 
-    func testStoredDetectedObjectFrameworkConversion_fallsBackToVisionForUnknownFramework() throws {
+    func testStoredDetectedObjectFrameworkConversionFallsBackToVisionForUnknownFramework() throws {
         let originalObject = StoredDetectedObject(
             from: DetectedObject(
                 boundingBox: CGRect(x: 0.2, y: 0.1, width: 0.4, height: 0.3),
@@ -37,34 +37,34 @@ extension DetectionResultsModelsTests {
         )
 
         let encoded = try JSONEncoder().encode(originalObject)
-        let updatedData = try replacingJSONValue("Completely Unknown", forKey: "framework", in: encoded)
+        let updatedData = try DetectionResultsTestSupport.replacingJSONValue("Completely Unknown", forKey: "framework", in: encoded)
         let decoded = try JSONDecoder().decode(StoredDetectedObject.self, from: updatedData)
 
         XCTAssertEqual(decoded.toDetectedObject().framework, .vision)
     }
 
-    func testStoredOCRResultThumbnailImage_generatesFallbackWhenThumbnailDataIsMissing() throws {
+    func testStoredOCRResultThumbnailImageGeneratesFallbackWhenThumbnailDataIsMissing() throws {
         let detectedTexts = [
             DetectedText(text: "Fallback", boundingBox: CGRect(x: 0.1, y: 0.1, width: 0.3, height: 0.1), confidence: 0.95, characterBoxes: [])
         ]
         let originalResult = StoredOCRResult(detectedTexts: detectedTexts, image: testImage)
 
         let encoded = try JSONEncoder().encode(originalResult)
-        let legacyData = try removingJSONKey("thumbnailData", from: encoded)
+        let legacyData = try DetectionResultsTestSupport.removingJSONKey("thumbnailData", from: encoded)
         let decoded = try JSONDecoder().decode(StoredOCRResult.self, from: legacyData)
 
         XCTAssertNil(decoded.thumbnailData)
         XCTAssertNotNil(decoded.thumbnailImage)
     }
 
-    func testStoredObjectDetectionResultThumbnailImage_generatesFallbackWhenThumbnailDataIsMissing() throws {
+    func testStoredObjectDetectionResultThumbnailImageGeneratesFallbackWhenThumbnailDataIsMissing() throws {
         let detectedObjects = [
             DetectedObject(boundingBox: CGRect.zero, className: "person", confidence: 0.91, framework: .vision)
         ]
         let originalResult = StoredObjectDetectionResult(detectedObjects: detectedObjects, image: testImage)
 
         let encoded = try JSONEncoder().encode(originalResult)
-        let legacyData = try removingJSONKey("thumbnailData", from: encoded)
+        let legacyData = try DetectionResultsTestSupport.removingJSONKey("thumbnailData", from: encoded)
         let decoded = try JSONDecoder().decode(StoredObjectDetectionResult.self, from: legacyData)
 
         XCTAssertNil(decoded.thumbnailData)
@@ -106,11 +106,21 @@ extension DetectionResultsModelsTests {
     }
 
     func testStoredBarcodeDetectionResultDecodingSupportsFallbackThumbnailGeneration() throws {
-        let fixture = StoredBarcodeDetectionResultFixture(
+        let fixture = DetectionResultsTestSupport.StoredBarcodeDetectionResultFixture(
             timestamp: Date(timeIntervalSince1970: 1234),
             detectedBarcodes: [
-                StoredDetectedBarcodeFixture(payload: "abc-123", symbology: "QR", boundingBox: CGRect(x: 0.1, y: 0.1, width: 0.4, height: 0.4), confidence: 0.95),
-                StoredDetectedBarcodeFixture(payload: "", symbology: "EAN13", boundingBox: CGRect(x: 0.5, y: 0.3, width: 0.2, height: 0.2), confidence: 0.74)
+                DetectionResultsTestSupport.StoredDetectedBarcodeFixture(
+                    payload: "abc-123",
+                    symbology: "QR",
+                    boundingBox: CGRect(x: 0.1, y: 0.1, width: 0.4, height: 0.4),
+                    confidence: 0.95
+                ),
+                DetectionResultsTestSupport.StoredDetectedBarcodeFixture(
+                    payload: "",
+                    symbology: "EAN13",
+                    boundingBox: CGRect(x: 0.5, y: 0.3, width: 0.2, height: 0.2),
+                    confidence: 0.74
+                )
             ],
             imageData: testImage.jpegData(compressionQuality: 0.7) ?? Data(),
             imageSize: testImage.size,
@@ -124,39 +134,4 @@ extension DetectionResultsModelsTests {
         XCTAssertNotNil(decoded.image)
         XCTAssertNotNil(decoded.thumbnailImage)
     }
-
-    func removingJSONKey(_ key: String, from encodedData: Data) throws -> Data {
-        guard var jsonObject = try JSONSerialization.jsonObject(with: encodedData) as? [String: Any] else {
-            XCTFail("Expected top-level JSON dictionary")
-            return encodedData
-        }
-
-        jsonObject.removeValue(forKey: key)
-        return try JSONSerialization.data(withJSONObject: jsonObject)
-    }
-
-    func replacingJSONValue(_ value: Any, forKey key: String, in encodedData: Data) throws -> Data {
-        guard var jsonObject = try JSONSerialization.jsonObject(with: encodedData) as? [String: Any] else {
-            XCTFail("Expected top-level JSON dictionary")
-            return encodedData
-        }
-
-        jsonObject[key] = value
-        return try JSONSerialization.data(withJSONObject: jsonObject)
-    }
-}
-
-private struct StoredDetectedBarcodeFixture: Codable {
-    let payload: String
-    let symbology: String
-    let boundingBox: CGRect
-    let confidence: Float
-}
-
-private struct StoredBarcodeDetectionResultFixture: Codable {
-    let timestamp: Date
-    let detectedBarcodes: [StoredDetectedBarcodeFixture]
-    let imageData: Data
-    let imageSize: CGSize
-    let thumbnailData: Data?
 }
