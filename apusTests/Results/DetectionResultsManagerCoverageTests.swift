@@ -314,17 +314,8 @@ final class DetectionResultsManagerCoverageTests: XCTestCase {
         ]
     }
 
-    private func makeBarcodeObservation(
-        symbology: VNBarcodeSymbology = .qr,
-        payload: String = "test-payload",
-        confidence: Float = 0.95
-    ) -> VNBarcodeObservation {
-        let obs = VNBarcodeObservation()
-        obs.symbology = symbology
-        obs.payloadStringValue = payload
-        obs.confidence = confidence
-        obs.boundingBox = CGRect(x: 0.1, y: 0.1, width: 0.4, height: 0.4)
-        return obs
+    private func makeBarcodeObservation() -> VNBarcodeObservation {
+        VNBarcodeObservation()
     }
 
     private func makeBarcodeResultsData(payloads: [(payload: String, symbology: String)]) throws -> Data {
