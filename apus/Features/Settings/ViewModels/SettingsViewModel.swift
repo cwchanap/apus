@@ -240,8 +240,12 @@ class SettingsViewModel: ObservableObject {
 
     // MARK: - Private Methods
     private func preloadModelsInBackground() {
-        let manager: any ObjectDetectionProtocol = container.resolve((any ObjectDetectionProtocol).self)
-        manager.preload()
+        guard let manager = container.resolveOptional((any ObjectDetectionProtocol).self) else {
+            return
+        }
+        DispatchQueue.global(qos: .utility).async {
+            manager.preload()
+        }
     }
 
     // MARK: - Public Methods

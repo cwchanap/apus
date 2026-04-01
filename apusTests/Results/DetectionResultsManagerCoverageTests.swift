@@ -40,7 +40,7 @@ final class DetectionResultsManagerCoverageTests: XCTestCase {
         sut.saveObjectDetectionResult(detectedObjects: makeDetectedObjects(name: "person"), image: testImage)
         sut.saveClassificationResult(classificationResults: makeClassificationResults(identifier: "document"), image: testImage)
         sut.saveContourDetectionResult(detectedContours: makeContours(aspectRatio: 1.4), image: testImage)
-        sut.saveBarcodeResult(detectedBarcodes: [VNBarcodeObservation()], image: testImage)
+        sut.saveBarcodeResult(detectedBarcodes: [makeBarcodeObservation()], image: testImage)
 
         XCTAssertEqual(sut.getResultsCount(for: .ocr), 1)
         XCTAssertEqual(sut.getResultsCount(for: .objectDetection), 1)
@@ -126,8 +126,8 @@ final class DetectionResultsManagerCoverageTests: XCTestCase {
     }
 
     func test_deleteBarcodeDetectionResultsAtOffsets_removesRequestedEntry() {
-        sut.saveBarcodeResult(detectedBarcodes: [VNBarcodeObservation()], image: testImage)
-        sut.saveBarcodeResult(detectedBarcodes: [VNBarcodeObservation()], image: testImage)
+        sut.saveBarcodeResult(detectedBarcodes: [makeBarcodeObservation()], image: testImage)
+        sut.saveBarcodeResult(detectedBarcodes: [makeBarcodeObservation()], image: testImage)
 
         sut.deleteBarcodeDetectionResults(at: IndexSet(integer: 0))
 
@@ -243,7 +243,7 @@ final class DetectionResultsManagerCoverageTests: XCTestCase {
         sut.saveObjectDetectionResult(detectedObjects: makeDetectedObjects(name: "book"), image: testImage)
         sut.saveClassificationResult(classificationResults: makeClassificationResults(identifier: "note"), image: testImage)
         sut.saveContourDetectionResult(detectedContours: makeContours(aspectRatio: 1.4), image: testImage)
-        sut.saveBarcodeResult(detectedBarcodes: [VNBarcodeObservation()], image: testImage)
+        sut.saveBarcodeResult(detectedBarcodes: [makeBarcodeObservation()], image: testImage)
         XCTAssertTrue(waitUntil {
             !self.sut.ocrResultsData.isEmpty &&
             !self.sut.objectDetectionResultsData.isEmpty &&
@@ -312,6 +312,19 @@ final class DetectionResultsManagerCoverageTests: XCTestCase {
                 area: 0.27
             )
         ]
+    }
+
+    private func makeBarcodeObservation(
+        symbology: VNBarcodeSymbology = .qr,
+        payload: String = "test-payload",
+        confidence: Float = 0.95
+    ) -> VNBarcodeObservation {
+        let obs = VNBarcodeObservation()
+        obs.symbology = symbology
+        obs.payloadStringValue = payload
+        obs.confidence = confidence
+        obs.boundingBox = CGRect(x: 0.1, y: 0.1, width: 0.4, height: 0.4)
+        return obs
     }
 
     private func makeBarcodeResultsData(payloads: [(payload: String, symbology: String)]) throws -> Data {
