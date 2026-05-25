@@ -1,0 +1,11 @@
+coverage:
+  status:
+    project:
+      default:
+        target: 50%
+        threshold: 1%
+        if_ci_failed: error
+
+ignore:
+  - "apusTests/**"
+  - "apusUITests/**"
