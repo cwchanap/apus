@@ -27,7 +27,7 @@ final class SettingsAndPreviewViewCoverageTests: XCTestCase {
         let viewModel = SettingsViewModel()
 
         AppSettings.shared.objectDetectionFramework = .coreML
-        ViewRenderingTestHarness.renderAfterSettling(SettingsView(), settleDuration: 0.2)
+        ViewRenderingTestHarness.render(SettingsView(), settleDuration: 0.2)
         ViewRenderingTestHarness.render(StorageLimitsSettingsView())
 
         for (offset, category) in DetectionCategory.allCases.enumerated() {
@@ -146,50 +146,5 @@ private extension SettingsAndPreviewViewCoverageTests {
         while manager.isLoading && Date() < deadline {
             RunLoop.main.run(until: Date().addingTimeInterval(0.01))
         }
-    }
-}
-
-private extension ViewRenderingTestHarness {
-    static func renderAfterSettling<V: View>(
-        _ view: V,
-        size: CGSize = CGSize(width: 390, height: 844),
-        settleDuration: TimeInterval,
-        file: StaticString = #filePath,
-        line: UInt = #line
-    ) {
-        let previousKeyWindow = currentKeyWindow()
-        let window = UIWindow(frame: CGRect(origin: .zero, size: size))
-        let host = UIHostingController(rootView: view)
-
-        defer {
-            window.isHidden = true
-            window.rootViewController = nil
-            previousKeyWindow?.makeKey()
-        }
-
-        window.rootViewController = host
-        window.makeKeyAndVisible()
-
-        host.view.frame = window.bounds
-        window.setNeedsLayout()
-        window.layoutIfNeeded()
-        host.view.setNeedsLayout()
-        host.view.layoutIfNeeded()
-
-        RunLoop.main.run(until: Date().addingTimeInterval(settleDuration))
-
-        host.view.frame = window.bounds
-        host.view.setNeedsLayout()
-        host.view.layoutIfNeeded()
-
-        XCTAssertEqual(host.view.bounds.size.width, size.width, accuracy: 0.5, file: file, line: line)
-        XCTAssertEqual(host.view.bounds.size.height, size.height, accuracy: 0.5, file: file, line: line)
-    }
-
-    static func currentKeyWindow() -> UIWindow? {
-        UIApplication.shared.connectedScenes
-            .compactMap { $0 as? UIWindowScene }
-            .flatMap(\.windows)
-            .first(where: \.isKeyWindow)
     }
 }
