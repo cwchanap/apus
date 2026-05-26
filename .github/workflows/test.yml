@@ -58,7 +58,8 @@ jobs:
           xcodebuild \
             -project apus.xcodeproj \
             -scheme apus-ci \
-            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -destination 'platform=iOS Simulator,OS=18.5,name=iPhone 16' \
+            -parallel-testing-enabled NO \
             -enableCodeCoverage YES \
             -only-testing:apusTests \
             -skip-testing:apusUITests \
