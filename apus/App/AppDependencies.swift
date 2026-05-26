@@ -137,9 +137,10 @@ class AppDependencies: ObservableObject {
         configurationLock.lock()
         defer { configurationLock.unlock() }
 
-        guard !testingDependenciesConfigured else { return }
-
         container.clear()
+
+        let appSettings = AppSettings.shared
+        container.register(AppSettings.self, instance: appSettings)
 
         // Register mock dependencies for testing
         container.register(CameraManagerProtocol.self) {
