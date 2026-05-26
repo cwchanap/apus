@@ -14,6 +14,7 @@ enum ViewRenderingTestHarness {
     static func render<V: View>(
         _ view: V,
         size: CGSize = CGSize(width: 390, height: 844),
+        settleDuration: TimeInterval = 0.05,
         file: StaticString = #filePath,
         line: UInt = #line
     ) {
@@ -36,7 +37,7 @@ enum ViewRenderingTestHarness {
         host.view.setNeedsLayout()
         host.view.layoutIfNeeded()
 
-        RunLoop.main.run(until: Date().addingTimeInterval(0.05))
+        RunLoop.main.run(until: Date().addingTimeInterval(settleDuration))
 
         host.view.frame = window.bounds
         host.view.setNeedsLayout()
