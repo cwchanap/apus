@@ -70,6 +70,24 @@ class DIContainer: DIContainerProtocol, ObservableObject {
             print("❌ No dependencies registered in DIContainer - AppDependencies may not be initialized")
             print("   Requested type: \(type)")
             print("   Make sure AppDependencies.shared is accessed before using @Injected properties")
+
+            if ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil {
+                AppDependencies.shared.configureForTesting()
+            } else {
+                _ = AppDependencies.shared.diContainer
+            }
+
+            if let instance = services[key] as? T {
+                return instance
+            }
+
+            if let factory = factories[key] {
+                guard let instance = factory() as? T else {
+                    print("❌ Factory for \(type) returned wrong type")
+                    return nil
+                }
+                return instance
+            }
         }
 
         return nil
