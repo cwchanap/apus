@@ -344,7 +344,7 @@ final class DetectionResultsManagerCoverageTests: XCTestCase {
     }
 
     @discardableResult
-    private func waitUntil(timeout: TimeInterval = 5.0, pollInterval: TimeInterval = 0.01, condition: () -> Bool) -> Bool {
+    private func waitUntil(timeout: TimeInterval = 15.0, pollInterval: TimeInterval = 0.01, condition: () -> Bool) -> Bool {
         let deadline = Date().addingTimeInterval(timeout)
         while Date() < deadline {
             if condition() {

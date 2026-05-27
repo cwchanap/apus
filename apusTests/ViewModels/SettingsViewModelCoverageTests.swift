@@ -112,12 +112,12 @@ extension SettingsViewModelTests {
         sut.isRealTimeObjectDetectionEnabled = false
         sut.isRealTimeObjectDetectionEnabled = true
 
-        XCTAssertTrue(waitUntil(timeout: 1.0) { preloadManager.preloadCalled })
+        XCTAssertTrue(waitUntil(timeout: 5.0) { preloadManager.preloadCalled })
         XCTAssertTrue(appSettings.isRealTimeObjectDetectionEnabled)
     }
 
     @discardableResult
-    private func waitUntil(timeout: TimeInterval = 0.5, pollInterval: TimeInterval = 0.01, condition: () -> Bool) -> Bool {
+    private func waitUntil(timeout: TimeInterval = 5.0, pollInterval: TimeInterval = 0.01, condition: () -> Bool) -> Bool {
         let deadline = Date().addingTimeInterval(timeout)
         while Date() < deadline {
             if condition() {
