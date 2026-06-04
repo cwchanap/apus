@@ -54,7 +54,12 @@ class DetectionResultsManager: ObservableObject {
 
     // MARK: - Initialization
 
-    init() {
+    init(userDefaults: UserDefaults = .standard) {
+        _ocrResultsData = AppStorage(wrappedValue: Data(), "stored_ocr_results", store: userDefaults)
+        _objectDetectionResultsData = AppStorage(wrappedValue: Data(), "stored_object_detection_results", store: userDefaults)
+        _classificationResultsData = AppStorage(wrappedValue: Data(), "stored_classification_results", store: userDefaults)
+        _contourDetectionResultsData = AppStorage(wrappedValue: Data(), "stored_contour_detection_results", store: userDefaults)
+        _barcodeDetectionResultsData = AppStorage(wrappedValue: Data(), "stored_barcode_detection_results", store: userDefaults)
         loadAllResultsAsync()
     }
 

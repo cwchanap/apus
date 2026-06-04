@@ -15,13 +15,18 @@ final class DetectionResultsManagerCoverageTests: XCTestCase {
     private var sut: DetectionResultsManager!
     private var appSettings: AppSettings!
     private var testImage: UIImage!
+    private var userDefaults: UserDefaults!
+    private var userDefaultsSuiteName: String!
 
     override func setUpWithError() throws {
         try super.setUpWithError()
+        userDefaultsSuiteName = "DetectionResultsManagerCoverageTests.\(name).\(UUID().uuidString)"
+        userDefaults = try XCTUnwrap(UserDefaults(suiteName: userDefaultsSuiteName))
+        userDefaults.removePersistentDomain(forName: userDefaultsSuiteName)
         appSettings = AppSettings.shared
         appSettings.resetToDefaults()
         testImage = createTestImage(size: CGSize(width: 400, height: 300))
-        sut = DetectionResultsManager()
+        sut = DetectionResultsManager(userDefaults: userDefaults)
         XCTAssertTrue(waitUntil { !self.sut.isLoading })
         resetManagerState()
     }
@@ -32,6 +37,9 @@ final class DetectionResultsManagerCoverageTests: XCTestCase {
         sut = nil
         appSettings.resetToDefaults()
         appSettings = nil
+        userDefaults.removePersistentDomain(forName: userDefaultsSuiteName)
+        userDefaults = nil
+        userDefaultsSuiteName = nil
         try super.tearDownWithError()
     }
 

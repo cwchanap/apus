@@ -43,9 +43,10 @@ final class DIContainerCoverageTests: XCTestCase {
     }
 
     func testClear_removesAllRegistrations() {
-        sut.register(CameraManagerProtocol.self, instance: MockCameraManager())
-        sut.clear()
-        XCTAssertTrue(sut.resolveOptional(CameraManagerProtocol.self) == nil)
+        let localContainer = TestDIContainer()
+        localContainer.register(CameraManagerProtocol.self, instance: MockCameraManager())
+        localContainer.clear()
+        XCTAssertNil(localContainer.resolveOptional(CameraManagerProtocol.self))
     }
 
     func testRegisterFactory_createsNewInstanceEachTime() {

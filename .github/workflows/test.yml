@@ -76,11 +76,15 @@ jobs:
             exit 0
           fi
 
-          xcrun xcresulttool get --path "$RESULT_BUNDLE" --format json --legacy \
-          | python3 - <<'PY'
+          XCRESULT_JSON="$RUNNER_TEMP/apus-xcresult.json"
+          xcrun xcresulttool get --path "$RESULT_BUNDLE" --format json --legacy > "$XCRESULT_JSON"
+
+          python3 - "$XCRESULT_JSON" <<'PY'
           import json, sys
 
-          raw = sys.stdin.read().strip()
+          with open(sys.argv[1], encoding="utf-8") as file:
+              raw = file.read().strip()
+
           if not raw:
               print("xcresulttool produced no JSON output.")
               sys.exit(0)
