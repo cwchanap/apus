@@ -41,9 +41,9 @@ final class VisionDetectionTests: XCTestCase {
     }
 
     func testVisionDetection_hasUniqueId() {
-        let d1 = VisionDetection(boundingBox: .zero, className: "a", confidence: 0.5)
-        let d2 = VisionDetection(boundingBox: .zero, className: "a", confidence: 0.5)
-        XCTAssertNotEqual(d1.id, d2.id)
+        let detection1 = VisionDetection(boundingBox: .zero, className: "a", confidence: 0.5)
+        let detection2 = VisionDetection(boundingBox: .zero, className: "a", confidence: 0.5)
+        XCTAssertNotEqual(detection1.id, detection2.id)
     }
 }
 
